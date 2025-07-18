@@ -1,7 +1,7 @@
 clear; clc;
 close all;
 
-load("data/static_char_ex_5_20ms_f_1.mat");
+load("data/s1.mat");
 
 T_step_size = T_step_time; % [s]
 nsamples = T_step_size/T_sample;
@@ -28,7 +28,7 @@ for i=1:length(static_char.t)
         ilast = i - 1;
         istep = istep + 1;
         t_last_step = ti;
-        ulast = ui;
+        ulast = ulast + STEP_SIZE;
         % In case the measured data are longer than the wanted input window
         % (for example only taking the input values from 0-10, but the
         % experiment was halted after the input has already changed to 11,
@@ -44,6 +44,7 @@ for i=1:length(static_char.t)
     
 end
 
+
 ym = nan(nsteps, 1);
 tm = nan(nsteps, 1);
 um = nan(nsteps, 1);
@@ -57,7 +58,7 @@ end
 figure(666);
 plot(tm, ym, '-k', tm, um, '-m', "LineWidth", 1);
 xlabel('t [s]');
-ylabel('y(t); u(t) [rad; V]');
+ylabel('y(t); u(t) [deg; V]');
 title('Meranie prevodovej charakteristiky');
 subtitle('Porovnanie vstup-vystup')
 legend('y','u', "Location", "northwest");
@@ -66,19 +67,19 @@ ylim([0, max(y{end}) + 10]);
 xlim([0, t_last_step + 10]);
 
 figure(999);
-plot(um, deg2rad(ym), 'xk');
+plot(um, ym, 'xk');
 xlabel('u(t) [V]');
-ylabel('y(t) [rad]');
+ylabel('y(t) [deg]');
 title('Prevodova charakteristika');
 legend('y', "Location", "northwest");
 grid on;
-ylim([0, deg2rad(max(y{end}) + 10)]);
+ylim([0, max(y{end}) + 10]);
 xlim([0, nsteps * STEP_SIZE + 1]);
 
 figure(888);
 plot(tm, ym./um, 'xk');
 xlabel('t [s]');
-ylabel('K [rad/V]');
+ylabel('K [deg/V]');
 title('Meranie prevodovej charakteristiky');
 subtitle('Podielova');
 legend('y', "Location", "northwest");

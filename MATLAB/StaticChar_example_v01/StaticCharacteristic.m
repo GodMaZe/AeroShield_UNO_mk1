@@ -31,6 +31,7 @@ end
 DateString = convertCharsToStrings(datestr(datetime('now'), "yyyy_mm_dd_HH_MM_ss"));
 
 datafileID = fopen("./" + DDIR + "/" + "dataFile_" + DateString + ".csv"','w');
+fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 % ----------------------------------
 % ----------------------------------
@@ -55,7 +56,11 @@ STEP_INIT = 0;
 
 STEP_SIZE = 1;
 
-STEP_MAX = 82.0;
+STEP_SIZE_DT = 0.02;
+
+IS_STEP_CHANGE = false;
+
+STEP_MAX = 76.0;
 
 
 
@@ -109,13 +114,10 @@ plant_potentiometer = serLineList(2);
 plant_output = serLineList(3);
 plant_input = serLineList(4);
 
-% plant_potentiometer = 100 * plant_potentiometer/1023;
-% plant_output = 100 * (plant_output - 2727)/(2176);
-
 % Display the received data
 tmp_printlist = [0, plant_time, plant_potentiometer, plant_output, plant_input, T_sample * 1000];
-fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', tmp_printlist);
-fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', tmp_printlist);
+% fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', tmp_printlist);
+% fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', tmp_printlist);
 % updateInfo(datafileID, T_sample*1000, T_sample, tmp_printlist);
 send(DataInformer, tmp_printlist);
 
@@ -156,9 +158,13 @@ while true
 
     time_delta_sample = milliseconds(time_curr - time_sample);
 
+    
+
     if time_delta_sample >= T_step_time * 1000
         time_sample = time_curr;
-        u = u + STEP_SIZE;
+        u_old = u;
+        u = u + STEP_SIZE_DT;
+        IS_STEP_CHANGE = true;
         u_send = u;
         
         if u_send > STEP_MAX
@@ -168,8 +174,6 @@ while true
         end        
 
     end
-
-
     
     % Check if it's time to send a new command
     if (time_delta >= T_sample * 1000)
@@ -231,9 +235,22 @@ while true
         % legend("u","ref","y");
         % 
         % drawnow nocallbacks;
+
+        if IS_STEP_CHANGE && u_old + STEP_SIZE > u
+            u = u + STEP_SIZE_DT;
+            if u > u_old + STEP_SIZE
+                u = u_old + STEP_SIZE;
+            elseif u < 0
+                u = 0.0;
+            end
+            u_send = u;
+            
+        else
+            IS_STEP_CHANGE = false;
+        end
         
         % Check if the simulation should stop
-        if time_elapsed >= T_stop || u > STEP_MAX
+        if time_elapsed >= T_stop || u > STEP_MAX || plant_potentiometer > 90
             break;
         end
     end
@@ -247,8 +264,9 @@ end
 % write(serPort, s2byte(0), 'uint8');
 write(serPort, 0.0, 'single');
 clear serPort;
-
 fclose(datafileID);
 
-save("./" + DDIR + "/" + "dataFile_" + DateString, "STEP_INIT", "STEP_MAX", "STEP_SIZE", "T_sample", "T_start", "T_step_time", "T_stop", "u");
+static_char = readtable("./" + DDIR + "/" + "dataFile_" + DateString + ".csv", "VariableNamingRule","preserve","Delimiter",",");
+
+save("./" + DDIR + "/" + "dataFile_" + DateString, "STEP_INIT", "STEP_MAX", "STEP_SIZE", "T_sample", "T_start", "T_step_time", "T_stop", "u", "static_char");
 
