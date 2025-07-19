@@ -1,7 +1,7 @@
 clear; clc;
 close all;
 
-load("data/s1.mat");
+load("data/s2.mat");
 
 T_step_size = T_step_time; % [s]
 nsamples = T_step_size/T_sample;
