@@ -76,11 +76,11 @@ for i=1:nops
 end
 
 figure(111);
+h1 = plot([ts{:,end}], [ys{:,end}], '-k', 'LineWidth', 1.5, 'DisplayName', 'y');
 hold on;
-plot([ts{:,end}], [ys{:,end}]);
-plot([ts{:,end}], [us{:,end}]);
+h2 = plot([ts{:,end}], [us{:,end}], '-r', 'LineWidth', 1.5, 'DisplayName', 'u');
 % plot(t(tcindx), u(tcindx), 'xr', 'MarkerSize', 15);
-legend('u','y');
+legend([h1(1), h2(1)], {'y', 'u'});
 title("Prechodove charakteristiky");
 subtitle("Spriemerovane");
 grid minor;
@@ -88,10 +88,10 @@ hold off;
 
 figure(222);
 hold on;
-plot([ts{:,1:STEP_REPS}], [ys{:,1:STEP_REPS}]);
-plot([ts{:,1}], [us{:,1}]);
+h1 = plot([ts{:,1:STEP_REPS}], [ys{:,1:STEP_REPS}], '-k', 'DisplayName', 'y');
+h2 = plot([ts{:,1}], [us{:,1}], '-r', 'DisplayName', 'u');
 title("Prechodove charakteristiky");
 subtitle("Agregovane");
-legend('u','y');
+legend([h1(1), h2(1)], {'y', 'u'});
 grid minor;
 hold off;
