@@ -95,6 +95,7 @@ ys{totalcountnext} = ys{totalcountnext}/totalcount;
 ts{totalcountnext} = ts{totalcountnext}/totalcount;
 us{totalcountnext} = us{totalcountnext}/totalcount;
 
+save("aggdata", "ys", "ts", "us", "t_last_step", "totalcount", "totalcountnext", "nsteps", "ulast", "STEP_SIZE");
 
 %% Plot the data
 
@@ -117,7 +118,7 @@ ylabel('y(t) [deg]');
 title('Prevodova charakteristika');
 % legend show;
 grid on;
-ylim([0, max(y{end}) + 10]);
+ylim([0, max(ys{end}) + 10]);
 xlim([0, nsteps * STEP_SIZE + 1]);
 
 
@@ -191,7 +192,7 @@ ylabel('y(t) [deg]');
 title('Prevodova charakteristika');
 % legend show;
 grid on;
-ylim([0, max(y{end}) + 10]);
+ylim([0, max(ys{end}) + 10]);
 xlim([0, nsteps * STEP_SIZE + 1]);
 
 
