@@ -9,8 +9,8 @@ u = dyn_char.u;
 y = dyn_char.y;
 ldata = length(t);
 
-[b,a] = butter(5, 1/10, "low");
-
+% [b,a] = butter(10, 1/10, "low");
+% 
 % y = filter(b, a, y);
 
 ys = cell(nops, STEP_REPS + 1);
