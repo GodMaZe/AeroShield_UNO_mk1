@@ -34,7 +34,7 @@ fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 T_start = 0;
 
-T_sample =    0.02;      % [sec]
+T_sample = 0.02;      % [sec]
 
 % Define step parameters
 

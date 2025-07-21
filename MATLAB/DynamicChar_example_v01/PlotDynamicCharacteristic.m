@@ -1,21 +1,97 @@
 clear;
 close all; clc;
 
-load("data\d1.mat");
+load("data\d2.mat");
 
 
 t = dyn_char.t;
 u = dyn_char.u;
 y = dyn_char.y;
+ldata = length(t);
 
+[b,a] = butter(5, 1/10, "low");
+
+% y = filter(b, a, y);
+
+ys = cell(nops, STEP_REPS + 1);
+ts = cell(nops, STEP_REPS + 1);
+us = cell(nops, STEP_REPS + 1);
+
+tindx = find(t < T_sample, nops * (STEP_REPS + 1));
+
+tcindx = tindx(1:STEP_REPS + 1:end);
+
+tindx = setdiff(tindx, tcindx);
+
+T_COUNTER = 2;
+
+istep = 1;
+irep = 1;
+
+for i=1:length(tindx)
+    otcounter = T_COUNTER;
+    cidx = tindx(i);
+    if i + 1 > length(tindx)
+        getter = cidx:ldata - 1;
+    elseif mod(i, STEP_REPS) == 0
+        getter = cidx:tcindx(T_COUNTER) - 1;
+        T_COUNTER = T_COUNTER + 1;
+    else
+        getter = cidx:tindx(i + 1) - 1;
+    end
+
+    ys{istep, irep} = y(getter);
+    us{istep, irep} = u(getter);
+    ts{istep, irep} = t(getter);
+
+    if T_COUNTER > otcounter
+        istep = istep + 1;
+        irep = 0;
+    end
+
+    irep = irep + 1;
+end
+
+% Fix missing data due to increased sampling time for a measurement
+nelem = (STEP_TIME * nprocessorder)/T_sample - 1;
+
+% Either use linear extrapolation for the few last missing points or cut
+% all the vectors to the smallest size
+for i=1:nops
+    for x=1:STEP_REPS
+        lint = length(ts{i, x});
+        nmvals = nelem - lint;
+        if nmvals > 0
+            ts{i, x}(end:end+nmvals) = interp1(1:lint, ts{i,x}, lint:lint+nmvals, "linear", "extrap");
+            ys{i, x}(end:end+nmvals) = interp1(1:lint, ys{i,x}, lint:lint+nmvals, "linear", "extrap");
+            us{i, x}(end:end+nmvals) = interp1(1:lint, us{i,x}, lint:lint+nmvals, "linear", "extrap");
+        end
+    end
+end
+
+for i=1:nops
+    ys{i, STEP_REPS + 1} = mean([ys{i, 1:STEP_REPS}], 2);
+    us{i, STEP_REPS + 1} = mean([us{i, 1:STEP_REPS}], 2);
+    ts{i, STEP_REPS + 1} = mean([ts{i, 1:STEP_REPS}], 2);
+end
 
 figure(111);
 hold on;
-plot(t, u);
-plot(t, y);
+plot([ts{:,end}], [ys{:,end}]);
+plot([ts{:,end}], [us{:,end}]);
+% plot(t(tcindx), u(tcindx), 'xr', 'MarkerSize', 15);
 legend('u','y');
+title("Prechodove charakteristiky");
+subtitle("Spriemerovane");
 grid minor;
 hold off;
 
 figure(222);
-plot(t, y);
+hold on;
+plot([ts{:,1:STEP_REPS}], [ys{:,1:STEP_REPS}]);
+plot([ts{:,1}], [us{:,1}]);
+title("Prechodove charakteristiky");
+subtitle("Agregovane");
+legend('u','y');
+grid minor;
+hold off;
