@@ -1,7 +1,7 @@
 close all;
 clear; clc;
 
-load("data/cr_GSPID_B_8.mat");
+load("data/ref1354.mat");
 
 
 t = logsout.t;
@@ -13,9 +13,9 @@ dt = logsout.dt;
 
 
 figure(111);
-plot(t, y, '-k', 'LineWidth', 1);
+plot(t, y, '-k', 'LineWidth', 1.5);
 hold on;
-plot(t, r, '-r', 'LineWidth', 1);
+plot(t, r, '-r', 'LineWidth', 1.5);
 title('Control Response');
 subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
 legend('y(t)', 'ref(t)', "Location", "best");
@@ -34,10 +34,10 @@ ylabel('u [%]');
 grid on;
 
 figure(666);
-plot(t, y, '-k', 'LineWidth', 1);
+plot(t, y, '-k', 'LineWidth', 1.5);
 hold on;
-plot(t, r, '-r', 'LineWidth', 1);
-plot(t, e, '-b', 'LineWidth', 1);
+plot(t, r, '-r', 'LineWidth', 1.5);
+plot(t, e, '-b', 'LineWidth', 1.5);
 title('Control Error Response');
 subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
 legend('y(t)', 'ref(t)', 'e(t)', "Location", "best");

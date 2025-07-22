@@ -44,11 +44,11 @@ fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 T_start = 0;
 
-T_sample =    0.02;      % [sec]
+T_sample =    0.012;      % [sec]
 
 % Define STOP TIME
 
-T_stop = 60.0;     % [sec]
+T_stop = 6.0;     % [sec]
 
 
 
@@ -56,7 +56,7 @@ T_stop = 60.0;     % [sec]
 
 U_MAX = 100.0;
 U_MIN = 0.0;
-Y_SAFETY = 150.0;
+Y_SAFETY = 190.0;
 
 % Define PID params.
 
@@ -65,10 +65,12 @@ P = 0.0125;
 I = 1.55;
 D = 0.15125;
 
-Ys = [0,             10,        20,      50,      70,       90,      110]';
-Ps = [0.0125,    0.0105,    0.0165,  0.0125,  0.0105,   0.1005,   0.0055]';
-Is = [0.85,       0.985,      1.05,    1.25,   1.175,    1.015,    0.965]';
-Ds = [0.05125,   0.0725,  0.085125, 0.15125, 0.25125, 0.355125, 0.300125]';
+R_WANTED = 130;
+
+Ys = [0,             10,        20,      50,      70,         80,       90,      110,     130,            140,        155,           169]';
+Ps = [0.00925,  0.15025,    0.265,  0.325,    0.6505,     1.8505,   1.9005,   1.855,      1.87,        1.525,     1.225,         1.2625]';
+Is = [1.85,       2.985,      3.25,    3.65,   3.275,      1.775,    1.625,    1.525,     1.85,       0.6225,    0.3225,      0.0110225]';
+Ds = [0.02125,   0.0725,  0.105125, 0.15125, 0.255125,   0.305125,   0.355125, 0.3500125, 0.30, 0.250125,  0.200125,    0.2000125]';
 
 RegParams = nan(ceil(T_stop/T_sample), 3);
 RegParams(1, :) = [0, 0, 0];
@@ -183,7 +185,7 @@ while true
         
         % Extract values from the received data
         plant_time = serLineList(1) - plant_time_init;
-        plant_potentiometer = serLineList(2);
+        plant_potentiometer = R_WANTED; % serLineList(2)/100*180;
         plant_output = serLineList(3);
         plant_input = serLineList(4);
         
@@ -234,7 +236,7 @@ while true
         % Fe = alpha * e + e_der;
         % u = U_MAX * tanh(0.015*Fe) + I * e_int;
 
-        Ri = find(pidtable.y <= plant_output);
+        Ri = find(pidtable.y <= plant_potentiometer);
         if isempty(Ri)
             Ri = 1;
         else
@@ -254,9 +256,9 @@ while true
         % e = 0 - plant_output;
 
         % Stop controller
-        b0 = 1; % 0.1
+        b0 = 2; % 0.1
         gamma = 0.725; % 0.725
-        dk = (gamma*log(abs(e) + b0))^2;
+        dk = 0; % (gamma*log(abs(e) + b0))^2;
         u = u + (dk*log10(e^2 + b0));
         % u=0;
 
@@ -294,3 +296,22 @@ logsout = readtable("./" + DDIR + "/" + "dataFile_" + DateString + ".csv", "Vari
 
 save("./" + DDIR + "/" + "dataFile_" + DateString, "U_MAX", "U_MIN", "Y_SAFETY", "T_sample", "T_start", "T_stop", "u", "P", "I", "D", "logsout", "RegParams");
 
+t = logsout.t;
+y = logsout.y;
+u = logsout.u;
+r = logsout.r;
+e = r - y;
+dt = logsout.dt;
+
+
+figure(111);
+plot(t, y, '-k', 'LineWidth', 1.5);
+hold on;
+plot(t, r, '-r', 'LineWidth', 1.5);
+title('Control Response');
+subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
+legend('y(t)', 'ref(t)', "Location", "best");
+xlabel('t [s]');
+ylabel('y [deg]');
+grid on;
+hold off;
