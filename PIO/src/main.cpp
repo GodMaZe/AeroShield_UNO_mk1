@@ -2,8 +2,8 @@
 
 // ---------------------------------------------------------
 
-const static int BUILT_IN_LED_PIN = 13; // PIN pre zabudovanu LED
-// const static int CURRENT_SENSOR_PIN = A0; // PIN pre citanie prudu z motora
+const static int BUILT_IN_LED_PIN = 13;   // PIN pre zabudovanu LED
+const static int CURRENT_SENSOR_PIN = A0; // PIN pre citanie prudu z motora
 
 // --------------------------------------------------------- BUILD-IN LED BLINK
 const unsigned long T_sample = 1000;
@@ -16,6 +16,7 @@ static float PHI_INIT = 0.0f; // uhol natocenia ramena pri inicializacii
 float REFERENCE_SIGNAL = 0.0f; // potenciometer
 float OUTPUT_SIGNAL = 0.0f;    // uhol natocenia ramena (I2C bus)
 float CONTROL_SIGNAL = 0.0f;   // PWM pre motor (matlab -> SPI bus)
+float CURRENT_SIGNAL = 0.0f;   // prúd motora (A0 pin)
 
 unsigned long time_curr;
 unsigned long time_tick = 0;
@@ -25,19 +26,30 @@ unsigned long time_curr_data;
 
 bool LED_on = false;
 
+static char buf[4];
+
+float readCurrent()
+{
+    return analogRead(CURRENT_SENSOR_PIN) / 1023.0f * 5.0f * 0.185f;
+}
+
 void setup()
 {
-    pinMode(BUILT_IN_LED_PIN, OUTPUT); // for LED
-    // pinMode(CURRENT_SENSOR_PIN, INPUT_PULLUP); // for current sensor
+    pinMode(BUILT_IN_LED_PIN, OUTPUT);         // for LED
+    pinMode(CURRENT_SENSOR_PIN, INPUT_PULLUP); // for current sensor
 
     AeroShield.begin();
     AeroShield.calibrate();
+
+    memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
 
     // Initialize Serial communication
     // Set the baud rate to 115200 for communication with the Serial Monitor
     Serial.begin(115200);
     Serial.println("--- MCU starting ---");
-    time_curr_data = millis();
+    time_curr_data = micros();
+    CURRENT_SIGNAL = readCurrent(); // Read the current sensor value
+
     Serial.print(time_curr_data);
     Serial.print(" ");
     Serial.print(REFERENCE_SIGNAL);
@@ -46,6 +58,7 @@ void setup()
     Serial.print(" ");
     Serial.print(CONTROL_SIGNAL);
     Serial.print(" ");
+    Serial.print(CURRENT_SIGNAL);
     Serial.print("\n");
 }
 
@@ -53,8 +66,7 @@ void setup()
 
 int recvByte(float &output)
 {
-    static char buf[4];
-    memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
+
     if (Serial.available() >= 4)
     {
         Serial.readBytes(buf, 4);             // Read 4 bytes from Serial
@@ -73,17 +85,17 @@ void processNewData()
         return;
     }
 
-    time_curr_data = millis();
+    time_curr_data = micros();
 
     // Convert the received character to an integer value (potentiometer value)
     REFERENCE_SIGNAL = AeroShield.referenceRead(); // Read the potentiometer value
     OUTPUT_SIGNAL = AeroShield.sensorReadDegree();
+    CURRENT_SIGNAL = readCurrent();
 
     AeroShield.actuatorWrite(CONTROL_SIGNAL); // Write the control signal to the actuator
 
     // Print the current time and the signals to the Serial Monitor
     Serial.print(time_curr_data);
-    // Serial.print(analogRead(CURRENT_SENSOR_PIN) / 1023.0 * 5.0 * 0.185);
     Serial.print(" ");
     Serial.print(REFERENCE_SIGNAL); // Read the current sensor value
     Serial.print(" ");
@@ -91,6 +103,7 @@ void processNewData()
     Serial.print(" ");
     Serial.print(CONTROL_SIGNAL);
     Serial.print(" ");
+    Serial.print(CURRENT_SIGNAL);
     Serial.print("\n");
 }
 
@@ -122,11 +135,11 @@ void buildInLedBlink()
 
 void loop()
 {
-    time_curr = millis();
+    // time_curr = micros();
 
     processNewData();
 
-    buildInLedBlink();
+    // buildInLedBlink();
 
-    delay(2);
+    // delay(2);
 }
