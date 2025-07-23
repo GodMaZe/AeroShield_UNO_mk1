@@ -53,7 +53,9 @@ for i=1:length(tindx)
 end
 
 % Fix missing data due to increased sampling time for a measurement
-nelem = (STEP_TIME * nprocessorder)/T_sample - 1;
+nelem = (STEP_TIME * nprocessorder)/T_sample + 1;
+
+tt = (0:T_sample:(nprocessorder * STEP_TIME))';
 
 % Either use linear extrapolation for the few last missing points or cut
 % all the vectors to the smallest size
@@ -61,18 +63,25 @@ for i=1:nops
     for x=1:STEP_REPS
         lint = length(ts{i, x});
         nmvals = nelem - lint;
-        if nmvals > 0
-            ts{i, x}(end:end+nmvals) = interp1(1:lint, ts{i,x}, lint:lint+nmvals, "linear", "extrap");
-            ys{i, x}(end:end+nmvals) = interp1(1:lint, ys{i,x}, lint:lint+nmvals, "linear", "extrap");
-            us{i, x}(end:end+nmvals) = interp1(1:lint, us{i,x}, lint:lint+nmvals, "linear", "extrap");
+        if nmvals < nelem/5.0
+            ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "makima");
+            us{i, x} = interp1(ts{i, x}, us{i,x}, tt, "makima");
+            ts{i, x} = tt;
+        else
+            ys{i, x} = [];
+            us{i, x} = [];
+            ts{i, x} = [];
+            fprintf(2, "Cannot interpolate values in the provided timeframe because more than 4/5 of the data is missing! Cell index: {%d, %d}", i, x);
         end
     end
 end
 
+
+
 for i=1:nops
-    ys{i, STEP_REPS + 1} = mean([ys{i, 1:STEP_REPS}], 2);
-    us{i, STEP_REPS + 1} = mean([us{i, 1:STEP_REPS}], 2);
-    ts{i, STEP_REPS + 1} = mean([ts{i, 1:STEP_REPS}], 2);
+    ys{i, STEP_REPS + 1} = mean([ys{i, 1:STEP_REPS}], 2, "omitmissing");
+    us{i, STEP_REPS + 1} = mean([us{i, 1:STEP_REPS}], 2, "omitmissing");
+    ts{i, STEP_REPS + 1} = mean([ts{i, 1:STEP_REPS}], 2, "omitmissing");
 end
 
 figure(111);

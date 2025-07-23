@@ -21,7 +21,7 @@ end
 DateString = convertCharsToStrings(datestr(datetime('now'), "yyyy_mm_dd_HH_MM_ss"));
 datafileName = "./" + DDIR + "/" + "dataFile_" + DateString;
 datafileID = fopen(datafileName + ".csv"','w');
-fprintf(datafileID, 't, tp, r, y, u, dt\n');
+fprintf(datafileID, 't, tp, r, y, u, dt, i\n');
 
 % ----------------------------------
 % ----------------------------------
@@ -34,15 +34,15 @@ fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 T_start = 0;
 
-T_sample = 0.02;      % [sec]
+T_sample = 0.010;      % [sec]
 
 % Define step parameters
 
 upb = [10, 20, 30, 40, 50, 60]; % The picked OPs, based on the linearity at and in close proximity of the point
 
-STEP_SIZE = 1; % [%] ; the size of the step in a direction
+STEP_SIZE = 5; % [%] ; the size of the step in a direction
 
-STEP_REPS = 10; % Number of repetitions per an operating point ; STEP UP - BACK TO Upb - STEP DOWN - BACK TO Upb (1 rep)
+STEP_REPS = 1; % Number of repetitions per an operating point ; STEP UP - BACK TO Upb - STEP DOWN - BACK TO Upb (1 rep)
 
 STEP_TIME = 15; % [s] ; time per each step
 
@@ -66,11 +66,11 @@ T_stop = (STEP_TIME * (nprocessorder * STEP_REPS) + STEP_STAB_TIME) * nops; % [s
 
 function updateInfo(datafileID, dt, Ts, x)
     if ((dt/1000) > (Ts*1.05))
-        fprintf(2,'%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
+        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f --\n', x);
     else
-        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
+        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
     end
-    fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', x);
+    fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', x);
 end
 
 
@@ -105,9 +105,10 @@ plant_time = serLineList(1) - plant_time_init;
 plant_potentiometer = serLineList(2);
 plant_output = serLineList(3);
 plant_input = serLineList(4);
+plant_current = serLineList(5);
 
 % Display the received data
-tmp_printlist = [0, plant_time, plant_potentiometer, plant_output, plant_input, T_sample * 1000];
+tmp_printlist = [0, plant_time, plant_potentiometer, plant_output, plant_input, T_sample * 1000, plant_current];
 send(DataInformer, tmp_printlist);
 
 
@@ -206,9 +207,10 @@ for u=upb
             plant_potentiometer = serLineList(2);
             plant_output = serLineList(3);
             plant_input = serLineList(4);
+            plant_current = serLineList(5);
             
             % Display the received data
-            tmp_printlist = [time_elapsed, plant_time, plant_potentiometer, plant_output, plant_input, time_delta];
+            tmp_printlist = [time_elapsed, plant_time, plant_potentiometer, plant_output, plant_input, time_delta, plant_current];
             send(DataInformer, tmp_printlist);
     
             
