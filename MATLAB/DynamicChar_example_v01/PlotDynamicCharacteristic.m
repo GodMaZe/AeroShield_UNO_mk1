@@ -1,7 +1,7 @@
 clear;
 close all; clc;
 
-load("data\d2.mat");
+load("data\d3.mat");
 
 
 t = dyn_char.t;
@@ -64,8 +64,13 @@ for i=1:nops
         lint = length(ts{i, x});
         nmvals = nelem - lint;
         if nmvals < nelem/5.0
-            ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "makima");
-            us{i, x} = interp1(ts{i, x}, us{i,x}, tt, "makima");
+            % used for comparing the interpolated and real data.
+            % ys{i, x+20} = ys{i, x};
+            % us{i, x+20} = us{i, x};
+            % ts{i, x+20} = ts{i, x};
+            
+            ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "linear");
+            us{i, x} = interp1(ts{i, x}, us{i,x}, tt, "linear");
             ts{i, x} = tt;
         else
             ys{i, x} = [];
@@ -83,6 +88,11 @@ for i=1:nops
     us{i, STEP_REPS + 1} = mean([us{i, 1:STEP_REPS}], 2, "omitmissing");
     ts{i, STEP_REPS + 1} = mean([ts{i, 1:STEP_REPS}], 2, "omitmissing");
 end
+
+% Use this plot when visualizing the interpolated values compared to the
+% real measured data.
+% figure(1); plot(tt, ys{1,1}, 'k'); hold on; plot(ts{1,21},ys{1,21},'.r');
+
 
 figure(111);
 h1 = plot([ts{:,end}], [ys{:,end}], '-k', 'LineWidth', 1.5, 'DisplayName', 'y');
