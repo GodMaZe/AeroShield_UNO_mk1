@@ -1,7 +1,7 @@
 clear;
 close all; clc;
 
-load("data\d4.mat");
+load("data\d5.mat");
 
 
 t = dyn_char.t;
@@ -98,6 +98,8 @@ end
 % Use this plot when visualizing the interpolated values compared to the
 % real measured data.
 % figure(1); plot(tt, ys{1,1}, 'k'); hold on; plot(ts{1,21},ys{1,21},'.r');
+
+save("aggdata", "ys", "ts", "us", "STEP_REPS", "STEP_TIME", "STEP_STAB_TIME", "STEP_STAB_DU", "STEP_SIZE", "STEP_PROCESS_ORDER", "nprocessorder", "nops", "T_sample", "T_COUNTER", "T_start", "T_sample");
 
 
 figure(111);

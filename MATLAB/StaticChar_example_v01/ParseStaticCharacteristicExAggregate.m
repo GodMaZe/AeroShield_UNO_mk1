@@ -99,6 +99,8 @@ save("aggdata", "ys", "ts", "us", "t_last_step", "totalcount", "totalcountnext",
 
 %% Plot the data
 
+close all;
+
 figure(666);
 hold on;
 xlabel('t [s]');
@@ -124,13 +126,13 @@ xlim([0, nsteps * STEP_SIZE + 1]);
 
 figure(888);
 hold on;
-xlabel('t [s]');
+xlabel('u [%]');
 ylabel('K [deg/%]');
 title('Meranie prevodovej charakteristiky');
 subtitle('Podielova');
 % legend show;
 grid on;
-xlim([0, t_last_step + 10]);
+xlim([0, ulast]);
 
 
 for i=1:totalcountnext
@@ -149,7 +151,7 @@ for i=1:totalcountnext
         plot(us{i}, ys{i}, '.r', 'MarkerSize', 14, 'DisplayName', "mean");
 
         figure(888);
-        plot(ts{i}, ys{i}./us{i}, '.r', 'MarkerSize', 14, 'DisplayName', 'mean');
+        plot(us{i}, ys{i}./us{i}, '.r', 'MarkerSize', 14, 'DisplayName', 'mean');
     else
         figure(666);
         plot(ts{i}, ys{i}, "LineWidth", 1, 'DisplayName', namey);
@@ -159,7 +161,7 @@ for i=1:totalcountnext
         plot(us{i}, ys{i}, '.k', 'MarkerSize', 8, 'DisplayName', "d" + num2str(i));
 
         figure(888);
-        plot(ts{i}, ys{i}./us{i}, '.k', 'MarkerSize', 8, 'DisplayName', "d" + num2str(i));
+        plot(us{i}, ys{i}./us{i}, '.k', 'MarkerSize', 8, 'DisplayName', "d" + num2str(i));
     end
 
     
@@ -197,11 +199,11 @@ xlim([0, nsteps * STEP_SIZE + 1]);
 
 
 figure(1888);
-plot(ts{end}, ys{end}./us{end}, '.k', 'MarkerSize', 14);
-xlabel('t [s]');
+plot(us{end}, ys{end}./us{end}, '.k', 'MarkerSize', 14);
+xlabel('u [%]');
 ylabel('K [deg/%]');
 title('Meranie prevodovej charakteristiky');
 subtitle('Podielova');
 % legend show;
 grid on;
-xlim([0, t_last_step + 10]);
+xlim([0, ulast]);

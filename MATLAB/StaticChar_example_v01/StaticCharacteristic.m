@@ -54,13 +54,13 @@ T_step_time = 5.0;         % [sec] 20.00
 
 STEP_INIT = 0;
 
-STEP_SIZE = 10;
+STEP_SIZE = 1;
 
-STEP_SIZE_DT = 0.5;
+STEP_SIZE_DT = 0.01;
 
 IS_STEP_CHANGE = false;
 
-STEP_MAX = 76.0;
+STEP_MAX = 100.0;
 
 
 

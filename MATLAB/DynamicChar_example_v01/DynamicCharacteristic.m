@@ -42,9 +42,9 @@ upb = [10, 20, 30, 40, 50, 60]; % The picked OPs, based on the linearity at and 
 
 STEP_SIZE = 5; % [%] ; the size of the step in a direction
 
-STEP_REPS = 1; % Number of repetitions per an operating point ; STEP UP - BACK TO Upb - STEP DOWN - BACK TO Upb (1 rep)
+STEP_REPS = 10; % Number of repetitions per an operating point ; STEP UP - BACK TO Upb - STEP DOWN - BACK TO Upb (1 rep)
 
-STEP_TIME = 10; % [s] ; time per each step
+STEP_TIME = 20; % [s] ; time per each step
 
 STEP_STAB_TIME = 20; % [s] ; time for the system to stabilize at an operating point.
 STEP_STAB_DU = 0.02; % [%] ; the small increment between OPs to get there with the least amount of unecessary oscillations
