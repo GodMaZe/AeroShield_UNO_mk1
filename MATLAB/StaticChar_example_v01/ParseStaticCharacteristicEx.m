@@ -1,7 +1,7 @@
 clear; clc;
 close all;
 
-load("data/s2.mat");
+load("data/s21.mat");
 
 T_step_size = T_step_time; % [s]
 nsamples = T_step_size/T_sample;
@@ -77,11 +77,11 @@ ylim([0, max(y{end}) + 10]);
 xlim([0, nsteps * STEP_SIZE + 1]);
 
 figure(888);
-plot(tm, ym./um, 'xk');
-xlabel('t [s]');
+plot(um, ym./um, 'xk');
+xlabel('u [%]');
 ylabel('K [deg/V]');
 title('Meranie prevodovej charakteristiky');
 subtitle('Podielova');
 legend('y', "Location", "northwest");
 grid on;
-xlim([0, t_last_step + 10]);
+xlim([0, max(um) + 1]);

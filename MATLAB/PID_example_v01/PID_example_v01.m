@@ -44,7 +44,7 @@ fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 T_start = 0;
 
-T_sample =    0.012;      % [sec]
+T_sample =    0.010;      % [sec]
 
 % Define STOP TIME
 
@@ -65,7 +65,7 @@ P = 0.0125;
 I = 1.55;
 D = 0.15125;
 
-R_WANTED = 130;
+R_WANTED = 105;
 
 Ys = [0,             10,        20,      50,      70,         80,       90,      110,     130,            140,        155,           169]';
 Ps = [0.00925,  0.15025,    0.265,  0.325,    0.6505,     1.8505,   1.9005,   1.855,      1.87,        1.525,     1.225,         1.2625]';
@@ -87,7 +87,7 @@ pidtable = table(Ys, Ps, Is, Ds, 'VariableNames', {'y', 'p', 'i', 'd'});
 
 function updateInfo(datafileID, dt, Ts, x)
     if ((dt/1000) > (Ts*1.05))
-        fprintf(2,'%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
+        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f --\n', x);
     else
         fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
     end

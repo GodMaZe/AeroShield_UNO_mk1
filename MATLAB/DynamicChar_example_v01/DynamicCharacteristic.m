@@ -44,7 +44,7 @@ STEP_SIZE = 5; % [%] ; the size of the step in a direction
 
 STEP_REPS = 1; % Number of repetitions per an operating point ; STEP UP - BACK TO Upb - STEP DOWN - BACK TO Upb (1 rep)
 
-STEP_TIME = 15; % [s] ; time per each step
+STEP_TIME = 10; % [s] ; time per each step
 
 STEP_STAB_TIME = 20; % [s] ; time for the system to stabilize at an operating point.
 STEP_STAB_DU = 0.02; % [%] ; the small increment between OPs to get there with the least amount of unecessary oscillations
@@ -75,7 +75,7 @@ end
 
 
 DataInformer = parallel.pool.DataQueue;
-DataInformer.afterEach(@(x) updateInfo(datafileID, x(end), T_sample, x));
+DataInformer.afterEach(@(x) updateInfo(datafileID, x(end - 1), T_sample, x));
 
 % ----------------------------------
 % CONNECT TO THE DEVICE AND RECORD THE CALIBRATION DATA

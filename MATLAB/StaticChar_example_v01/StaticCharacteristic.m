@@ -31,7 +31,7 @@ end
 DateString = convertCharsToStrings(datestr(datetime('now'), "yyyy_mm_dd_HH_MM_ss"));
 
 datafileID = fopen("./" + DDIR + "/" + "dataFile_" + DateString + ".csv"','w');
-fprintf(datafileID, 't, tp, r, y, u, dt\n');
+fprintf(datafileID, 't, tp, r, y, u, dt, i\n');
 
 % ----------------------------------
 % ----------------------------------
@@ -44,7 +44,7 @@ fprintf(datafileID, 't, tp, r, y, u, dt\n');
 
 T_start = 0;
 
-T_sample =    0.02;      % [sec]
+T_sample =    0.008;      % [sec]
 
 
 % step time
@@ -54,9 +54,9 @@ T_step_time = 5.0;         % [sec] 20.00
 
 STEP_INIT = 0;
 
-STEP_SIZE = 1;
+STEP_SIZE = 10;
 
-STEP_SIZE_DT = 0.02;
+STEP_SIZE_DT = 0.5;
 
 IS_STEP_CHANGE = false;
 
@@ -75,16 +75,16 @@ T_stop = T_step_time * (STEP_MAX/STEP_SIZE + 1);     % [sec]
 
 function updateInfo(datafileID, dt, Ts, x)
     if ((dt/1000) > (Ts*1.05))
-        fprintf(2,'%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
+        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f --\n', x);
     else
-        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
+        fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', x);
     end
-    fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', x);
+    fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', x);
 end
 
 
 DataInformer = parallel.pool.DataQueue;
-DataInformer.afterEach(@(x) updateInfo(datafileID, x(end), T_sample, x));
+DataInformer.afterEach(@(x) updateInfo(datafileID, x(end - 1), T_sample, x));
 
 % ----------------------------------
 % ----------------------------------
@@ -113,12 +113,10 @@ plant_time = serLineList(1) - plant_time_init;
 plant_potentiometer = serLineList(2);
 plant_output = serLineList(3);
 plant_input = serLineList(4);
+plant_current = serLineList(5);
 
 % Display the received data
-tmp_printlist = [0, plant_time, plant_potentiometer, plant_output, plant_input, T_sample * 1000];
-% fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', tmp_printlist);
-% fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', tmp_printlist);
-% updateInfo(datafileID, T_sample*1000, T_sample, tmp_printlist);
+tmp_printlist = [0, plant_time, plant_potentiometer, plant_output, plant_input, T_sample * 1000, plant_current];
 send(DataInformer, tmp_printlist);
 
 % ----------------------------------
@@ -196,45 +194,11 @@ while true
         plant_potentiometer = serLineList(2);
         plant_output = serLineList(3);
         plant_input = serLineList(4);
-
-        % plant_potentiometer = 100 * plant_potentiometer/1023;
-        % plant_output = 100 * (plant_output - 2727)/(2176);
+        plant_current = serLineList(5);
         
         % Display the received data
-        tmp_printlist = [time_elapsed, plant_time, plant_potentiometer, plant_output, plant_input, time_delta];
-        % if ((time_delta/1000) > (T_sample*1.05))
-        %     fprintf(2,'%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', tmp_printlist);
-        % else
-        %     fprintf('%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n', tmp_printlist);
-        % end
-
-        % fprintf(datafileID, '%8.3f, %8.3f, %8.3f, %8.3f, %8.3f, %8.3f\n', tmp_printlist);
-
+        tmp_printlist = [time_elapsed, plant_time, plant_potentiometer, plant_output, plant_input, time_delta, plant_current];
         send(DataInformer, tmp_printlist);
-
-
-        % ----------------------------------
-        % ----------------------------------
-        
-        % plot_t = circshift(plot_t, -1);
-        % plot_t(end) = time_elapsed;
-        % 
-        % plot_sig_1 = circshift(plot_sig_1, -1);
-        % plot_sig_1(end) = plant_output;
-        % 
-        % plot_sig_2 = circshift(plot_sig_2, -1);
-        % plot_sig_2(end) = plant_potentiometer;
-        % 
-        % plot_sig_3 = circshift(plot_sig_3, -1);
-        % plot_sig_3(end) = plant_input;
-        % 
-        % plot(plot_t, plot_sig_3,'.b', plot_t, plot_sig_2,'.r', plot_t, plot_sig_1,'.k' )
-        % xlim([min(plot_t), max(plot_t)+T_sample])
-        % ylim([-10, 100]);
-        % grid on;
-        % legend("u","ref","y");
-        % 
-        % drawnow nocallbacks;
 
         if IS_STEP_CHANGE && u_old + STEP_SIZE > u
             u = u + STEP_SIZE_DT;

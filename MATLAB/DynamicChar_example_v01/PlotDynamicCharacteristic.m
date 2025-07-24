@@ -1,7 +1,7 @@
 clear;
 close all; clc;
 
-load("data\d3.mat");
+load("data\d4.mat");
 
 
 t = dyn_char.t;
@@ -12,6 +12,8 @@ ldata = length(t);
 % [b,a] = butter(10, 1/10, "low");
 % 
 % y = filter(b, a, y);
+
+% nops = 5;
 
 ys = cell(nops, STEP_REPS + 1);
 ts = cell(nops, STEP_REPS + 1);
@@ -57,6 +59,8 @@ nelem = (STEP_TIME * nprocessorder)/T_sample + 1;
 
 tt = (0:T_sample:(nprocessorder * STEP_TIME))';
 
+%% Interpolation Loopback
+
 % Either use linear extrapolation for the few last missing points or cut
 % all the vectors to the smallest size
 for i=1:nops
@@ -68,10 +72,12 @@ for i=1:nops
             % ys{i, x+20} = ys{i, x};
             % us{i, x+20} = us{i, x};
             % ts{i, x+20} = ts{i, x};
-            
+
             ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "linear");
             us{i, x} = interp1(ts{i, x}, us{i,x}, tt, "linear");
             ts{i, x} = tt;
+        elseif nmvals == 0
+            continue;
         else
             ys{i, x} = [];
             us{i, x} = [];
