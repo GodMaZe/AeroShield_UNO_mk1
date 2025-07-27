@@ -1,12 +1,29 @@
 clear;
 close all; clc;
 
-load("data\d5.mat");
+load("./data/d5.mat");
 
 
 t = dyn_char.t;
 u = dyn_char.u;
 y = dyn_char.y;
+
+tp = dyn_char.tp;
+
+% Fix arduino long overflow
+while true
+    [tpv,tpidx] = max(tp);
+    if tpidx < length(tp)
+        tp(tpidx+1:end) = tp(tpidx+1:end) + tpv;
+    else
+        break;
+    end
+end
+
+Ts = mean(diff(tp))/1e6; % Get the average sampling period (org. time is in [ms])
+
+du = gradient(u, Ts);
+
 ldata = length(t);
 
 % [b,a] = butter(10, 1/10, "low");
@@ -19,32 +36,46 @@ ys = cell(nops, STEP_REPS + 1);
 ts = cell(nops, STEP_REPS + 1);
 us = cell(nops, STEP_REPS + 1);
 
+
+uindx = find(abs(du) > STEP_SIZE/Ts/4);
 tindx = find(t < T_sample, nops * (STEP_REPS + 1));
 
 tcindx = tindx(1:STEP_REPS + 1:end);
 
-tindx = setdiff(tindx, tcindx);
+uindx = uindx(2:nprocessorder*2:end);
+
+
+% tindx = setdiff(tindx, tcindx);
+
+figure(6666); hold on; plot(tp/1e6, u, 'LineWidth', 1); plot(tp(uindx)/1e6, u(uindx), 'or'); plot(tp(tcindx)/1e6, u(tcindx), 'om'); grid on;
+figure(6669); hold on; plot(tp/1e6, du, 'LineWidth', 1); plot(tp(uindx)/1e6, du(uindx), 'or'); plot(tp(tcindx)/1e6, du(tcindx), 'om'); grid on;
+% return;
+
 
 T_COUNTER = 2;
 
 istep = 1;
 irep = 1;
 
-for i=1:length(tindx)
+for i=1:length(uindx)
     otcounter = T_COUNTER;
-    cidx = tindx(i);
-    if i + 1 > length(tindx)
-        getter = cidx:ldata - 1;
+    cidx = uindx(i);
+    if i + 1 > length(uindx)
+        getter = cidx:ldata;
     elseif mod(i, STEP_REPS) == 0
         getter = cidx:tcindx(T_COUNTER) - 1;
         T_COUNTER = T_COUNTER + 1;
     else
-        getter = cidx:tindx(i + 1) - 1;
+        getter = cidx:uindx(i + 1) - 1;
     end
 
     ys{istep, irep} = y(getter);
     us{istep, irep} = u(getter);
     ts{istep, irep} = t(getter);
+    if ts{istep, irep}(end) < ts{istep, irep}(end - 1)
+        ts{istep, irep}(end) = t(end-1) + min(T_sample, max(0, ts{istep, irep}(end - 1)));
+    end
+    ts{istep, irep}(:) = ts{istep, irep}(:) - ts{istep, irep}(1);
 
     if T_COUNTER > otcounter
         istep = istep + 1;
@@ -54,11 +85,16 @@ for i=1:length(tindx)
     irep = irep + 1;
 end
 
+
+% return;
+ 
 % Fix missing data due to increased sampling time for a measurement
 nelem = (STEP_TIME * nprocessorder)/T_sample + 1;
 
 tt = (0:T_sample:(nprocessorder * STEP_TIME))';
 
+ut = ones(nprocessorder, STEP_TIME/T_sample) .* STEP_PROCESS_ORDER' * STEP_SIZE;
+ut = [STEP_PROCESS_ORDER(1) * STEP_SIZE; reshape(ut.', 1, [])'];
 %% Interpolation Loopback
 
 % Either use linear extrapolation for the few last missing points or cut
@@ -73,8 +109,8 @@ for i=1:nops
             % us{i, x+20} = us{i, x};
             % ts{i, x+20} = ts{i, x};
 
-            ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "linear");
-            us{i, x} = interp1(ts{i, x}, us{i,x}, tt, "linear");
+            ys{i, x} = interp1(ts{i, x}, ys{i,x}, tt, "linear","extrap");
+            us{i, x} = ut + median(us{i,x}); %interp1(ts{i, x}, us{i,x}, tt, "previous","extrap");
             ts{i, x} = tt;
         elseif nmvals == 0
             continue;
@@ -82,7 +118,7 @@ for i=1:nops
             ys{i, x} = [];
             us{i, x} = [];
             ts{i, x} = [];
-            fprintf(2, "Cannot interpolate values in the provided timeframe because more than 4/5 of the data is missing! Cell index: {%d, %d}", i, x);
+            fprintf(2, "Cannot interpolate values in the provided timeframe because more than 4/5 of the data is missing! Cell index: {%d, %d}\n", i, x);
         end
     end
 end
@@ -99,7 +135,7 @@ end
 % real measured data.
 % figure(1); plot(tt, ys{1,1}, 'k'); hold on; plot(ts{1,21},ys{1,21},'.r');
 
-save("aggdata", "ys", "ts", "us", "STEP_REPS", "STEP_TIME", "STEP_STAB_TIME", "STEP_STAB_DU", "STEP_SIZE", "STEP_PROCESS_ORDER", "nprocessorder", "nops", "T_sample", "T_COUNTER", "T_start", "T_sample");
+save("aggdata", "ys", "ts", "us", "nelem", "STEP_REPS", "STEP_TIME", "STEP_STAB_TIME", "STEP_STAB_DU", "STEP_SIZE", "STEP_PROCESS_ORDER", "nprocessorder", "nops", "T_sample", "T_COUNTER", "T_start", "T_sample");
 
 
 figure(111);
