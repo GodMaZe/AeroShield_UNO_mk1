@@ -97,8 +97,8 @@ U = [pu{upbidx, :, procorder}];
 upb = median([us{upbidx, :}]);
 tfin = [pt{1, 1}];
 
-Yf = (Y - Y(1,:))/STEP_SIZE;
-Uf = (U - upb)/STEP_SIZE;
+Yf = (Y - Y(1, :));
+Uf = (U - U(1, :));
 
 figure(333);
 hold on;
@@ -119,17 +119,19 @@ u = [us{1, end}];
 idata = iddata(Y(:,end), U(:, end), T_sample);
 
 Gs = tfest(idata, 2);
-Gs2 = arx(idata, [2 1 1]);
-Gs3 = armax(idata, [2 1 1 1]);
+Gs2 = oe(idata, [2 1 1]);
+Gs3 = armax(idata, [2 1 0 1]);
 
 %% Plot the models and data
 yfin = Yf(:, end);
 figure(9999);
 hold on;
 plot(tfin, yfin, 'LineWidth', 1.5);
-[stepy1, stept1] = step(Gs, tfin);
-[stepy2, stept2] = step(Gs2, tfin);
-[stepy3, stept3] = step(Gs3, tfin);
+stepconf = RespConfig;
+stepconf.Amplitude = STEP_SIZE;
+[stepy1, stept1] = step(Gs, tfin, stepconf);
+[stepy2, stept2] = step(Gs2, tfin, stepconf);
+[stepy3, stept3] = step(Gs3, tfin, stepconf);
 plot(stept1, stepy1, stept2, stepy2, stept3, stepy3, 'LineWidth', 1.5);
 grid minor;
 e1 = sum((stepy1 - yfin).^2);
