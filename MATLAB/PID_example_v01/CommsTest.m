@@ -276,3 +276,16 @@ xlabel('t [s]');
 ylabel('y [deg]');
 grid on;
 hold off;
+
+%% DT PLOT
+figure(222);
+hold on;
+plot(t, logsout.dt, 'LineWidth', 1);
+plot(t, dt/1000, 'LineWidth', 2);
+legend("dt_{plant} = " + num2str(mean(dt)/1000), "dt_{matlab} = " + num2str(mean(logsout.dt)));
+title("Porovnanie zaznamenanej Tvz");
+ylim([1 10]);
+xlim([0 T_stop])
+xlabel('t [s]');
+ylabel('dt [ms]');
+hold off;
