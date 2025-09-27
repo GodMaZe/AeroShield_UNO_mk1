@@ -37,6 +37,10 @@ T_start = 0;
 
 T_sample = 0.05;      % [sec]
 
+T_step = 1; % [%PWM]
+
+T_step_time = 10; % [sec]
+
 % Define STOP TIME
 
 T_stop = 20.0;     % [sec]
@@ -47,13 +51,7 @@ T_stop = 20.0;     % [sec]
 
 U_MAX = 100.0;
 U_MIN = 0.0;
-Y_SAFETY = 120.0;
-
-% Define PID params.
-
-P = 2;
-I = 5;
-D = 3/3*(P*T_sample+I);
+Y_SAFETY = 360.0;
 
 % ----------------------------------
 % ----------------------------------
@@ -141,8 +139,6 @@ doUpdate(tmp_printlist);
 % ----------------------------------
 
 % Set initial control input value
-e_old = 0;
-e_int_old = 0;
 u = 0;
 u_send = u;
 
