@@ -37,21 +37,22 @@ T_start = 0;
 
 T_sample = 0.05;      % [sec]
 
-T_step = 1; % [%PWM]
+STEP_SIZE = 1; % [%PWM]
 
 T_step_time = 10; % [sec]
-
-% Define STOP TIME
-
-T_stop = 20.0;     % [sec]
-
-
 
 % Define control parameters
 
 U_MAX = 100.0;
 U_MIN = 0.0;
 Y_SAFETY = 360.0;
+
+% Define STOP TIME
+
+T_stop = T_step_time * (ceil(U_MAX/STEP_SIZE) + 1);     % [sec]
+
+
+fprintf(2, "Simulation will be running for the next: %8.3f seconds, contain %8.3f steps\n", T_stop, ceil(U_MAX/STEP_SIZE) + 1);
 
 % ----------------------------------
 % ----------------------------------
@@ -146,6 +147,7 @@ u_send = u;
 % Get the initial time
 time_start = datetime('now');
 time_tick = time_start;
+time_step = time_start;
 
 % ----------------------------------
 % ----------------------------------
@@ -160,6 +162,12 @@ while true
     
     % Calculate time elapsed since last iteration
     time_delta = milliseconds(time_curr - time_tick);
+    
+    if milliseconds(time_curr - time_step)/1000 >= T_step_time
+        time_step = time_curr;
+        u = u + STEP_SIZE;
+    end
+
     
     % ----------------------------------
     % Receiving and Sending data
@@ -220,17 +228,6 @@ while true
         % ----------------------------------
         % Calcualte 'u' - control output (akcny zasah)
         % ----------------------------------
-
-        e = plant_potentiometer - plant_output;
-
-        e_der = (e - e_old) / (time_delta/1000);
-
-        e_int = e_int_old + (e * (time_delta/1000));
-
-        e_old = e;
-        e_int_old = e_int;
-
-        u = P * e  +  I * e_int + D * e_der;
 
         u_send = u;
         
@@ -304,7 +301,9 @@ title('Control Response');
 subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
 legend('y(t)', 'ref(t)', "Location", "best");
 xlim([0, max(t) + T_sample]);
-ylim([min(y), max(y)]);
+if min(y) ~= max(y)
+    ylim([min(y), max(y)]);
+end
 xlabel('t [s]');
 ylabel('y [deg]');
 grid on;
