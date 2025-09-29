@@ -35,24 +35,35 @@ fprintf(datafileID, 't,tp,r,y,u,dt_plant,dt\n');
 
 T_start = 0;
 
-T_sample = 0.05;      % [sec]
+T_sample = 0.06;      % [sec]
 
-STEP_SIZE = 1; % [%PWM]
+STEP_SIZE = 5; % [%PWM]
 
-T_step_time = 10; % [sec]
+U_PB = 20; % [%PWM] pracovny bod, OP - operating point
+
+T_step_time = 15; % [sec]
+
+STEP_SHAPE = [1, 0, -1, 0, 1, -1, 1, 0]; % step up, down, down, up, up, large down, large up, down
+
+nsteps = length(STEP_SHAPE);
+
+T_stabilize_time = 30; % [sec] Cas stabilizacie v PB
 
 % Define control parameters
 
 U_MAX = 100.0;
 U_MIN = 0.0;
-Y_SAFETY = 360.0;
+Y_SAFETY = 100.0;
 
 % Define STOP TIME
 
-T_stop = T_step_time * (ceil(U_MAX/STEP_SIZE) + 1);     % [sec]
+T_stop = T_stabilize_time + T_step_time * nsteps;  % [sec]
+
+% Define U increments to get to the U_PB smoothly
+dU = ceil(U_PB/T_stabilize_time*10)/10;
 
 
-fprintf(2, "Simulation will be running for the next: %8.3f seconds, contain %8.3f steps\n", T_stop, ceil(U_MAX/STEP_SIZE) + 1);
+fprintf(2, "Simulation will be running for the next: %8.3f seconds, with %8.3f steps\n", T_stop, nsteps + 1);
 
 % ----------------------------------
 % ----------------------------------
@@ -63,7 +74,7 @@ fprintf(2, "Simulation will be running for the next: %8.3f seconds, contain %8.3
 % Initiate Plot Figure
 % ----------------------------------
 
-plot_window = 10;
+plot_window = 20;
 plot_idx_num = floor(plot_window/T_sample);
  
 plot_t = nan(plot_idx_num,1);
@@ -143,11 +154,15 @@ doUpdate(tmp_printlist);
 u = 0;
 u_send = u;
 
+istep = 1; % Holding the step index within the STEP_SHAPE matrix
+wasstepchange = false; % Check whether a change in step happened within the iteration
+isstable = false;
 
 % Get the initial time
 time_start = datetime('now');
 time_tick = time_start;
 time_step = time_start;
+time_stabilize = time_start;
 
 % ----------------------------------
 % ----------------------------------
@@ -162,11 +177,24 @@ while true
     
     % Calculate time elapsed since last iteration
     time_delta = milliseconds(time_curr - time_tick);
+
+    % ----------------------------------
+    % Logic behind the measurement, before sending the data
+    % ----------------------------------
     
-    if milliseconds(time_curr - time_step)/1000 >= T_step_time
-        time_step = time_curr;
-        u = u + STEP_SIZE;
+    if (~isstable && milliseconds(time_curr - time_stabilize)/1000 >= T_stabilize_time)
+        isstable = true;
     end
+
+    if (isstable && milliseconds(time_curr - time_step)/1000 >= T_step_time)
+        time_step = time_curr;
+        u = U_PB + STEP_SHAPE(istep) * STEP_SIZE;
+        istep = istep + 1;
+        wasstepchange = true;
+    end
+
+    % ----------------------------------
+    % ----------------------------------
 
     
     % ----------------------------------
@@ -174,7 +202,8 @@ while true
     % ----------------------------------
 
     % Check if it's time to send a new command
-    if (time_delta >= T_sample * 1000)
+    if (wasstepchange || time_delta >= T_sample * 1000)
+        wasstepchange = false; % Reset the step change variable, to keep to the defined sampling period
         time_tick = time_curr;
         
         % Calculate total time elapsed
@@ -228,6 +257,9 @@ while true
         % ----------------------------------
         % Calcualte 'u' - control output (akcny zasah)
         % ----------------------------------
+        if(~isstable && u < U_PB)
+            u = min(u + dU, U_PB);
+        end
 
         u_send = u;
         
@@ -276,7 +308,7 @@ fclose(datafileID);
 
 logsout = readtable("./" + DDIR + "/" + "dataFile_" + DateString + ".csv", "VariableNamingRule","preserve","Delimiter",",");
 
-save("./" + DDIR + "/" + "dataFile_" + DateString, "U_MAX", "U_MIN", "Y_SAFETY", "T_sample", "T_start", "T_stop", "u", "logsout");
+save("./" + DDIR + "/" + "dataFile_" + DateString, "U_MAX", "U_MIN", "Y_SAFETY", "T_sample", "T_start", "T_stop", "T_stabilize_time", "T_step_time", "U_PB", "dU", "STEP_SHAPE", "STEP_SIZE", "u", "logsout");
 
 % ----------------------------------
 % ----------------------------------
@@ -296,16 +328,15 @@ dt = logsout.dt;
 figure(111);
 hold on;
 plot(t, y, '-k', 'LineWidth', 1.5);
-plot(t, r, '-r', 'LineWidth', 1.5);
+plot(t, u, '--b', 'LineWidth', 1.5);
 title('Control Response');
-subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
-legend('y(t)', 'ref(t)', "Location", "best");
+legend('y(t)', 'u(t)', "Location", "best");
 xlim([0, max(t) + T_sample]);
 if min(y) ~= max(y)
     ylim([min(y), max(y)]);
 end
 xlabel('t [s]');
-ylabel('y [deg]');
+ylabel('value [deg]/[%]');
 grid on;
 hold off;
 
