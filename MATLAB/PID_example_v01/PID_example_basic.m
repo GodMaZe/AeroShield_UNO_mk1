@@ -35,7 +35,7 @@ fprintf(datafileID, 't, tp, r, y, u, dt_plant, dt\n');
 
 T_start = 0;
 
-T_sample = 0.05;      % [sec]
+T_sample = 0.06;      % [sec]
 
 % Define STOP TIME
 
@@ -234,7 +234,8 @@ while true
         e_old = e;
         e_int_old = e_int;
 
-        u = P * e  +  I * e_int + D * e_der;
+        % u = P * e  +  I * e_int + D * e_der;
+        u = 20;
 
         u_send = u;
         
@@ -303,7 +304,7 @@ dt = logsout.dt;
 figure(111);
 hold on;
 plot(t, y, '-k', 'LineWidth', 1.5);
-plot(t, r, '-r', 'LineWidth', 1.5);
+% plot(t, r, '-r', 'LineWidth', 1.5);
 title('Control Response');
 subtitle("P = " + num2str(P) + ", I = " + num2str(I) + ", D = " + num2str(D));
 legend('y(t)', 'ref(t)', "Location", "best");
