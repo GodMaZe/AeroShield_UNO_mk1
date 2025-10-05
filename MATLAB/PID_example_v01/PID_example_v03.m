@@ -13,8 +13,8 @@ end
 % ----------------------------------
 % ----------------------------------
 
-% Plot
-
+% % Plot
+% 
 % plot_window = 10;
 % plot_idx_num = floor(plot_window/T_sample);
 % 
@@ -84,7 +84,7 @@ P = 1.2475;
 I = 0.2235;
 D = 0.20;
 
-R_WANTED = 170;
+R_WANTED = 160;
 
 
 % ----------------------------------
@@ -208,6 +208,33 @@ while true
     % Display the received data
     tmp_printlist = [time_elapsed, plant_time, plant_potentiometer, plant_output, plant_input, plant_dt, time_delta];
     send(DataInformer, tmp_printlist);
+
+    % % ----------------------------------
+    % % Plot the measured data in real time
+    % % ----------------------------------
+    % 
+    % plot_t = circshift(plot_t, -1);
+    % plot_t(end) = time_elapsed;
+    % 
+    % plot_sig_1 = circshift(plot_sig_1, -1);
+    % plot_sig_1(end) = plant_output;
+    % 
+    % plot_sig_2 = circshift(plot_sig_2, -1);
+    % plot_sig_2(end) = plant_potentiometer;
+    % 
+    % plot_sig_3 = circshift(plot_sig_3, -1);
+    % plot_sig_3(end) = plant_input;
+    % 
+    % plot(plot_t, plot_sig_3,'.b', plot_t, plot_sig_2,'.r', plot_t, plot_sig_1,'.k' )
+    % xlim([min(plot_t), max(plot_t)+T_sample])
+    % ylim([min(plot_sig_1) - 5, max(plot_sig_1) + 5]);
+    % grid on;
+    % legend("u","ref","y");
+    % 
+    % drawnow nocallbacks
+    % 
+    % % ----------------------------------
+    % % ----------------------------------
 
 
     e = plant_potentiometer - plant_output;

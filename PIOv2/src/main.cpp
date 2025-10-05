@@ -17,8 +17,13 @@ const unsigned long T_sample = 1000;
 const unsigned long LED_onTime = 15;
 byte Ts_user = 1; // sampling time in ms
 
+constexpr float TS_INTERVAL_MIN(byte Ts)
+{
+    return (static_cast<float>(Ts) * 1000.0f) * 0.95f;
+}
+
 // ---------------------------------------------------------
-float uSig = 0.0f, ySig = 0.0f, potSig = 0.0f, dtoffset = 0.0f; // control, output, reference, time offset
+float uSig = 0.0f, ySig = 0.0f, potSig = 0.0f, dtoffset = 0.0f, dtoffset_interval = 0.0f; // control, output, reference, time offset
 
 bool isUReady = true;
 
@@ -48,9 +53,8 @@ void writeControl()
 
 void printData()
 {
-    Serial.flush();
     dt = currentTime - lastTime;
-    dtoffset = (Ts_user * 1000) * 0.95f - dt;
+    dtoffset = dtoffset_interval - dt;
     if (dtoffset > 0)
     {
         if (dtoffset > 1000)
@@ -113,7 +117,8 @@ void processNewData()
 // ---------------------------------------------------------
 void setup()
 {
-    Serial.begin(115200);              // Initialize Serial communication at 115200 baud rate
+    Serial.begin(115200); // Initialize Serial communication at 115200 baud rate
+    Serial.flush();
     pinMode(BUILT_IN_LED_PIN, OUTPUT); // for LED
 
     AeroShield.begin();
@@ -132,6 +137,15 @@ void setup()
         Ts_user = 1; // minimum 1 ms
     }
 
+    if (Ts_user > 10)
+    {
+        dtoffset_interval = static_cast<float>(Ts_user) * 1000.0f;
+    }
+    else
+    {
+        dtoffset_interval = TS_INTERVAL_MIN(Ts_user);
+    }
+
     // Calculate the timers
     const int cmr = CMR(CURRENT_PS, DIF(T_sample));
 
@@ -148,9 +162,9 @@ void setup()
 
     sei();
 
-    Serial.println("--- MCU starting ---");
+    Serial.println("--- MCU starting [" + String(Ts_user) + "] ---");
     currentTime = micros();
-    lastTime = currentTime - (Ts_user * 1000); // better for the statistics
+    lastTime = currentTime - (Ts_user * 1000); // better for statistics
 
     // Initial reads and writes
     readData();
