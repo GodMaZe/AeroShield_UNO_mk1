@@ -1,68 +1,46 @@
 #include <AeroShield.h>
+#include <Arduino_FreeRTOS.h>
+#include <queue.h>
 
 // ---------------------------------------------------------
 
 const static int BUILT_IN_LED_PIN = 13;   // PIN pre zabudovanu LED
-const static int CURRENT_SENSOR_PIN = A0; // PIN pre citanie prudu z motora
 
 // --------------------------------------------------------- BUILD-IN LED BLINK
-const unsigned long T_sample = 1000;
-const unsigned long LED_onTime = 100;
-
-// --------------------------------------------------------- CALIBRATION DATA
-static float PHI_INIT = 0.0f; // uhol natocenia ramena pri inicializacii
+const unsigned long T_sample = 50; // perioda vzorkovania v ms
 
 // ---------------------------------------------------------
-float REFERENCE_SIGNAL = 0.0f; // potenciometer
 float OUTPUT_SIGNAL = 0.0f;    // uhol natocenia ramena (I2C bus)
-float CONTROL_SIGNAL = 0.0f;   // PWM pre motor (matlab -> SPI bus)
-float CURRENT_SIGNAL = 0.0f;   // prúd motora (A0 pin)
+float CONTROL_SIGNAL = 0.0f;   // Potentiometer value (0.0 - 100.0 %)
+bool CONTROL_OVERRIDE = false; // flag pre manualne riadenie
 
-unsigned long time_curr;
-unsigned long time_tick = 0;
-unsigned long time_delta;
+unsigned long time_curr, time_last;
 
-unsigned long time_curr_data;
-
-bool LED_on = false;
+bool IS_INITIALIZED = false;
 
 static char buf[4];
+QueueHandle_t AeroDataQueue;
 
-float readCurrent()
+struct AeroData
 {
-    return analogRead(CURRENT_SENSOR_PIN) / 1023.0f * 5.0f * 0.185f;
-}
+    unsigned long time;
+    float output;
+    float control;
+    float dt;
+};
 
-void setup()
+void writeSerialData(const AeroData &data)
 {
-    pinMode(BUILT_IN_LED_PIN, OUTPUT);         // for LED
-    pinMode(CURRENT_SENSOR_PIN, INPUT_PULLUP); // for current sensor
-
-    AeroShield.begin();
-    AeroShield.calibrate();
-
-    memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
-
-    // Initialize Serial communication
-    // Set the baud rate to 115200 for communication with the Serial Monitor
-    Serial.begin(115200);
-    Serial.println("--- MCU starting ---");
-    time_curr_data = micros();
-    CURRENT_SIGNAL = readCurrent(); // Read the current sensor value
-
-    Serial.print(time_curr_data);
+    Serial.print(data.time);
     Serial.print(" ");
-    Serial.print(REFERENCE_SIGNAL);
+    Serial.print(data.output);
     Serial.print(" ");
-    Serial.print(PHI_INIT);
+    Serial.print(data.control);
     Serial.print(" ");
-    Serial.print(CONTROL_SIGNAL);
-    Serial.print(" ");
-    Serial.print(CURRENT_SIGNAL);
+    Serial.print(data.dt);
     Serial.print("\n");
 }
 
-// ---------------------------------------------------------
 
 int recvByte(float &output)
 {
@@ -76,70 +54,165 @@ int recvByte(float &output)
     return 1; // No new data received
 }
 
-void processNewData()
+
+void TaskBlinkLED(void *pvParameters);
+void TaskSerialWrite(void *pvParameters);
+void TaskSerialRead(void *pvParameters);
+void TaskReadData(void *pvParameters);
+
+
+void setup()
 {
+    Serial.begin(115200);
 
-    if (recvByte(CONTROL_SIGNAL))
+    memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
+
+    AeroDataQueue = xQueueCreate(5, sizeof(struct AeroData));
+
+    if(AeroDataQueue != NULL)
     {
-        // No new data received
-        return;
+        Serial.println("AeroDataQueue created successfully.");
+        // Create a task to handle Serial writing
+        xTaskCreate(TaskSerialWrite, "SerialWrite", 128, NULL, 2, NULL);
+
+        Serial.println("Serial Write Task created.");
+        // Create a task to handle Serial reading
+        xTaskCreate(TaskSerialRead, "SerialRead", 128, NULL, 1, NULL);
+
+        Serial.println("Serial Read Task created.");
+        // Create a task to read the potentiometer
+        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 1, NULL);
+
+        Serial.println("Read Data Task created.");
+    }
+    else{
+        Serial.println("Failed to create AeroDataQueue.");
     }
 
-    time_curr_data = micros();
 
-    // Convert the received character to an integer value (potentiometer value)
-    REFERENCE_SIGNAL = AeroShield.referenceRead(); // Read the potentiometer value
-    OUTPUT_SIGNAL = AeroShield.sensorReadDegree();
-    CURRENT_SIGNAL = readCurrent();
-
-    AeroShield.actuatorWrite(CONTROL_SIGNAL); // Write the control signal to the actuator
-
-    // Print the current time and the signals to the Serial Monitor
-    Serial.print(time_curr_data);
-    Serial.print(" ");
-    Serial.print(REFERENCE_SIGNAL); // Read the current sensor value
-    Serial.print(" ");
-    Serial.print(OUTPUT_SIGNAL);
-    Serial.print(" ");
-    Serial.print(CONTROL_SIGNAL);
-    Serial.print(" ");
-    Serial.print(CURRENT_SIGNAL);
-    Serial.print("\n");
+    // Create a task to blink the built-in LED (indicating MCU is running)
+    xTaskCreate(TaskBlinkLED, "BlinkLED", 128, NULL, 0, NULL);
 }
-
-// ---------------------------------------------------------
-
-void buildInLedBlink()
-{
-    time_delta = time_curr - time_tick;
-
-    if (LED_on == true)
-    {
-        if (time_delta >= LED_onTime)
-        {
-            digitalWrite(BUILT_IN_LED_PIN, LOW);
-            LED_on = false;
-        }
-    }
-
-    if (time_delta >= T_sample)
-    {
-        time_tick = time_curr;
-
-        digitalWrite(BUILT_IN_LED_PIN, HIGH);
-        LED_on = true;
-    }
-}
-
-// ---------------------------------------------------------
 
 void loop()
 {
-    // time_curr = micros();
+}
 
-    processNewData();
+// ---------------------------------------------------------
 
-    // buildInLedBlink();
+void TaskBlinkLED(void *pvParameters)
+{
+    (void)pvParameters;
 
-    // delay(2);
+    pinMode(BUILT_IN_LED_PIN, OUTPUT); // for LED
+
+
+    for (;;)
+    {
+        if (AeroDataQueue == NULL)
+        {
+            // Blink rapidly to indicate error
+            digitalWrite(BUILT_IN_LED_PIN, HIGH);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            digitalWrite(BUILT_IN_LED_PIN, LOW);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+        else{
+            digitalWrite(BUILT_IN_LED_PIN, HIGH);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            digitalWrite(BUILT_IN_LED_PIN, LOW);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+    }
+}
+
+void TaskSerialWrite(void *pvParameters)
+{
+    (void)pvParameters;
+
+    Serial.println("Waiting for Serial connection...");
+
+    // while(!Serial)
+    // {
+    //     vTaskDelay(100 / portTICK_PERIOD_MS);
+    // }
+
+    IS_INITIALIZED = true;
+
+    Serial.println("--- MCU starting ---");
+
+    AeroData data;
+
+    for (;;)
+    {
+        if (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) == pdPASS)
+        {
+            writeSerialData(data);
+        }
+    }
+}
+
+void TaskSerialRead(void *pvParameters)
+{
+    (void)pvParameters;
+
+    float receivedValue = 0.0f;
+
+    Serial.println("Serial Read Task started.");
+
+    for (;;)
+    {
+        if (!recvByte(receivedValue) && IS_INITIALIZED)
+        {
+            if(receivedValue < 0)
+            {
+                CONTROL_OVERRIDE = false;
+            }
+            else
+            {
+                CONTROL_SIGNAL = receivedValue;
+                CONTROL_OVERRIDE = true;
+            }
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void TaskReadData(void *pvParameters)
+{
+    (void)pvParameters;
+
+    Serial.println("Task Read Data started.");
+
+    AeroShield.begin();
+    AeroShield.calibrate();
+
+    time_curr = micros();
+    time_last = time_curr;
+    vTaskDelay(T_sample / portTICK_PERIOD_MS);
+
+    AeroData data;
+    float controlSignal = 0.0f, outputSignal = 0.0f;
+
+    for (;;)
+    {
+        if (IS_INITIALIZED)
+        {
+            controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : AeroShield.referenceRead()/1023.0f*100.0f;
+            outputSignal = AeroShield.sensorReadDegree();
+
+            time_curr = micros();
+            
+            data.time = time_curr;
+            data.output = outputSignal;
+            data.control = controlSignal;
+            data.dt = (float)(time_curr - time_last) / 1000000.0f;
+            time_last = time_curr;
+
+            xQueueSend(AeroDataQueue, &data, 0);
+
+            AeroShield.actuatorWrite(controlSignal);
+        }
+        vTaskDelay(T_sample / portTICK_PERIOD_MS);
+    }
 }
