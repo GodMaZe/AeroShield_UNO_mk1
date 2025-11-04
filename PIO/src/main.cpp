@@ -15,9 +15,9 @@ float OUTPUT_SIGNAL = 0.0f;    // uhol natocenia ramena (I2C bus)
 float CONTROL_SIGNAL = 0.0f;   // Potentiometer value (0.0 - 100.0 %)
 bool CONTROL_OVERRIDE = false; // flag pre manualne riadenie
 
-unsigned long time_curr, time_last;
+unsigned long time_curr, time_last, control_time;
 
-bool IS_INITIALIZED = false;
+bool IS_INITIALIZED = false, IS_CALIBRATED = false;
 
 static char buf[4];
 QueueHandle_t AeroDataQueue;
@@ -29,6 +29,7 @@ struct AeroData
     float output;
     float control;
     float potentiometer;
+    double control_time;
     double dt;
 };
 
@@ -43,6 +44,8 @@ void writeSerialData(const AeroData &data)
     Serial.print(data.potentiometer);
     Serial.print(" ");
     Serial.print(data.dt);
+    Serial.print(" ");
+    Serial.print(data.control_time);
     Serial.print("\n");
 }
 
@@ -65,7 +68,7 @@ void TaskReadData(void *pvParameters);
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
 
@@ -79,18 +82,11 @@ void setup()
         // Create a task to handle Serial writing
         xTaskCreate(TaskSerialWrite, "SerialWrite", 128, NULL, 3, NULL);
 
-        // Create a task to handle Serial reading
-        // xTaskCreate(TaskSerialRead, "SerialRead", 128, NULL, 2, NULL);
-
         // Create a task to read the potentiometer
-        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 1, NULL);
+        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 2, NULL);
     }
-    else
-    {
-        // Serial.println("Failed to create AeroDataQueue.");
-        // Create a task to blink the built-in LED (indicating MCU is running)
-        xTaskCreate(TaskBlinkLED, "BlinkLED", 128, NULL, 0, NULL);
-    }
+    // Create a task to blink the built-in LED (indicating MCU is running)
+    xTaskCreate(TaskBlinkLED, "BlinkLED", 128, NULL, 0, NULL);
 }
 
 void loop()
@@ -131,69 +127,35 @@ void TaskSerialWrite(void *pvParameters)
 
     while (!Serial)
     {
-        // Serial.println("Waiting for Serial connection...");
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    xSemaphoreGive(mut_serial);
+
+
+    float receivedValue = 0.0f;
+    AeroData data;
+
+    while (!IS_CALIBRATED)
+    {
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
-    xSemaphoreGive(mut_serial);
-
-    IS_INITIALIZED = true;
-    bool IS_INIT_LOOP = true;
-    float receivedValue = 0.0f;
+    while(Serial.available())
+    {
+        Serial.read(); // Clear any initial junk data
+    }
 
     Serial.println("--- MCU starting ---");
 
-    AeroData data;
+    // while(Serial.available() < 4);
+
+    IS_INITIALIZED = true;
 
     for (;;)
     {
-        if (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) == pdPASS)
-        {
-            xSemaphoreTake(mut_serial, portMAX_DELAY);
-            writeSerialData(data);
-            xSemaphoreGive(mut_serial);
-        }
-
         xSemaphoreTake(mut_serial, portMAX_DELAY);
+        // while(Serial.available() < 4);
         if (recvByte(receivedValue))
-        {
-            if (IS_INIT_LOOP)
-                IS_INIT_LOOP = false;
-            else if (receivedValue < 0)
-            {
-                CONTROL_OVERRIDE = false;
-            }
-            else
-            {
-                CONTROL_SIGNAL = receivedValue;
-                CONTROL_OVERRIDE = true;
-            }
-        }
-        xSemaphoreGive(mut_serial);
-    }
-}
-
-void TaskSerialRead(void *pvParameters)
-{
-    (void)pvParameters;
-
-    while (xSemaphoreTake(mut_serial, portMAX_DELAY) != pdTRUE)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-
-    float receivedValue = 0.0f;
-    int recved = 0;
-
-    // Serial.println("Serial Read Task started.");
-
-    for (;;)
-    {
-        xSemaphoreTake(mut_serial, portMAX_DELAY);
-        // Serial.println("Waiting for control signal...");
-        recved = recvByte(receivedValue);
-        xSemaphoreGive(mut_serial);
-        if (recved)
         {
             if (receivedValue < 0)
             {
@@ -204,8 +166,16 @@ void TaskSerialRead(void *pvParameters)
                 CONTROL_SIGNAL = receivedValue;
                 CONTROL_OVERRIDE = true;
             }
+            control_time = micros();
         }
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        xSemaphoreGive(mut_serial);
+
+        if (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) == pdPASS && Serial)
+        {
+            xSemaphoreTake(mut_serial, portMAX_DELAY);
+            writeSerialData(data);
+            xSemaphoreGive(mut_serial);
+        }
     }
 }
 
@@ -213,21 +183,28 @@ void TaskReadData(void *pvParameters)
 {
     (void)pvParameters;
 
+    AeroShield.begin();
+
+    while (!AeroShield.calibrate())
+    {
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+
+    IS_CALIBRATED = true;
+
     while (!IS_INITIALIZED)
     {
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-
-    // Serial.println("Task Read Data started.");
-
-    AeroShield.begin();
-    AeroShield.calibrate();
 
     time_curr = micros();
     time_last = time_curr;
     vTaskDelay(T_sample / portTICK_PERIOD_MS);
 
     AeroData data;
+
+    data.potentiometer = AeroShield.referenceRead(); // Initial read to ground the floating pin value
+
     float controlSignal = 0.0f, outputSignal = 0.0f;
 
     for (;;)
@@ -238,11 +215,11 @@ void TaskReadData(void *pvParameters)
 
         data.potentiometer = AeroShield.referenceRead();
         controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : data.potentiometer;
-        data.time = static_cast<double>(time_curr) / 1000000.0;
+        data.time = static_cast<double>(time_curr) / 1e6;
         data.output = outputSignal;
         data.control = controlSignal;
-
-        data.dt = static_cast<double>(time_curr - time_last) / 1000000.0;
+        data.dt = static_cast<double>(time_curr - time_last) / 1e6;
+        data.control_time = static_cast<double>(control_time) / 1e6;
         time_last = time_curr;
 
         xQueueSend(AeroDataQueue, &data, 0);
