@@ -1,3 +1,4 @@
 .vscode
 dataRepo
 *.asv
+.DS_STORE
