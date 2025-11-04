@@ -22,7 +22,6 @@ bool IS_INITIALIZED = false, IS_CALIBRATED = false, IS_SETUP = false;
 
 static char buf[4];
 QueueHandle_t AeroDataQueue;
-SemaphoreHandle_t mut_serial;
 SemaphoreHandle_t mut_waitMatlab;
 
 struct AeroData
@@ -76,7 +75,7 @@ void setup()
     AeroDataQueue = xQueueCreate(5, sizeof(struct AeroData));
 
     mut_waitMatlab = xSemaphoreCreateBinary();
-    xSemaphoreTake(mut_waitMatlab, 0);
+    // xSemaphoreTake(mut_waitMatlab, 0);
 
     if (AeroDataQueue != NULL)
     {
@@ -85,7 +84,7 @@ void setup()
         xTaskCreate(TaskSerial, "SerialHandle", 128, NULL, 3, NULL);
 
         // Create a task to read the potentiometer
-        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 2, NULL);
+        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 1, NULL);
     }
     // Create a task to blink the built-in LED (indicating MCU is running)
     xTaskCreate(TaskBlinkLED, "BlinkLED", 128, NULL, 0, NULL);
@@ -151,39 +150,29 @@ void TaskSerial(void *pvParameters)
 
     IS_INITIALIZED = true;
 
-    while(!IS_SETUP){
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-
-    while(xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) != pdPASS){
-        vTaskDelay(10/portTICK_PERIOD_MS);
-    }
-
-    writeSerialData(data);
+    // while(!IS_SETUP){
+    //     vTaskDelay(10/ portTICK_PERIOD_MS);
+    // }
 
     for (;;)
     {
+        while (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) != pdPASS)
+        {
+            vTaskDelay(10 / portTICK_PERIOD_MS);    
+        }
+
+        writeSerialData(data);
+
         while(Serial.available() < 4);
         if (recvByte(receivedValue))
         {
-            if (receivedValue < 0)
-            {
-                CONTROL_OVERRIDE = false;
-            }
-            else
-            {
-                CONTROL_SIGNAL = receivedValue;
-                CONTROL_OVERRIDE = true;
-            }
+           
+            CONTROL_SIGNAL = receivedValue;
+            CONTROL_OVERRIDE = true;
             control_time = micros();
         }
         // Unlock waiting for matlab message
-        xSemaphoreGive(mut_waitMatlab);
-
-        if (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) == pdPASS && Serial)
-        {
-            writeSerialData(data);
-        }
+        xSemaphoreGive(mut_waitMatlab);        
     }
 }
 
@@ -208,21 +197,18 @@ void TaskReadData(void *pvParameters)
     float controlSignal = 0.0f, outputSignal = 0.0f;
     time_curr = micros();
     time_last = time_curr;
-    vTaskDelay(T_sample / portTICK_PERIOD_MS);
 
     AeroData data;
 
     data.potentiometer = AeroShield.referenceRead(); // Initial read to ground the floating pin value
 
     outputSignal = AeroShield.sensorReadDegree();
-    data.potentiometer = AeroShield.referenceRead();
-    controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : data.potentiometer;
+    controlSignal = 0.0f;
     data.time = static_cast<double>(time_curr) / 1e6;
     data.output = outputSignal;
     data.control = controlSignal;
     data.dt = static_cast<double>(time_curr - time_last) / 1e6;
     data.control_time = static_cast<double>(control_time) / 1e6;
-    time_last = time_curr;
     xQueueSend(AeroDataQueue, &data, 0);
 
     IS_SETUP = true;

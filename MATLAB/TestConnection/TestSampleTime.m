@@ -70,6 +70,16 @@ try
 
     disp(sline);
 
+    sline = str2num(readline(scon));
+    disp(sline);
+
+    init_plant_time = sline(1);
+    plant_output = sline(2);
+    plant_input = sline(3);
+    plant_potentiometer = sline(4);
+    plant_dt = sline(5);
+    plant_control_time = sline(6);
+
     time_start = datetime("now");
     time_curr = time_start;
     time_last = time_curr;
@@ -94,21 +104,6 @@ try
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
         time_last = time_curr;
-        
-        % Wait for the system to send a data message
-        sline = str2num(readline(scon));
-
-        % Extract values from the received data
-        if plant_time_init < 0
-            plant_time_init = sline(1);
-        end
-
-        plant_time = sline(1) - plant_time_init;
-        plant_output = sline(2);
-        plant_input = sline(3);
-        plant_potentiometer = sline(4);
-        plant_dt = sline(5);
-        plant_control_time = sline(6) - plant_time_init;
 
         % write(scon, 5*(sin(step/2/pi)) + 20, "single");
 
@@ -141,6 +136,16 @@ try
         u = max(0, min(100, u));
 
         write(scon, u, "single");
+        
+        % Wait for the system to send a data message
+        sline = str2num(readline(scon));
+
+        plant_time = sline(1) - plant_time_init;
+        plant_output = sline(2);
+        plant_input = sline(3);
+        plant_potentiometer = sline(4);
+        plant_dt = sline(5);
+        plant_control_time = sline(6) - plant_time_init;
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time];
