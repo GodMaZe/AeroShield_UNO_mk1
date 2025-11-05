@@ -73,7 +73,7 @@ try
     sline = str2num(readline(scon));
     disp(sline);
 
-    init_plant_time = sline(1);
+    init_plant_time = -1;
     plant_output = sline(2);
     plant_input = sline(3);
     plant_potentiometer = sline(4);
@@ -89,8 +89,8 @@ try
     step = 0;
 
 
-    P = 0.1;
-    I = 0.6;
+    P = 0.085;
+    I = 0.4;
     D = 0.025;
 
     e = 0;
@@ -103,7 +103,10 @@ try
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
-        time_last = time_curr;
+
+        if time_delta < Ts
+            continue;
+        end
 
         % write(scon, 5*(sin(step/2/pi)) + 20, "single");
 
@@ -140,6 +143,10 @@ try
         % Wait for the system to send a data message
         sline = str2num(readline(scon));
 
+        if plant_time_init < 0
+            plant_time_init = sline(1);
+        end
+
         plant_time = sline(1) - plant_time_init;
         plant_output = sline(2);
         plant_input = sline(3);
@@ -149,7 +156,7 @@ try
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time];
-        writenum2file(dfile_handle, data, mod(step, 10)==1, Ts, time_delta);
+        writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
 
         LOG_T = [LOG_T, time_elapsed];
         LOG_TP = [LOG_TP, plant_time];
@@ -161,9 +168,10 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         step = step + 1;
+        time_last = time_curr;
 
         if plant_time >= Tstop || plant_output >= Ystop
-            configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
+            % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
             break;
         end
     end
@@ -172,7 +180,6 @@ catch er
     % Send a final command and close the serial port
     if exist("scon", "var")
         write(scon, 0.0, 'single');
-        scon.flush("input");
         clear scon;
     end
     if exist("dfile_handle", "var")

@@ -18,7 +18,7 @@ bool CONTROL_OVERRIDE = false; // flag pre manualne riadenie
 unsigned long time_curr, time_last, control_time;
 
 // Initialize the serial comms, calibrate the aeroshield system, send the initial state of the system
-bool IS_INITIALIZED = false, IS_CALIBRATED = false, IS_SETUP = false;
+SemaphoreHandle_t mut_comms, mut_calibration, mut_init;
 
 static char buf[4];
 QueueHandle_t AeroDataQueue;
@@ -57,9 +57,9 @@ int recvByte(float &output)
     {
         Serial.readBytes(buf, 4);             // Read 4 bytes from Serial
         memcpy(&output, &buf, sizeof(float)); // Copy the float value to CONTROL_SIGNAL
-        return 1;                             // Success
+        return 0;                             // Success
     }
-    return 0; // No new data received
+    return 1; // No new data received
 }
 
 void TaskBlinkLED(void *pvParameters);
@@ -70,24 +70,34 @@ void setup()
 {
     Serial.begin(115200);
 
+    while (!Serial)
+    {
+        ; // wait for serial port to connect. Needed for native USB
+    }
+
+    Serial.flush();
+
     memset(buf, 0, 4 * sizeof(char)); // Initialize buffer to zero
 
     AeroDataQueue = xQueueCreate(5, sizeof(struct AeroData));
 
     mut_waitMatlab = xSemaphoreCreateBinary();
+    mut_comms = xSemaphoreCreateBinary();
+    mut_calibration = xSemaphoreCreateBinary();
+    mut_init = xSemaphoreCreateBinary();
+
     // xSemaphoreTake(mut_waitMatlab, 0);
 
     if (AeroDataQueue != NULL)
     {
-        // Serial.println("AeroDataQueue created successfully.");
         // Create a task to handle Serial writing
-        xTaskCreate(TaskSerial, "SerialHandle", 128, NULL, 3, NULL);
+        xTaskCreate(TaskSerial, "SerialHandle", 100, NULL, 3, NULL);
 
         // Create a task to read the potentiometer
-        xTaskCreate(TaskReadData, "ReadData", 128, NULL, 1, NULL);
+        xTaskCreate(TaskReadData, "ReadData", 100, NULL, 1, NULL);
     }
     // Create a task to blink the built-in LED (indicating MCU is running)
-    xTaskCreate(TaskBlinkLED, "BlinkLED", 128, NULL, 0, NULL);
+    xTaskCreate(TaskBlinkLED, "BlinkLED", 20, NULL, 0, NULL);
 }
 
 void loop()
@@ -122,22 +132,11 @@ void TaskBlinkLED(void *pvParameters)
     }
 }
 
+// ---------------------------------------------------------
+
 void TaskSerial(void *pvParameters)
 {
     (void)pvParameters;
-
-    while (!Serial)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-
-    float receivedValue = 0.0f;
-    AeroData data;
-
-    while (!IS_CALIBRATED)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
 
     while(Serial.available())
     {
@@ -148,51 +147,43 @@ void TaskSerial(void *pvParameters)
 
     // while(Serial.available() < 4);
 
-    IS_INITIALIZED = true;
+    xSemaphoreGive(mut_comms); // Allow data reading task to start
+    xSemaphoreTake(mut_calibration, portMAX_DELAY); // Wait for calibration to complete
+    xSemaphoreTake(mut_init, portMAX_DELAY); // Wait for initial data to be ready
 
-    // while(!IS_SETUP){
-    //     vTaskDelay(10/ portTICK_PERIOD_MS);
-    // }
+    float receivedValue = 0.0f;
+    AeroData data;
 
     for (;;)
     {
-        while (xQueueReceive(AeroDataQueue, &data, portMAX_DELAY) != pdPASS)
-        {
-            vTaskDelay(10 / portTICK_PERIOD_MS);    
-        }
+        xQueueReceive(AeroDataQueue, &data, portMAX_DELAY);
 
         writeSerialData(data);
 
-        while(Serial.available() < 4);
-        if (recvByte(receivedValue))
+        while (recvByte(receivedValue))
         {
-           
-            CONTROL_SIGNAL = receivedValue;
-            CONTROL_OVERRIDE = true;
-            control_time = micros();
+            vTaskDelay(1/ portTICK_PERIOD_MS);
         }
+        CONTROL_SIGNAL = receivedValue;
+        CONTROL_OVERRIDE = true;
+        control_time = micros();
         // Unlock waiting for matlab message
         xSemaphoreGive(mut_waitMatlab);        
     }
 }
 
+// ---------------------------------------------------------
+
 void TaskReadData(void *pvParameters)
 {
+    xSemaphoreTake(mut_comms, portMAX_DELAY);
     (void)pvParameters;
 
     AeroShield.begin();
 
-    while (!AeroShield.calibrate())
-    {
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
+    AeroShield.calibrate();
 
-    IS_CALIBRATED = true;
-
-    while (!IS_INITIALIZED)
-    {
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
+    xSemaphoreGive(mut_calibration);
 
     float controlSignal = 0.0f, outputSignal = 0.0f;
     time_curr = micros();
@@ -211,27 +202,34 @@ void TaskReadData(void *pvParameters)
     data.control_time = static_cast<double>(control_time) / 1e6;
     xQueueSend(AeroDataQueue, &data, 0);
 
-    IS_SETUP = true;
+    xSemaphoreGive(mut_init);
+
+    time_curr = micros();
+    time_last = time_curr;
 
     for (;;)
     {
         // Wait for communication from matlab
         xSemaphoreTake(mut_waitMatlab, portMAX_DELAY);
+        time_curr = micros();
+        
+        data.potentiometer = AeroShield.referenceRead();
+        controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : data.potentiometer;
 
         AeroShield.actuatorWrite(controlSignal);
         outputSignal = AeroShield.sensorReadDegree();
-
-        time_curr = micros();
-
-        data.potentiometer = AeroShield.referenceRead();
-        controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : data.potentiometer;
+        
+        
+        
         data.time = static_cast<double>(time_curr) / 1e6;
         data.output = outputSignal;
         data.control = controlSignal;
         data.dt = static_cast<double>(time_curr - time_last) / 1e6;
         data.control_time = static_cast<double>(control_time) / 1e6;
+        
         time_last = time_curr;
 
         xQueueSend(AeroDataQueue, &data, 0);
+        
     }
 }
