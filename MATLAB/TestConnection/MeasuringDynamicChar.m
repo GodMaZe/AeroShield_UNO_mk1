@@ -5,7 +5,7 @@ addpath("./misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "dataFile";
+FILENAME = "dynamicChar";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -22,9 +22,9 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 20;
+Tstop = 60;
 
-Ts = 0.05;
+Ts = 0.02;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -114,7 +114,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM5", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -143,30 +143,9 @@ try
     plant_time = 0;
     step = 0;
 
-    % REF = plant_potentiometer;
+    REF = 0;
 
-    REF = 30;
-
-    chrom = [0.1633    4.6267    0.159];
-    % chrom = [1.0000    5.0432         0.1];
-
-    P = chrom(1);
-    I = chrom(2);
-    D = chrom(3);
-
-    P = 0.01;
-    I = 1.5;
-    D = 0.0525;
-
-    
-    e = 0;
-    eint = 0;
-    elast = plant_output;
-
-    U_PB = 30;
-    u = 0;
-    udt = 1;
-    is_init = true;
+    U_STEP_SIZE = 5;
     
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -177,58 +156,19 @@ try
             continue;
         end
 
-        % write(scon, 5*(sin(step/2/pi)) + 20, "single");
+        u = 30;
 
-        % u = 10;
-        % 
-        % if time_elapsed >= 7.5
-        %     u = 20;
-        % elseif time_elapsed >= 5.0
-        %     u = 10;
-        % elseif time_elapsed >= 2.5
-        %     u = 20;
-        % else
-        %     u = 10;
-        % end
-        % 
-        % write(scon, u, "single");
-
-        if time_elapsed >= 15
-            REF = 50;
+        if time_elapsed >= 50
+            u = u - U_STEP_SIZE;
+        elseif time_elapsed >= 40
+            u = u + U_STEP_SIZE;
+        elseif time_elapsed >= 30
+            u = u - U_STEP_SIZE;
+        elseif time_elapsed >= 20
+            u = u + U_STEP_SIZE;
         elseif time_elapsed >= 10
-            REF = 40;
-        elseif time_elapsed >= 5
-            REF = 45;
+            u = u - U_STEP_SIZE;
         end
-
-        % REF = plant_potentiometer;
-        
-        if is_init
-            u = u + udt;
-            u = max(0, min(u, U_PB));
-            if u >= U_PB
-                is_init = false;
-            end
-        else
-            u = U_PB;
-        end
-        
-        if time_elapsed > 2.5
-            e = REF - plant_output;
-            eint = max(-85, min(85, (eint + e * time_delta)));
-            % eint = max(0, min(eint/I/plant_dt, 100/I/plant_dt));
-            de = -(plant_output - elast)/time_delta;
-            
-            uP = P * e;
-            uI = I * eint;
-            uD = D * de;
-            % fprintf("u: %8.3f | uP: %8.3f | uI: %8.3f | uD: %8.3f\n", u, uP, uI, uD);
-            u = u + uP + uI + uD;
-            
-            u = max(0, min(100, u));
-        end
-
-        elast = plant_output;
 
         write(scon, u, "single");
         
@@ -279,10 +219,6 @@ catch er
     if exist("dfile_handle", "var")
         fclose(dfile_handle);
         clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
     end
     rethrow(er);
 end
