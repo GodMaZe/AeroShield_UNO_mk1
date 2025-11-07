@@ -9,7 +9,7 @@ nxsm = nxs - 1;
 B = Gs.Numerator(end:-1:1);
 A = Gs.Denominator(end:-1:1);
 
-fx = @(A, B, u, x) (B * u' - A(1:end - 1) * x')/A(end);
+fx = @(A, B, u, x) (B * u' - A(1:(end - 1)) * x)/A(end);
 
 K = zeros(nxs, 4);
 
@@ -20,11 +20,14 @@ for i=1:2
     for k=1:nxsm
         K(k, i + 1) = (x(k + 1) + K(k + 1, i)/2) * dt;
     end
-    K(nxs, i + 1) = fx(A, B, u, x + K(:, i)'/2) * dt;
+    K(nxs, i + 1) = fx(A, B, u, x + K(:, i)/2) * dt;
 end
-
+% disp("K:")
+% disp(size(K));
+% disp("x:")
+% disp(size(x));
 K(1:nxsm, end) = (x(2:nxs) + K(2:nxs, 3)) * dt;
-K(nxs, 4) = fx(A, B, u, x + K(:, 3)') * dt;
+K(nxs, 4) = fx(A, B, u, x + K(:, 3)) * dt;
+x = x + (1/6*K*[1 2 2 1]');
 
-x = x + (1/6*K*[1 2 2 1]')';
 end
