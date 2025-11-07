@@ -14,7 +14,7 @@ if ~exist(FILENAME_TRAIN, "dir")
 end
 
 % Set the system
-Gs = Gs20; %GS21
+Gs = Gs21; %GS21
 
 if exist('bestchrom_pid.mat', 'file')
     load('bestchrom_pid.mat');
@@ -50,12 +50,12 @@ end
 
 bestgen = 0;
 
-dt = mean(diff(logsout.t));
+dt = mean(diff(logsout.tp));
 t = 0:dt:20;
 r = ones(size(t))';
-r(1:100) = 50;
-r(100:250) = 40;
-r(250:end) = 60;
+r(1:100) = 4;
+r(100:250) = -5;
+r(250:end) = 3;
 
 for gen=1:numgen
     Fit=fitness_pid(Pop, Gs, r, t);
@@ -103,7 +103,7 @@ if ~exist(FILENAME_TRAIN + "/bestchrom_pid.mat", 'file')
 end
 
 load(FILENAME_TRAIN + "/bestchrom_pid.mat");
-x0 = [0, 0];
+x0 = zeros(numel(Gs.den)-1, 1);
 
 [t,y,dy,w,e,de]=sim_pid_VIR25(...
     bestchrom(1), ...
@@ -142,16 +142,16 @@ r_bestchrom = round(bestchrom, 2);
 Gs = Gs20;
 t = 0:dt:20;
 r = ones(size(t))';
-r(1:100) = 55;
-r(100:200) = 50;
-r(200:300) = 40;
-r(300:end) = 65;
+r(1:100) = 5;
+r(100:200) = 0;
+r(200:300) = -7;
+r(300:end) = 10;
 
-x0 = [0, 0];
+x0 = zeros(numel(Gs.den)-1, 1);
 umax = 100;
-umin = 0;
+umin = -100;
 Imax = 85; % Anti-windup upper saturation
-Imin = 0; % Anti-windup lower saturation
+Imin = -85; % Anti-windup lower saturation
 
 
 [t,y,d1y,w,e,de,u,ureal]=sim_pid_VIR25(...

@@ -23,8 +23,12 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 60;
+SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
 Ts = 0.02;
+
+
+Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -145,7 +149,15 @@ try
 
     REF = 0;
 
-    U_STEP_SIZE = 5;
+    U_STEP_SIZE = -5;
+
+
+    
+    U_PB = 30;
+    u = 0;
+    udt = 1;
+    is_init = true;
+    
     
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -156,18 +168,30 @@ try
             continue;
         end
 
-        u = 30;
+        if is_init
+            u = u + udt;
+            u = max(0, min(u, U_PB));
+            if u >= U_PB
+                is_init = false;
+            end
+        else
+            u = U_PB;
+        end
 
-        if time_elapsed >= 50
+        elapsed = time_elapsed - SYNC_TIME;
+
+        if elapsed >= 50
             u = u - U_STEP_SIZE;
-        elseif time_elapsed >= 40
+        elseif elapsed >= 40
             u = u + U_STEP_SIZE;
-        elseif time_elapsed >= 30
+        elseif elapsed >= 30
             u = u - U_STEP_SIZE;
-        elseif time_elapsed >= 20
+        elseif elapsed >= 20
             u = u + U_STEP_SIZE;
-        elseif time_elapsed >= 10
+        elseif elapsed >= 10
             u = u - U_STEP_SIZE;
+        elseif elapsed >= 0
+            u = u + U_STEP_SIZE;
         end
 
         write(scon, u, "single");

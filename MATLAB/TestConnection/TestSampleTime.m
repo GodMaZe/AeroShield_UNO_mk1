@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 20;
 
-Ts = 0.05;
+Ts = 0.02;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -114,7 +114,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM5", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -148,15 +148,17 @@ try
     REF = 30;
 
     chrom = [0.1633    4.6267    0.159];
-    % chrom = [1.0000    5.0432         0.1];
+    % chrom = [0    2.2    0.1]; % Home
+    chrom = [0 2.75 0.05];
+    chrom = [0 3.09 0.06];
 
     P = chrom(1);
     I = chrom(2);
     D = chrom(3);
 
-    P = 0.01;
-    I = 1.5;
-    D = 0.0525;
+    % P = 0.01;
+    % I = 1.5;
+    % D = 0.0525;
 
     
     e = 0;
