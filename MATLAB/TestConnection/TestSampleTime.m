@@ -156,7 +156,7 @@ try
     % chrom = [0 3.09 0.06];
     chrom = [0.04 3.16 0.04];
     chrom = [0.09 6.57 0.08];
-    chrom = [0.88 5.62 0.17]; % Fix PID in GA
+    % chrom = [0.88 5.62 0.17]; % Fix PID in GA
     chrom = [0.39 3.85 0.11];
 
     P = chrom(1);
@@ -218,6 +218,10 @@ try
             REF = 45;
         end
 
+        % if elapsed >= 5
+        %     REF = 5 * sin(0.5*elapsed) + 38;
+        % end
+
         % REF = plant_potentiometer;
         
         if is_init
@@ -230,16 +234,16 @@ try
             u = U_PB;
         end
         
+        e = REF - plant_output;
+        
         if elapsed >= 0
-            e = REF - plant_output;
+            
             eint = max(-85, min(85, (eint + e * time_delta)));
-            % eint = max(0, min(eint/I/plant_dt, 100/I/plant_dt));
             de = -(plant_output - elast)/time_delta;
             
             uP = P * e;
             uI = I * eint;
             uD = D * de;
-            % fprintf("u: %8.3f | uP: %8.3f | uI: %8.3f | uD: %8.3f\n", u, uP, uI, uD);
             u = u + uP + uI + uD;
             
             u = max(0, min(100, u));
