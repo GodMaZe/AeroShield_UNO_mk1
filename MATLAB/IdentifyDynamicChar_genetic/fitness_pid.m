@@ -8,7 +8,7 @@ c2 = 25; % weight for error derivative
 c3 = 10;
 
 umax = 100;
-umin = 0;
+umin = -100;
 dt = mean(diff(t));
 
 parfor i = 1:N

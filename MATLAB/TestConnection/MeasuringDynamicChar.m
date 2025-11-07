@@ -149,7 +149,7 @@ try
 
     REF = 0;
 
-    U_STEP_SIZE = -5;
+    U_STEP_SIZE = +5;
 
 
     
@@ -263,12 +263,24 @@ end
 
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
-save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
+save(FILEPATH_MAT, "Tstop","SYNC_TIME","U_PB", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
 
 %%
 % ===========================
 %   Plot Results
 % ===========================
+figure(1); clf;
+hold on;
+stairs(LOG_TP, LOG_Y);
+stairs(LOG_TP, LOG_REF);
+stairs(LOG_TP, LOG_U);
+title("Real-Time System Response");
+xlabel("t [s]");
+ylabel("$\varphi [^\circ]$", "Interpreter","latex");
+legend("y","ref", "u", 'Location', 'southeast');
+grid minor;
+hold off;
+
 figure(999);
 style='-k';
 

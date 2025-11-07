@@ -114,7 +114,8 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -145,12 +146,18 @@ try
 
     % REF = plant_potentiometer;
 
-    REF = 30;
+    
 
     chrom = [0.1633    4.6267    0.159];
     % chrom = [0    2.2    0.1]; % Home
     chrom = [0 2.75 0.05];
     chrom = [0 3.09 0.06];
+    % chrom = [0 2.75 0.05];
+    % chrom = [0 3.09 0.06];
+    chrom = [0.04 3.16 0.04];
+    chrom = [0.09 6.57 0.08];
+    chrom = [0.88 5.62 0.17]; % Fix PID in GA
+    chrom = [0.39 3.85 0.11];
 
     P = chrom(1);
     I = chrom(2);
@@ -160,7 +167,9 @@ try
     % I = 1.5;
     % D = 0.0525;
 
-    
+    REF = 35;
+
+
     e = 0;
     eint = 0;
     elast = plant_output;
@@ -169,6 +178,10 @@ try
     u = 0;
     udt = 1;
     is_init = true;
+
+    SYNC_TIME = 10;
+    Tstop = Tstop + SYNC_TIME;
+    nsteps = floor(Tstop/Ts);
     
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -195,11 +208,13 @@ try
         % 
         % write(scon, u, "single");
 
-        if time_elapsed >= 15
-            REF = 50;
-        elseif time_elapsed >= 10
+        elapsed = time_elapsed - SYNC_TIME;
+
+        if elapsed >= 15
+            REF = 42.5;
+        elseif elapsed >= 10
             REF = 40;
-        elseif time_elapsed >= 5
+        elseif elapsed >= 5
             REF = 45;
         end
 
@@ -215,7 +230,7 @@ try
             u = U_PB;
         end
         
-        if time_elapsed > 2.5
+        if elapsed >= 0
             e = REF - plant_output;
             eint = max(-85, min(85, (eint + e * time_delta)));
             % eint = max(0, min(eint/I/plant_dt, 100/I/plant_dt));
@@ -311,6 +326,20 @@ save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPAT
 % ===========================
 %   Plot Results
 % ===========================
+
+figure(1); clf;
+hold on;
+stairs(LOG_TP, LOG_Y);
+stairs(LOG_TP, LOG_REF);
+stairs(LOG_TP, LOG_U);
+title("Real-Time System Response");
+xlabel("t [s]");
+ylabel("$\varphi [^\circ]$", "Interpreter","latex");
+legend("y","ref", "u", 'Location', 'southeast');
+grid minor;
+hold off;
+
+
 figure(999);
 style='-k';
 
