@@ -26,7 +26,7 @@ end
 %% Plot the data
 t = logsout.tp';
 
-tind = find(t >= 8, 1);
+tind = find(t >= SYNC_TIME, 1);
 
 mask = tind:numel(t);
 
@@ -34,9 +34,9 @@ t = t(mask);
 t = t - t(1);
 dt = mean(diff(t));
 y = logsout.y(mask)';
-% y = y - y(1);
+y = y - mean(logsout.y(1:tind));
 u = logsout.u(mask)';
-% u = u - u(1);
+u = u - logsout.u(tind-10);
 
 figure(1);
 plot(t, y, t, u, '--k');
@@ -86,7 +86,7 @@ load(DATADIR + "/" + FILENAME_VAL);
 
 t = logsout.tp';
 
-tind = find(t >= 8, 1);
+tind = find(t >= SYNC_TIME, 1);
 
 mask = tind:numel(t);
 
@@ -94,9 +94,9 @@ t = t(mask);
 t = t - t(1);
 dt = mean(diff(t));
 y = logsout.y(mask)';
-% y = y - y(1);
+y = y - mean(logsout.y(1:tind));
 u = logsout.u(mask)';
-% u = u - u(1);
+u = u - logsout.u(tind-10);
 
 t = 0:dt:t(end);
 

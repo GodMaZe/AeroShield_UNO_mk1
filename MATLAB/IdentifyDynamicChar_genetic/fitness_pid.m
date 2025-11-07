@@ -1,13 +1,14 @@
 function [fit] = fitness_pid(pop, Gs, r, t)
 N = size(pop, 1);
 fit = zeros(N,1);
+npoles = numel(Gs.den) - 1;
 
-c1 = 3; % weight for error
-c2 = 0.5; % weight for error derivative
+c1 = 100; % weight for error
+c2 = 25; % weight for error derivative
 c3 = 10;
 
 umax = 100;
-umin = 0;
+umin = -100;
 dt = mean(diff(t));
 
 parfor i = 1:N
@@ -19,8 +20,10 @@ parfor i = 1:N
     P = chrom(1);
     I = chrom(2);
     D = chrom(3);
+    
+    x0 = zeros(npoles, 1);
 
-    [tt,y,dy,w,e,de,u,usat] = sim_pid_VIR25(P, I, D, Gs, r, t, [0, 0]);
+    [tt,y,dy,w,e,de,u,usat] = sim_pid_VIR25(P, I, D, Gs, r, t, x0);
 
     IAE = sum(abs(e)) * dt; % Integral of Absolute Error
     IADE = sum(abs(de)) * dt; % Integral of Absolute Derivative of Error

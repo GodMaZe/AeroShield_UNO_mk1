@@ -61,10 +61,10 @@ for i=1:numel(t)
     end
 
     e(i+1) = r(i) - x(1);
-    de(i+1) = (e(i) - elast)/dt;
+    de(i+1) = -(y(i) - elast)/dt;
     eint = min(antiwindup_max, max(antiwindup_min, eint + e(i) * dt));
 
-    elast = e(i);
+    elast = y(i);
     ulast = usat(i);
 end
 end
