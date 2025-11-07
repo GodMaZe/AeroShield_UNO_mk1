@@ -114,6 +114,7 @@ try
         clear scon;
     end
 
+
     scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
@@ -149,6 +150,8 @@ try
 
     chrom = [0.1633    4.6267    0.159];
     % chrom = [0    2.2    0.1]; % Home
+    chrom = [0 2.75 0.05];
+    chrom = [0 3.09 0.06];
     % chrom = [0 2.75 0.05];
     % chrom = [0 3.09 0.06];
     chrom = [0.04 3.16 0.04];
@@ -165,6 +168,7 @@ try
     % D = 0.0525;
 
     REF = 35;
+
 
     e = 0;
     eint = 0;

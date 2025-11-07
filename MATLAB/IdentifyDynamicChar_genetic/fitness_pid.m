@@ -4,7 +4,7 @@ fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
 
 c1 = 100; % weight for error
-c2 = 0.5; % weight for error derivative
+c2 = 25; % weight for error derivative
 c3 = 10;
 
 umax = 100;
