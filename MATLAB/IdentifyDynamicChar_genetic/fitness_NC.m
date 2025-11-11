@@ -3,12 +3,13 @@ N = size(pop, 1);
 fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
 
-c1 = 10; % weight for error
-c2 = 1; % weight for control effort
-c3 = 0.6;
+c1 = 1; % weight for error (e)
+c2 = 0.95; % weight for control effort (de)
+c3 = 0.4; % max(u)
+c4 = 0.01; % Change in the control input in time (du)
 
-umax = 100;
-umin = -100;
+umax = 70;
+umin = -30;
 dt = mean(diff(t));
 
 n_input = layers(1);
@@ -42,8 +43,9 @@ parfor i = 1:N
     IAE = sum(abs(e)) * dt; % Integral of Absolute Error
     IADE = sum(abs(de)) * dt; % Integral of Absolute Derivative of Error
     IUOUTBOUNDS = sum(u < umin | u > umax); % Integral of Control input out of the bounds set by the real system
+    IADU = sum(abs(gradient(u, dt)));
 
-    fit(i) = c1 * IAE + c2 * IADE + c3 * IUOUTBOUNDS;
+    fit(i) = c1 * IAE + c2 * IADE + c3 * IUOUTBOUNDS + c4 * IADU;
     if isnan(fit(i))
         fit(i) = Inf; % Assign a large fitness value if NaN
     end

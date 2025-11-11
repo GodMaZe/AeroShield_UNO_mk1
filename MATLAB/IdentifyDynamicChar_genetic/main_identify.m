@@ -26,7 +26,7 @@ end
 %% Plot the data
 t = logsout.tp';
 
-tind = find(t >= SYNC_TIME, 1);
+tind = find(t >= SYNC_TIME, 1)-100;
 
 mask = tind:numel(t);
 
@@ -51,7 +51,7 @@ saveas(gcf, FILENAME_TRAIN + "/ident_measurement.svg");
 idata = iddata(y, u, dt);
 
 Gs20 = tfest(idata, 2, 0);
-Gs21 = tfest(idata, 3, 0);
+Gs21 = tfest(idata, 2, 1);
 Gsss = ssest(idata, 3);
 
 %% Simulate the model

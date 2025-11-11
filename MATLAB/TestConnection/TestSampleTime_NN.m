@@ -5,7 +5,7 @@ addpath("./misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "dynamicChar";
+FILENAME = "dataFile";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -22,13 +22,9 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 60;
-SYNC_TIME = 20; % Time for the system to stabilize in the OP
+Tstop = 20;
 
 Ts = 0.02;
-
-
-Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -57,7 +53,7 @@ function plotdatarealtime()
     % ----------------------------------
     try
         if isempty(hy) || isempty(hr) || isempty(hu)
-            f = figure("Name","Plot-RealTime");
+            f = figure("Name","Plot-RealTime","GraphicsSmoothing","on","Renderer","opengl","RendererMode","auto");
             ax = axes(f);
             hold on;
             % hy = plot(ax, nan, nan, '.k');
@@ -118,6 +114,7 @@ try
         clear scon;
     end
 
+
     scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
@@ -147,17 +144,49 @@ try
     plant_time = 0;
     step = 0;
 
-    REF = 0;
+    % REF = plant_potentiometer;
 
-    U_STEP_SIZE = 5;
+    % Load the neural network controller
+    load("bestchrom_nn");
 
+    y_max   = 220;           % ocakavane max(|y|)
+    d1y_max = 220/Ts;           % ocakavane max(|dy/dt|)
+    de_max = 1000/1.23;
+    e_max   = 10;
+    ie_max  = 4000/3.5/2.99;    % odhad pre integral
+    d1u_max = 10000;
 
-    
+    Ny=1/y_max; Nd1y=1/d1y_max;
+    Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
+
+    W1size = layers(1);
+    W2size = layers(2);
+    W3size = layers(3);
+
+    W1 = reshape(bestchrom(1:W1size*W2size), W2size, W1size);
+    W2 = reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size);
+    W3 = reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size);
+
+    % Reference signal
+    REF = 35;
+
+    dylast = 0;
+    ylast= 0;
+    ulast = 0;
+    dulast = 0;
+    elast = 0;
+    eint = 0;
+
     U_PB = 30;
     u = 0;
     udt = 1;
+    umax = 100;
+    umin = -umax;
     is_init = true;
-    
+
+    SYNC_TIME = 10;
+    Tstop = Tstop + SYNC_TIME;
+    nsteps = floor(Tstop/Ts);
     
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -168,6 +197,38 @@ try
             continue;
         end
 
+        % write(scon, 5*(sin(step/2/pi)) + 20, "single");
+
+        % u = 10;
+        % 
+        % if time_elapsed >= 7.5
+        %     u = 20;
+        % elseif time_elapsed >= 5.0
+        %     u = 10;
+        % elseif time_elapsed >= 2.5
+        %     u = 20;
+        % else
+        %     u = 10;
+        % end
+        % 
+        % write(scon, u, "single");
+
+        elapsed = time_elapsed - SYNC_TIME;
+
+        if elapsed >= 15
+            REF = 42.5;
+        elseif elapsed >= 10
+            REF = 40;
+        elseif elapsed >= 5
+            REF = 45;
+        end
+
+        % if elapsed >= 5
+        %     REF = 5 * sin(0.5*elapsed) + 38;
+        % end
+
+        % REF = plant_potentiometer;
+        
         if is_init
             u = u + udt;
             u = max(0, min(u, U_PB));
@@ -177,22 +238,33 @@ try
         else
             u = U_PB;
         end
-
-        elapsed = time_elapsed - SYNC_TIME;
-
-        if elapsed >= 50
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 40
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 30
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 20
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 10
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 0
-            u = u + U_STEP_SIZE;
+        
+        e = REF - ylast;
+        
+        if elapsed >= 0
+            de = (e - elast)/time_delta;
+            eint = eint + e * time_delta;
+        
+            X=[ylast*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
+            % writenum2file(fhandle, X);
+            X = max(min(X,1),-1); % orezanie na interval <-1,1>
+            % disp(X);
+            
+            if size(W1, 2) ~= length(X)
+                error('Nespravny pocet vstupov do NC podla vah W1 a vektora X.');
+            end
+        
+            % NN control law
+            A1=(W1*X);    % vstupna/1.skryta vrstva
+            A1=tanh(3*A1);
+            A2=(W2*A1);   % 1./2. skryta vrstva
+            A2=tanh(3*A2);
+            ux=W3*A2*umax;
+        
+            u = u + min(umax, max(umin, ux));
         end
+
+        du = (u - ulast)/time_delta;
 
         write(scon, u, "single");
         
@@ -228,6 +300,12 @@ try
         step = step + 1;
         time_last = time_curr;
 
+        dulast = du;
+        dylast = (plant_output - ylast)/time_delta;
+        ylast = plant_output;
+        elast = e;
+        ulast = u;
+
         if plant_time >= Tstop || plant_output >= Ystop
             % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
             break;
@@ -243,6 +321,10 @@ catch er
     if exist("dfile_handle", "var")
         fclose(dfile_handle);
         clear dfile_handle;
+    end
+    for tim=timerfindall
+        stop(tim);
+        delete(tim);
     end
     rethrow(er);
 end
@@ -263,12 +345,13 @@ end
 
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
-save(FILEPATH_MAT, "Tstop","SYNC_TIME","U_PB", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
+save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
 
 %%
 % ===========================
 %   Plot Results
 % ===========================
+
 figure(1); clf;
 hold on;
 stairs(LOG_TP, LOG_Y);
@@ -280,6 +363,7 @@ ylabel("$\varphi [^\circ]$", "Interpreter","latex");
 legend("y","ref", "u", 'Location', 'southeast');
 grid minor;
 hold off;
+
 
 figure(999);
 style='-k';

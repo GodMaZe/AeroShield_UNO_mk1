@@ -6,8 +6,19 @@ function[x]=simtf(Gs,u,dt,x)
 % to initial)
 nxs = numel(x);
 nxsm = nxs - 1;
-B = Gs.Numerator(end:-1:1);
+nzeros = numel(Gs.num);
+zidx = 1;
+if(abs(Gs.num(1)) <= 0.001)
+    nzeros = nzeros - 1;
+    zidx = zidx + 1;
+end
+% Continues
+B = Gs.Numerator(end:-1:zidx);
 A = Gs.Denominator(end:-1:1);
+
+% Discrete
+% B = Gs.Numerator(zidx:end);
+% A = Gs.Denominator;
 
 fx = @(A, B, u, x) (B * u' - A(1:(end - 1)) * x)/A(end);
 

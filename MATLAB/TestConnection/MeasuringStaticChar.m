@@ -5,7 +5,7 @@ addpath("./misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "dynamicChar";
+FILENAME = "staticChar";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -22,8 +22,11 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 60;
+STEPS = 0:5:100;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
+
+Tstop = numel(STEPS)*SYNC_TIME;
+
 
 Ts = 0.02;
 
@@ -142,20 +145,20 @@ try
     time_start = datetime("now");
     time_curr = time_start;
     time_last = time_curr;
+    time_step = time_curr;
 
     plant_time_init = -1;
     plant_time = 0;
-    step = 0;
+    
 
     REF = 0;
 
-    U_STEP_SIZE = 5;
+    U_STEP_SIZE = mean(diff(STEPS));
 
 
-    
-    U_PB = 30;
+    step = 1;
     u = 0;
-    udt = 1;
+    udt = U_STEP_SIZE/10;
     is_init = true;
     
     
@@ -163,6 +166,13 @@ try
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
+        time_step_delta = seconds(time_curr - time_step);
+
+        if time_step_delta >= SYNC_TIME
+            time_step = time_curr;
+            step = step + 1;
+            is_init = true;
+        end
 
         if time_delta < Ts
             continue;
@@ -170,29 +180,14 @@ try
 
         if is_init
             u = u + udt;
-            u = max(0, min(u, U_PB));
-            if u >= U_PB
+            u = max(0, min(u, STEPS(step)));
+            if u >= STEPS(step)
                 is_init = false;
             end
         else
-            u = U_PB;
+            u = STEPS(step);
         end
 
-        elapsed = time_elapsed - SYNC_TIME;
-
-        if elapsed >= 50
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 40
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 30
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 20
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 10
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 0
-            u = u + U_STEP_SIZE;
-        end
 
         write(scon, u, "single");
         
@@ -225,7 +220,6 @@ try
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
 
-        step = step + 1;
         time_last = time_curr;
 
         if plant_time >= Tstop || plant_output >= Ystop
@@ -263,7 +257,7 @@ end
 
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
-save(FILEPATH_MAT, "Tstop","SYNC_TIME","U_PB", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
+save(FILEPATH_MAT, "Tstop","SYNC_TIME","STEPS", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME", "U_STEP_SIZE");
 
 %%
 % ===========================
@@ -294,8 +288,8 @@ xlabel('k'); ylabel('\phi(k)'); grid on
 hold of;
 
 subplot(2,1,2)
-stairs(LOG_TP,LOG_U,style,'LineWidth',1.5)
-xlabel('k'); ylabel('u(k)'); grid on
+stairs(LOG_U, LOG_Y/LOG_U,style,'LineWidth',1.5)
+ylabel('y(k)'); xlabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
