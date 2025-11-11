@@ -2,3 +2,4 @@
 dataRepo
 *.asv
 .DS_STORE
+norms.csv

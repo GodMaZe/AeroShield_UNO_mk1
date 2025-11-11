@@ -3,19 +3,24 @@
 function[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(W1,W2,W3,Gs,r,t,x0,umax,umin,norms)
 % W1, W2, W3 = maice váh
 % rezim = trenovanie / testovanie
+dt = mean(diff(t));
+
+FNORMS = "norms.csv";
+fhandle = fopen(FNORMS,"a+");
+% write(fhandle, "Ny,Ndy,Ne,Nint,Nde,Ndu\n");
 
 if nargin <= 7
-    umax = 10;
-    umin = 0;
+    umax = 100;
+    umin = -100;
 end
 
 if nargin<10 || isempty(norms)
     % defaultne normy
-    y_max   = 40*8;           % ocakavane max(|y|)
-    d1y_max = 7.16*10.5*1.4;           % ocakavane max(|dy/dt|)
-    de_max = 2000;
-    e_max   = 24*17.5;
-    ie_max  = 1200;    % odhad pre integral
+    y_max   = 220/1.718;           % ocakavane max(|y|)
+    d1y_max = 220/dt;           % ocakavane max(|dy/dt|)
+    de_max = 1000/1.23;
+    e_max   = 290;
+    ie_max  = 4000/3.5/2.99;    % odhad pre integral
     d1u_max = 2000;
 
     Ny=1/y_max; Nd1y=1/d1y_max;
@@ -38,20 +43,24 @@ usat = zeros(size(t));
 du = zeros(size(t));
 w = r;
 
+dylast = 0;
+ylast= 0;
 ulast = 0;
+dulast = 0;
 elast = 0;
 eint = 0;
 
-dt = mean(diff(t));
+
 
 x = x0;
 
 for i=1:numel(t)
-    e(i) = r(i) - x(1);
+    e(i) = r(i) - ylast;
     de(i) = (e(i) - elast)/dt;
     eint = eint + e(i) * dt;
 
-    X=[y(i)*Ny; dy(i)*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; du(i)*Nd1u]; % pripadne ine
+    X=[ylast*Ny; dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u]; % pripadne ine
+    writenum2file(fhandle, X);
     X = max(min(X,1),-1); % orezanie na interval <-1,1>
     
     if size(W1, 2) ~= length(X)
@@ -80,9 +89,12 @@ for i=1:numel(t)
     
     y(i) = x(1);
     dy(i) = x(2);
-
+    
+    dulast = du(i);
+    dylast = dy(i);
+    ylast = y(i);
     elast = e(i);
     ulast = usat(i);
 end
-
+fclose(fhandle);
 end

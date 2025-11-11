@@ -1,15 +1,25 @@
-function [fit] = fitness_pid(pop, Gs, r, t)
+function [fit] = fitness_pid(pop, Gs, r, t, noise, noise_amp)
 N = size(pop, 1);
 fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
 
-c1 = 100; % weight for error
-c2 = 25; % weight for error derivative
-c3 = 10;
+c1 = 1; % weight for error
+c2 = 0.4; % weight for error derivative
+c3 = 0.6;
 
 umax = 100;
 umin = -100;
 dt = mean(diff(t));
+
+is_noise = false;
+noise_K = 1;
+
+if nargin > 4
+    is_noise = noise;
+end
+if nargin > 5
+    noise_K = noise_amp;
+end
 
 parfor i = 1:N
     chrom = pop(i, :);
@@ -23,7 +33,7 @@ parfor i = 1:N
     
     x0 = zeros(npoles, 1);
 
-    [tt,y,dy,w,e,de,u,usat] = sim_pid_VIR25(P, I, D, Gs, r, t, x0);
+    [tt,y,dy,w,e,de,u,usat] = sim_pid_VIR25(P, I, D, Gs, r, t, x0, -inf, inf, -inf, inf, is_noise, noise_K);
 
     IAE = sum(abs(e)) * dt; % Integral of Absolute Error
     IADE = sum(abs(de)) * dt; % Integral of Absolute Derivative of Error

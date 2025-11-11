@@ -2,6 +2,7 @@ addpath("./genetic");
 clear;
 close all;
 
+
 FILENAME_DATA = "data/train";
 FILENAME = "train_ident_model";
 FILENAME_TRAIN = "train_ident";
@@ -57,8 +58,9 @@ r(1:100) = 4;
 r(100:250) = -5;
 r(250:end) = 3;
 
+%% DO GENETIC
 for gen=1:numgen
-    Fit=fitness_pid(Pop, Gs, r, t);
+    Fit=fitness_pid(Pop, Gs, r, t, true, 0.5);
 
     evolution(gen)=min(Fit);	% convergence graph of the solution
 
@@ -138,8 +140,8 @@ if ~exist('bestchrom', 'var') || ~exist('evolution', 'var')
 end
 
 % bestchrom = [1, 0.2, 10];
-r_bestchrom = round(bestchrom, 2);
-Gs = Gs20;
+r_bestchrom = round(bestchrom, 3);
+Gs = Gs21;
 t = 0:dt:20;
 r = ones(size(t))';
 r(1:100) = 5;
@@ -174,7 +176,9 @@ title('Output and Reference Signal');
 subtitle("[P, I, D] = " + mat2str(r_bestchrom))
 xlabel('Time [s]');
 ylabel('Amplitude');
-legend('Output', 'Reference');
+legend('y', 'ref', 'u');
 grid on;
 saveas(gcf, FILENAME_TRAIN + "/output_pid_best_test.svg");
 hold off;
+
+fprintf("chrom = " + mat2str(r_bestchrom) + ";\n");

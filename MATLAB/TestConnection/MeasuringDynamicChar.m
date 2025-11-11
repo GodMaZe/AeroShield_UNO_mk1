@@ -25,7 +25,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 60;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
-Ts = 0.02;
+Ts = 0.05;
 
 
 Tstop = Tstop + SYNC_TIME;
@@ -57,7 +57,7 @@ function plotdatarealtime()
     % ----------------------------------
     try
         if isempty(hy) || isempty(hr) || isempty(hu)
-            f = figure("Name","Plot-RealTime","GraphicsSmoothing","on","Renderer","opengl","RendererMode","auto");
+            f = figure("Name","Plot-RealTime");
             ax = axes(f);
             hold on;
             % hy = plot(ax, nan, nan, '.k');
@@ -118,7 +118,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 

@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 20;
 
-Ts = 0.02;
+Ts = 0.05;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -115,7 +115,7 @@ try
     end
 
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -146,26 +146,37 @@ try
 
     % REF = plant_potentiometer;
 
-    
+    USE_GA_PID_PARAMS = true;
 
     chrom = [0.1633    4.6267    0.159];
     % chrom = [0    2.2    0.1]; % Home
-    chrom = [0 2.75 0.05];
-    chrom = [0 3.09 0.06];
     % chrom = [0 2.75 0.05];
     % chrom = [0 3.09 0.06];
-    chrom = [0.04 3.16 0.04];
-    chrom = [0.09 6.57 0.08];
+    % chrom = [0 2.75 0.05];
+    % chrom = [0 3.09 0.06];
+    % chrom = [0.04 3.16 0.04];
+    % chrom = [0.09 6.57 0.08];
     % chrom = [0.88 5.62 0.17]; % Fix PID in GA
     chrom = [0.39 3.85 0.11];
+    % chrom = [1 4 0.17];
+    % chrom = [1 3.76 0.177];
+    chrom = [0.6 3.63 0.11];
+    chrom = [0.739 3.385 0.1];
+    chrom = [0.7 2.539 0.061];
+    chrom = [0.194 1.315 0.031];
+    chrom = [0.054 1.05 0.024]; % Ts = 0.05
+    chrom = [0.057 1.046 0.022]; % Ts = 0.05
+    chrom = [0.237 1.717 0.072];
 
-    P = chrom(1);
-    I = chrom(2);
-    D = chrom(3);
-
-    % P = 0.01;
-    % I = 1.5;
-    % D = 0.0525;
+    if USE_GA_PID_PARAMS
+        P = chrom(1);
+        I = chrom(2);
+        D = chrom(3);
+    else
+        P = 0.01;
+        I = 1.5;
+        D = 0.0525;
+    end
 
     REF = 35;
 

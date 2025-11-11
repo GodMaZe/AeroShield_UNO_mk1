@@ -34,7 +34,7 @@ t = t(mask);
 t = t - t(1);
 dt = mean(diff(t));
 y = logsout.y(mask)';
-y = y - mean(logsout.y(1:tind));
+y = y - mean(logsout.y(tind-30:tind));
 u = logsout.u(mask)';
 u = u - logsout.u(tind-10);
 
@@ -94,7 +94,7 @@ t = t(mask);
 t = t - t(1);
 dt = mean(diff(t));
 y = logsout.y(mask)';
-y = y - mean(logsout.y(1:tind));
+y = y - mean(logsout.y(tind-30:tind));
 u = logsout.u(mask)';
 u = u - logsout.u(tind-10);
 

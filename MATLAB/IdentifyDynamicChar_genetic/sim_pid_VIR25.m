@@ -1,6 +1,6 @@
 % funkcia na simulaciu regulacie SISO s neuro-regulatorom, bez simulinku
 
-function[t,y,dy,w,e,de,u,usat]=sim_pid_VIR25(P,I,D,Gs,r,t,x0,umin,umax,intmin,intmax)
+function[t,y,dy,w,e,de,u,usat]=sim_pid_VIR25(P,I,D,Gs,r,t,x0,umin,umax,intmin,intmax,noise,noise_amp)
 % P, I, D = pid parametre
 % rezim = trenovanie / testovanie
 e = zeros(size(t));
@@ -11,6 +11,7 @@ u = zeros(size(t));
 usat = zeros(size(t));
 du = zeros(size(t));
 w = r;
+rng(1337);
 
 ulast = 0;
 elast = 0;
@@ -24,6 +25,8 @@ u_bottom = -inf;
 u_top = inf;
 antiwindup_min = -inf;
 antiwindup_max = inf;
+is_noise = false;
+noise_K = 1;
 
 if nargin > 7
     u_bottom = umin;
@@ -36,6 +39,12 @@ if nargin > 9
 end
 if nargin > 10
     antiwindup_max = intmax;
+end
+if nargin > 11
+    is_noise = noise;
+end
+if nargin > 12
+    noise_K = noise_amp;
 end
 
 for i=1:numel(t)
@@ -54,7 +63,7 @@ for i=1:numel(t)
 
     x = simtf(Gs, ux, dt, x);
     
-    y(i) = x(1);
+    y(i) = x(1) + noise_K*randn(1)*is_noise;
     
     if numel(x) > 1
         dy(i) = x(2);
