@@ -99,7 +99,7 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
 
     % --- Kalman filter initialization ---    
     R=0.3; % measurement noise covariance
-    Q=diag([0.2;0.2;1;0.1]);  % process noise covariance
+    Q=diag([0.2;0.2;1]);  % process noise covariance
 
     %% ----------------------------------
     % ----------------------------------
@@ -265,8 +265,8 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
     
     
     % Kalman initial
-    P=zeros(size(Q_tilde));
-    x_hat=zeros(size(Q_tilde,1),1);
+    P=zeros(size(Q));
+    x_hat=zeros(size(Q,1),1);
         
     % Initialize control variables
     z=zeros(m,1);
@@ -317,14 +317,14 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
         plant_potentiometer = R_WANTED + serLineList(4)/100*20; % R_WANTED; %*sin(2*pi*20*plant_time/1e6) + R_WANTED; % serLineList(4);
         plant_dt = serLineList(5);
         
-        x_hat = A_tilde*x_hat + B_tilde*u;
+        x_hat = A*x_hat + B*u;
 
-        P = A_tilde*P*A_tilde' + Q;
-        K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
-        e1 = plant_output - C_tilde*x_hat;
+        P = A*P*A' + Q;
+        K = P*C'/(C*P*C' + R);
+        e1 = plant_output - C*x_hat;
         x_hat = x_hat + K*e1;
-        y_hat = C_tilde*x_hat;
-        P = P - K*C_tilde*P;
+        y_hat = C*x_hat;
+        P = P - K*C*P;
 
         timer_yhat = [timer_yhat, y_hat];
         timer_dyhat = [timer_dyhat, x_hat(1)];
