@@ -115,7 +115,7 @@ try
     end
 
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -149,12 +149,12 @@ try
     % Load the neural network controller
     load("bestchrom_nn");
 
-    y_max   = 220;           % ocakavane max(|y|)
-    d1y_max = 220/Ts;           % ocakavane max(|dy/dt|)
-    de_max = 1000/1.23;
-    e_max   = 10;
-    ie_max  = 4000/3.5/2.99;    % odhad pre integral
-    d1u_max = 10000;
+    y_max   = 2200;           % ocakavane max(|y|)
+    d1y_max = 5000;           % ocakavane max(|dy/dt|)
+    de_max = 1000;
+    e_max   = 220;
+    ie_max  = 8500;    % odhad pre integral
+    d1u_max = 20000;
 
     Ny=1/y_max; Nd1y=1/d1y_max;
     Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
@@ -169,13 +169,17 @@ try
 
     % Reference signal
     REF = 35;
-
+    
+    yinit = -1;
     dylast = 0;
     ylast= 0;
     ulast = 0;
     dulast = 0;
     elast = 0;
     eint = 0;
+
+    e = 0;
+    du = 0;
 
     U_PB = 30;
     u = 0;
@@ -197,21 +201,6 @@ try
             continue;
         end
 
-        % write(scon, 5*(sin(step/2/pi)) + 20, "single");
-
-        % u = 10;
-        % 
-        % if time_elapsed >= 7.5
-        %     u = 20;
-        % elseif time_elapsed >= 5.0
-        %     u = 10;
-        % elseif time_elapsed >= 2.5
-        %     u = 20;
-        % else
-        %     u = 10;
-        % end
-        % 
-        % write(scon, u, "single");
 
         elapsed = time_elapsed - SYNC_TIME;
 
@@ -239,13 +228,17 @@ try
             u = U_PB;
         end
         
-        e = REF - ylast;
+        
         
         if elapsed >= 0
+            if yinit < 0
+                yinit = ylast;
+            end
+            e = REF - ylast;
             de = (e - elast)/time_delta;
-            eint = eint + e * time_delta;
+            eint = max(-85, min(85, (eint + e * time_delta)));
         
-            X=[ylast*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
+            X=[ylast-yinit*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
             % writenum2file(fhandle, X);
             X = max(min(X,1),-1); % orezanie na interval <-1,1>
             % disp(X);
@@ -259,9 +252,9 @@ try
             A1=tanh(3*A1);
             A2=(W2*A1);   % 1./2. skryta vrstva
             A2=tanh(3*A2);
-            ux=W3*A2*umax;
+            ux=W3*A2*(umax-U_PB);
         
-            u = u + min(umax, max(umin, ux));
+            u = u + min(umax-U_PB, max(-U_PB, ux));
         end
 
         du = (u - ulast)/time_delta;

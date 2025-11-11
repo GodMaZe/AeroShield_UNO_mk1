@@ -87,9 +87,8 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
         0 0 0.25];
     R_=[0.1];
     Qz=[1];
-    Q_tilde=zeros(size(Q_) + size(Qz));
-    Q_tilde(1:n, 1:n) = Q_;
-    Q_tilde(n+1:end, n+1:end) = Qz;
+    Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
+            zeros(size(Qz, 1), size(Q_, 2)), Qz];
     
     % --- Solve Discrete-time Algebraic Riccati Equation ---
     [P_LQ,~,K_LQ]= dare(A_tilde, B_tilde, Q_tilde, R_);
@@ -100,7 +99,7 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
 
     % --- Kalman filter initialization ---    
     R=0.3; % measurement noise covariance
-    Q=diag([0.2;0.2;1]);  % process noise covariance
+    Q=diag([0.2;0.2;1;0.1]);  % process noise covariance
 
     %% ----------------------------------
     % ----------------------------------
@@ -266,8 +265,8 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
     
     
     % Kalman initial
-    P=zeros(n);
-    x_hat=zeros(n,1);
+    P=zeros(size(Q_tilde));
+    x_hat=zeros(size(Q_tilde,1),1);
         
     % Initialize control variables
     z=zeros(m,1);
@@ -318,14 +317,14 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
         plant_potentiometer = R_WANTED + serLineList(4)/100*20; % R_WANTED; %*sin(2*pi*20*plant_time/1e6) + R_WANTED; % serLineList(4);
         plant_dt = serLineList(5);
         
-        x_hat = A*x_hat + B*u;
+        x_hat = A_tilde*x_hat + B_tilde*u;
 
-        P = A*P*A' + Q;
-        K = P*C'/(C*P*C' + R);
-        e = plant_output - C*x_hat;
-        x_hat = x_hat + K*e;
-        y_hat = C*x_hat;
-        P = P - K*C*P;
+        P = A_tilde*P*A_tilde' + Q;
+        K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
+        e1 = plant_output - C_tilde*x_hat;
+        x_hat = x_hat + K*e1;
+        y_hat = C_tilde*x_hat;
+        P = P - K*C_tilde*P;
 
         timer_yhat = [timer_yhat, y_hat];
         timer_dyhat = [timer_dyhat, x_hat(1)];
@@ -342,8 +341,9 @@ function [timer_t, timer_y, timer_u, timer_potentiometer, timer_yhat, timer_dyha
         u_send = u;
 
         u_send = min(U_MAX, max(u_send, U_MIN));
-
-        z = z + plant_potentiometer - plant_output;
+        
+        e = plant_potentiometer - plant_output;
+        z = z + e;
         % z = z + 0.7*e + (plant_potentiometer - plant_output)*(0.6 + 0.8/(plant_dt/1000));
 
         % if u_send > U_MAX

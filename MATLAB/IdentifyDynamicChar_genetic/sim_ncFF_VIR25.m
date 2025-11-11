@@ -1,6 +1,6 @@
 % funkcia na simulaciu regulacie SISO s neuro-regulatorom, bez simulinku
 
-function[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(W1,W2,W3,Gs,r,t,x0,umin,umax,norms)
+function[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(W1,W2,W3,Gs,r,t,x0,umin,umax,norms,noise,noise_amp)
 % W1, W2, W3 = maice váh
 % rezim = trenovanie / testovanie
 dt = mean(diff(t));
@@ -46,6 +46,16 @@ else
     Nd1u = norms.Nd1u;
 end
 
+is_noise = false;
+noise_K = 1;
+
+if nargin >= 11
+    is_noise = noise;
+end
+if nargin >= 12
+    noise_K = noise_amp;
+end
+
 e = zeros(size(t));
 de = zeros(size(t));
 dy = zeros(size(t));
@@ -66,7 +76,7 @@ eint = 0;
 
 x = x0;
 
-U_PB = 30;
+U_PB = 0;
 
 for i=1:numel(t)
     e(i) = r(i) - ylast;
@@ -103,6 +113,8 @@ for i=1:numel(t)
     
     y(i) = x(1);
     dy(i) = x(2);
+
+    x = x + flip(eye(size(x))*noise_K*randn(1))*is_noise;
     
     dulast = du(i);
     dylast = dy(i);

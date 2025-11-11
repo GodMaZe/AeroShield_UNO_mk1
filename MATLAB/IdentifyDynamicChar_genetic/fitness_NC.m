@@ -1,4 +1,4 @@
-function [fit] = fitness_NC(pop, layers, Gs, r, t)
+function [fit] = fitness_NC(pop, layers, Gs, r, t, noise, noise_amp)
 N = size(pop, 1);
 fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
@@ -8,8 +8,8 @@ c2 = 0.95; % weight for control effort (de)
 c3 = 0.4; % max(u)
 c4 = 0.01; % Change in the control input in time (du)
 
-umax = 70;
-umin = -30;
+umax = 100;
+umin = -100;
 dt = mean(diff(t));
 
 n_input = layers(1);
@@ -20,6 +20,16 @@ lenW1 = n_h1 * n_input;   % W1: n_h1 x n_input
 lenW2 = n_h2 * n_h1;      % W2: n_h2 x n_h1
 lenW3 = 1     * n_h2;     % W3: 1    x n_h2
 expectedLen = lenW1 + lenW2 + lenW3;
+
+is_noise = false;
+noise_K = 1;
+
+if nargin > 5
+    is_noise = noise;
+end
+if nargin > 6
+    noise_K = noise_amp;
+end
 
 parfor i = 1:N
     chrom = pop(i, :);
@@ -37,7 +47,7 @@ parfor i = 1:N
 
     x0 = zeros(npoles, 1);
 
-    [tt,y,dy,w,e,de,u,usat] = sim_ncFF_VIR25(W1, W2, W3, Gs, r, t, x0, umin, umax);
+    [tt,y,dy,w,e,de,u,usat] = sim_ncFF_VIR25(W1, W2, W3, Gs, r, t, x0, umin, umax, [], is_noise, noise_K);
 
 
     IAE = sum(abs(e)) * dt; % Integral of Absolute Error

@@ -34,7 +34,7 @@ end
 % r = ones(size(t))'*5;
 
 t = 0:dt:5;
-r = ones(size(t))'*38;
+r = ones(size(t))'*5;
 % r(1:120) = 5;
 % r(121:end) = 1;
 % r(1:100) = 4;
@@ -44,7 +44,7 @@ r = ones(size(t))'*38;
 
 
 %% Prepare Genetic
-numgen=100;	% number of generations
+numgen=500;	% number of generations
 lpop=150;	% number of chromosomes in population
 W1size = 6;
 W2size = 6;
@@ -73,10 +73,14 @@ bestgen = 0;
 
 Pop = genrpop(lpop,Space);
 
+%%
+is_noise = true;
+noise_amp = 0.1;
+
 
 %% DO GENETIC
 for gen=1:numgen
-    Fit=fitness_NC(Pop,layers, Gs, r, t);
+    Fit=fitness_NC(Pop,layers, Gs, r, t, is_noise, noise_amp);
 
     evolution(gen)=min(Fit);	% convergence graph of the solution
 
@@ -132,7 +136,7 @@ x0 = zeros(numel(Gs.den) - 1, 1);
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
-    Gs, r, t, x0);
+    Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
 
 figure(1);
 plot(evolution);
@@ -159,10 +163,10 @@ saveas(gcf, FILENAME_TRAIN + "/output_nn_best_train.png");
 x0 = zeros(numel(Gs.den) - 1, 1);
 t = 0:dt:20;
 r = ones(size(t))';
-r(1:100) = 40;
-r(100:200) = 30;
-r(200:300) = 35;
-r(300:end) = 42;
+r(1:100) = 5;
+r(100:200) = -5;
+r(200:300) = 0;
+r(300:end) = 4;
 
 if ~exist('layers', 'var') || ~exist('bestchrom', 'var') || ~exist('evolution', 'var')
     error('Variables "layers", "rezim", "bestchrom", and "evolution" must be defined in the workspace.');
@@ -172,7 +176,7 @@ end
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
-    Gs, r, t, x0);
+    Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
 %%
 try
     close(3);
@@ -182,7 +186,7 @@ figure(3);
 hold on;
 stairs(t, y);
 stairs(t, w, 'k--');
-stairs(t, e, 'r')
+stairs(t, u, 'r')
 title('Output and Reference Signal');
 xlabel('Time [s]');
 ylabel('Amplitude');
