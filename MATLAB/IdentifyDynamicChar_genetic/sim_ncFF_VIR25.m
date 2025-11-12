@@ -21,12 +21,12 @@ end
 
 if nargin<10 || isempty(norms)
     % defaultne normy
-    y_max   = 2200;           % ocakavane max(|y|)
-    d1y_max = 5000;           % ocakavane max(|dy/dt|)
-    de_max = 1000;
+    y_max   = 220;           % ocakavane max(|y|)
+    d1y_max = 150;           % ocakavane max(|dy/dt|)
+    de_max = 100;
     e_max   = 220;
-    ie_max  = 8500;    % odhad pre integral
-    d1u_max = 20000;
+    ie_max  = 3000;    % odhad pre integral
+    d1u_max = 4000;
 
     % y_max   = 1;           % ocakavane max(|y|)
     % d1y_max = 1;           % ocakavane max(|dy/dt|)

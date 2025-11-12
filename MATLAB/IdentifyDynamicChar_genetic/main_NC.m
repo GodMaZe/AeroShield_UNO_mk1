@@ -172,6 +172,10 @@ if ~exist('layers', 'var') || ~exist('bestchrom', 'var') || ~exist('evolution', 
     error('Variables "layers", "rezim", "bestchrom", and "evolution" must be defined in the workspace.');
 end
 
+W1size = layers(1);
+W2size = layers(2);
+W3size = layers(3);
+
 [t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(...
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...

@@ -44,6 +44,7 @@ LOG_DT = [];
 LOG_STEP = [];
 LOG_CTRL_T = [];
 LOG_REF = [];
+LOG_X = [];
 
 function plotdatarealtime()
     global LOG_T LOG_Y LOG_U LOG_REF;
@@ -115,7 +116,7 @@ try
     end
 
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -149,12 +150,12 @@ try
     % Load the neural network controller
     load("bestchrom_nn");
 
-    y_max   = 2200;           % ocakavane max(|y|)
-    d1y_max = 5000;           % ocakavane max(|dy/dt|)
-    de_max = 1000;
+    y_max   = 220;           % ocakavane max(|y|)
+    d1y_max = 150;           % ocakavane max(|dy/dt|)
+    de_max = 100;
     e_max   = 220;
-    ie_max  = 8500;    % odhad pre integral
-    d1u_max = 20000;
+    ie_max  = 3000;    % odhad pre integral
+    d1u_max = 4000;
 
     Ny=1/y_max; Nd1y=1/d1y_max;
     Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
@@ -238,8 +239,9 @@ try
             de = (e - elast)/time_delta;
             eint = max(-85, min(85, (eint + e * time_delta)));
         
-            X=[ylast-yinit*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
+            X=[(ylast-yinit)*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
             % writenum2file(fhandle, X);
+            LOG_X = [LOG_X; X'];
             X = max(min(X,1),-1); % orezanie na interval <-1,1>
             % disp(X);
             
@@ -376,3 +378,13 @@ xlabel('k'); ylabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
+
+figure(123); clf;
+hold on;
+for i=1:size(LOG_X, 2)
+    subplot(size(LOG_X, 2), 1, i);
+    plot(LOG_X(:, i));
+    ylabel("X" + num2str(i));
+    grid minor;
+end
+hold off;
