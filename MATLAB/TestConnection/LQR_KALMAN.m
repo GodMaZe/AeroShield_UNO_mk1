@@ -189,7 +189,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -219,11 +219,11 @@ try
     plant_time = 0;
     
 
-    REF = 25;
+    REF = 30;
 
     U_STEP_SIZE = 5;
     
-    U_PB = 30;
+    U_PB = 20;
 
     step = 1;
     u = 0;
@@ -255,11 +255,11 @@ try
         elapsed = time_elapsed - SYNC_TIME;
 
         if elapsed >= 15
-            REF = 25;
-        elseif elapsed >= 10
-            REF = 20;
-        elseif elapsed >= 5
             REF = 30;
+        elseif elapsed >= 10
+            REF = 25;
+        elseif elapsed >= 5
+            REF = 35;
         end
 
         x_hat = A*x_hat + B*u;
@@ -271,15 +271,18 @@ try
         y_hat = C*x_hat;
         P = P - K*C*P;
 
-        ux = Kx*x_hat + Kz*z;
-        u = U_PB + max(UMin, min(UMax, ux));
+        
+        
 
         if elapsed >= 0
-            
+            ux = Kx*x_hat + Kz*z;
+            e = REF - plant_output;
+            z = z + e;
         end
 
-        e = REF - plant_output;
-        z = z + e;
+        u = U_PB + max(UMin, min(UMax, ux));
+
+        
 
         write(scon, u, "single");
         
