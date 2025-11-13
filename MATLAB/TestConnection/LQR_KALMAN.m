@@ -22,10 +22,10 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 20;
+Tstop = 30;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
-Ts = 0.05;
+Ts = 0.1;
 
 Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
@@ -68,7 +68,7 @@ function plotdatarealtime()
             % hr = plot(ax, nan, nan, '.r');
             % hu = plot(ax, nan, nan, '.b');
             hy = stairs(ax, nan, nan);
-            hr = stairs(ax, nan, nan);
+            hr = stairs(ax, nan, nan, '--k');
             hu = stairs(ax, nan, nan);
             grid minor;
             title("Real-Time System Response");
@@ -145,10 +145,10 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 % --- LQ weighting matrices ---
-Q_=[0.1 0 0;
+Q_=[0.01 0 0;
     0 0.1 0;
-    0 0 10];
-R_=[1];
+    0 0 15];
+R_=[0.1];
 Qz=[30];
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
@@ -219,7 +219,10 @@ try
     plant_time = 0;
     
 
-    REF = 35;
+    REF_INIT = 35;
+    REF = REF_INIT;
+
+    REF_STEPS = [5, -5, 0, 10, -REF_INIT];
 
     U_STEP_SIZE = 5;
     
@@ -254,12 +257,16 @@ try
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        if elapsed >= 15
-            REF = 35;
+        if elapsed >= 25
+            REF = REF_INIT + REF_STEPS(5);
+        elseif elapsed >= 20
+            REF = REF_INIT + REF_STEPS(4);
+        elseif elapsed >= 15
+            REF = REF_INIT + REF_STEPS(3);
         elseif elapsed >= 10
-            REF = 30;
+            REF = REF_INIT + REF_STEPS(2);
         elseif elapsed >= 5
-            REF = 40;
+            REF = REF_INIT + REF_STEPS(1);
         end
 
         x_hat = A*x_hat + B*u;
