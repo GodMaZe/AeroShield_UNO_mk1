@@ -3,9 +3,9 @@ N = size(pop, 1);
 fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
 
-c1 = 1; % weight for error (e)
-c2 = 0.95; % weight for control effort (de)
-c3 = 0.4; % max(u)
+c1 = 1.5; % weight for error (e)
+c2 = 0.4; % weight for control effort (de)
+c3 = 0.7; % max(u)
 c4 = 0.01; % Change in the control input in time (du)
 
 umax = 100;

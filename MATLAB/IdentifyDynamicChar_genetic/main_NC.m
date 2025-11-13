@@ -33,22 +33,26 @@ end
 % t = 0:round(dt,2):5;
 % r = ones(size(t))'*5;
 
-t = 0:dt:5;
+t = 0:dt:20;
 r = ones(size(t))'*5;
-% r(1:120) = 5;
+% r(1:120) = 20;
 % r(121:end) = 1;
-% r(1:100) = 4;
-% r(100:250) = -5;
-% r(250:end) = 3;
+r(1:100) = 20;
+r(100:250) = -15;
+r(250:350) = 10;
+r(350:500) = -20;
+r(500:750) = 0;
+r(750:850) = 5;
+r(850:end) = -15;
 
 
 
 %% Prepare Genetic
 numgen=500;	% number of generations
 lpop=150;	% number of chromosomes in population
-W1size = 6;
-W2size = 6;
-W3size = 3;
+W1size = 5;
+W2size = 3;
+W3size = 2;
 layers = [W1size, W2size, W3size];
 lstring=W1size * W2size + W2size * W3size + W3size;	% number of genes in a chromosome
 M=1;          % maximum of the search space
@@ -75,7 +79,7 @@ Pop = genrpop(lpop,Space);
 
 %%
 is_noise = true;
-noise_amp = 0.1;
+noise_amp = 0.012;
 
 
 %% DO GENETIC
@@ -109,6 +113,28 @@ for gen=1:numgen
         bestgen=gen;
         bestchrom=Best(1,:);
         fprintf('New best chromosome found in generation %d with fitness %.4f\n', bestgen, best);
+    end
+
+    if mod(gen, numgen/10) == 0
+        x0 = zeros(numel(Gs.den) - 1, 1);
+        [t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(...
+            reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
+            reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
+            reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
+            Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
+        figure(2); clf;
+        hold on;
+        stairs(t, y, 'b');
+        stairs(t, w, 'r--');
+        stairs(t, u);
+        title('Output and Reference Signal');
+        subtitle("Gen = " + num2str(gen));
+        xlabel('t [s]');
+        ylabel('response [-]');
+        legend('y', 'r','u');
+        grid on;
+        hold on;
+        saveas(gcf, FILENAME_TRAIN + "/output_nn_best_train_gen_" + num2str(gen) + ".png");
     end
     fprintf('Generation %d completed.\n', gen);
 end
@@ -152,6 +178,7 @@ stairs(t, y, 'b');
 stairs(t, w, 'r--');
 stairs(t, u);
 title('Output and Reference Signal');
+subtitle("Train");
 xlabel('Time [s]');
 ylabel('Amplitude');
 legend('y', 'r','u');
@@ -192,6 +219,7 @@ stairs(t, y);
 stairs(t, w, 'k--');
 stairs(t, u, 'r')
 title('Output and Reference Signal');
+subtitle("Test");
 xlabel('Time [s]');
 ylabel('Amplitude');
 legend('y', 'r', 'u');

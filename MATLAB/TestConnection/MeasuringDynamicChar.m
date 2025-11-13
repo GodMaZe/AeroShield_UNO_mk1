@@ -118,7 +118,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -149,7 +149,7 @@ try
 
     REF = 0;
 
-    U_STEP_SIZE = 5;
+    U_STEP_SIZE = -5;
 
 
     

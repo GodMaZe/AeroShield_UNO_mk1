@@ -22,11 +22,11 @@ end
 if nargin<10 || isempty(norms)
     % defaultne normy
     y_max   = 220;           % ocakavane max(|y|)
-    d1y_max = 150;           % ocakavane max(|dy/dt|)
+    d1y_max = 50;           % ocakavane max(|dy/dt|)
+    e_max   = 10;
+    ie_max  = 10;    % odhad pre integral
     de_max = 100;
-    e_max   = 220;
-    ie_max  = 3000;    % odhad pre integral
-    d1u_max = 4000;
+    d1u_max = 800;
 
     % y_max   = 1;           % ocakavane max(|y|)
     % d1y_max = 1;           % ocakavane max(|dy/dt|)
@@ -83,7 +83,8 @@ for i=1:numel(t)
     de(i) = (e(i) - elast)/dt;
     eint = eint + e(i) * dt;
 
-    X=[ylast*Ny; dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u]; % pripadne ine
+    % X=[ylast*Ny; dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u];
+    X=[-dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u];
     % writenum2file(fhandle, X);
     X = max(min(X,1),-1); % orezanie na interval <-1,1>
     

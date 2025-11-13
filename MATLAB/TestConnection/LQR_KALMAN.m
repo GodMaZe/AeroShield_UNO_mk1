@@ -33,8 +33,8 @@ nsteps = floor(Tstop/Ts);
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
 Ystop = 180; % deg
-UMax = 100;
-UMin = -UMax;
+UMax = 70;
+UMin = -30;
 
 global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
 

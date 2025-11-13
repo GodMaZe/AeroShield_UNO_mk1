@@ -116,7 +116,7 @@ try
     end
 
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -151,11 +151,18 @@ try
     load("bestchrom_nn");
 
     y_max   = 220;           % ocakavane max(|y|)
-    d1y_max = 150;           % ocakavane max(|dy/dt|)
+    d1y_max = 50;           % ocakavane max(|dy/dt|)
+    e_max   = 10;
+    ie_max  = 10;    % odhad pre integral
     de_max = 100;
-    e_max   = 220;
-    ie_max  = 3000;    % odhad pre integral
-    d1u_max = 4000;
+    d1u_max = 800;
+
+    % y_max   = 1;           % ocakavane max(|y|)
+    % d1y_max = 1;           % ocakavane max(|dy/dt|)
+    % de_max = 1;
+    % e_max   = 1;
+    % ie_max  = 1;    % odhad pre integral
+    % d1u_max = 1;
 
     Ny=1/y_max; Nd1y=1/d1y_max;
     Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
@@ -169,7 +176,7 @@ try
     W3 = reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size);
 
     % Reference signal
-    REF = 35;
+    REF = 42;
     
     yinit = -1;
     dylast = 0;
@@ -185,8 +192,8 @@ try
     U_PB = 30;
     u = 0;
     udt = 1;
-    umax = 100;
-    umin = -umax;
+    umax = 70;
+    umin = -30;
     is_init = true;
 
     SYNC_TIME = 10;
@@ -206,11 +213,11 @@ try
         elapsed = time_elapsed - SYNC_TIME;
 
         if elapsed >= 15
-            REF = 42.5;
+            REF = 42;
         elseif elapsed >= 10
-            REF = 40;
+            REF = 37;
         elseif elapsed >= 5
-            REF = 45;
+            REF = 32;
         end
 
         % if elapsed >= 5
@@ -237,9 +244,10 @@ try
             end
             e = REF - ylast;
             de = (e - elast)/time_delta;
-            eint = max(-85, min(85, (eint + e * time_delta)));
+            eint = eint + e * time_delta;
         
-            X=[(ylast-yinit)*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u]; % pripadne ine
+            % X=[(ylast-yinit)*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
+            X=[-dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
             % writenum2file(fhandle, X);
             LOG_X = [LOG_X; X'];
             X = max(min(X,1),-1); % orezanie na interval <-1,1>
