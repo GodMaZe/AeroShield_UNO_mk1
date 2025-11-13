@@ -36,7 +36,7 @@ Ystop = 180; % deg
 UMax = 70;
 UMin = -30;
 
-global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
+global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF LOG_YHAT LOG_XHAT;
 
 % Logging vectors
 LOG_T = [];
@@ -49,9 +49,11 @@ LOG_DT = [];
 LOG_STEP = [];
 LOG_CTRL_T = [];
 LOG_REF = [];
+LOG_YHAT = [];
+LOG_XHAT = [];
 
 function plotdatarealtime()
-    global LOG_T LOG_Y LOG_U LOG_REF;
+    global LOG_T LOG_Y LOG_YHAT LOG_REF;
     persistent hy hr hu;
     % ----------------------------------
     % Plot the measured data in real time
@@ -71,7 +73,7 @@ function plotdatarealtime()
             title("Real-Time System Response");
             xlabel("t [s]");
             ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-            legend(ax, "y","ref", "u", 'Location', 'southeast');
+            legend(ax, "y","ref", "yhat", 'Location', 'southeast');
             
         end
        
@@ -90,7 +92,7 @@ function plotdatarealtime()
 
         set(hy, 'YData', LOG_Y(mask), 'XData', t);
         set(hr, 'YData', LOG_REF(mask), 'XData', t);
-        set(hu, 'YData', LOG_U(mask), 'XData', t);
+        set(hu, 'YData', LOG_YHAT(mask), 'XData', t);
         drawnow limitrate nocallbacks;
     catch err
        fprintf(2, "Plot thread: " + err.message + "\n");
@@ -142,11 +144,11 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 % --- LQ weighting matrices ---
-Q_=[0.1 0 0;
-    0 2 0;
-    0 0 0.25];
-R_=[0.4];
-Qz=[2];
+Q_=[1 0 0;
+    0 1 0;
+    0 0 1];
+R_=[1];
+Qz=[1];
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -186,7 +188,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -226,6 +228,7 @@ try
     u = 0;
     udt = U_STEP_SIZE/10;
     is_init = true;
+    e = 0;
     
     
     while plant_time < Tstop
@@ -266,12 +269,14 @@ try
         y_hat = C*x_hat;
         P = P - K*C*P;
 
-        u = Kx*x_hat + Kz*z;
-
-        u = U_PB + min(UMax-U_PB, min(-U_PB, u));
-
-        e = REF - plant_output;
-        z = z + e;
+        if elapsed >= 0
+            u = Kx*x_hat + Kz*z;
+    
+            u = U_PB + max(UMin, min(UMax, u));
+    
+            e = REF - plant_output;
+            z = z + e;
+        end
 
         write(scon, u, "single");
         
@@ -303,6 +308,8 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
+        LOG_YHAT = [LOG_YHAT, y_hat];
+        LOG_XHAT = [LOG_XHAT; x_hat'];
 
         time_last = time_curr;
         step = step + 1;
@@ -371,11 +378,23 @@ stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 % scatter(LOG_TP, LOG_Y, '.k');
 xlabel('k'); ylabel('\phi(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
-hold of;
+hold off;
 
 subplot(2,1,2)
-stairs(LOG_U, LOG_Y./LOG_U,style,'LineWidth',1.5)
+stairs(LOG_TP, LOG_Y,style,'LineWidth',1.5)
+stairs(LOG_TP, LOG_YHAT,style,'LineWidth',1.5)
 ylabel('y(k)'); xlabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
+
+%%
+figure(123); clf;
+hold on;
+for i=1:size(LOG_XHAT, 2)
+    subplot(size(LOG_XHAT, 2), 1, i);
+    plot(LOG_XHAT(:, i));
+    ylabel("X" + num2str(i));
+    grid minor;
+end
+hold off;
