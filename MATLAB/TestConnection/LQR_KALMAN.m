@@ -22,7 +22,7 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 60;
+Tstop = 20;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
@@ -51,6 +51,7 @@ LOG_CTRL_T = [];
 LOG_REF = [];
 LOG_YHAT = [];
 LOG_XHAT = [];
+LOG_UX = [];
 
 function plotdatarealtime()
     global LOG_T LOG_Y LOG_YHAT LOG_REF;
@@ -144,11 +145,11 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 % --- LQ weighting matrices ---
-Q_=[1 0 0;
-    0 1 0;
+Q_=[0.1 0 0;
+    0 0.1 0;
     0 0 1];
-R_=[1];
-Qz=[1];
+R_=[0.1];
+Qz=[2];
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -160,7 +161,7 @@ Kx=K_LQ(1:n);           % state feedback part
 Kz=K_LQ(n + 1:end);        % integral feedback part
 
 % --- Kalman filter initialization ---    
-R=0.3; % measurement noise covariance
+R=3; % measurement noise covariance
 Q=diag([0.2;0.2;1]);  % process noise covariance
 
 % Kalman initial
@@ -188,7 +189,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -218,7 +219,7 @@ try
     plant_time = 0;
     
 
-    REF = 35;
+    REF = 25;
 
     U_STEP_SIZE = 5;
     
@@ -226,6 +227,7 @@ try
 
     step = 1;
     u = 0;
+    ux = 0;
     udt = U_STEP_SIZE/10;
     is_init = true;
     e = 0;
@@ -253,11 +255,11 @@ try
         elapsed = time_elapsed - SYNC_TIME;
 
         if elapsed >= 15
-            REF = 42.5;
+            REF = 25;
         elseif elapsed >= 10
-            REF = 40;
+            REF = 20;
         elseif elapsed >= 5
-            REF = 45;
+            REF = 30;
         end
 
         x_hat = A*x_hat + B*u;
@@ -269,14 +271,15 @@ try
         y_hat = C*x_hat;
         P = P - K*C*P;
 
+        ux = Kx*x_hat + Kz*z;
+        u = U_PB + max(UMin, min(UMax, ux));
+
         if elapsed >= 0
-            u = Kx*x_hat + Kz*z;
-    
-            u = U_PB + max(UMin, min(UMax, u));
-    
-            e = REF - plant_output;
-            z = z + e;
+            
         end
+
+        e = REF - plant_output;
+        z = z + e;
 
         write(scon, u, "single");
         
@@ -310,6 +313,7 @@ try
         LOG_REF = [LOG_REF, REF];
         LOG_YHAT = [LOG_YHAT, y_hat];
         LOG_XHAT = [LOG_XHAT; x_hat'];
+        LOG_UX = [LOG_UX, ux];
 
         time_last = time_curr;
         step = step + 1;
@@ -360,7 +364,7 @@ figure(1); clf;
 hold on;
 stairs(LOG_TP, LOG_Y);
 stairs(LOG_TP, LOG_REF);
-stairs(LOG_TP, LOG_U);
+stairs(LOG_TP, LOG_YHAT);
 title("Real-Time System Response");
 xlabel("t [s]");
 ylabel("$\varphi [^\circ]$", "Interpreter","latex");
@@ -368,24 +372,25 @@ legend("y","ref", "u", 'Location', 'southeast');
 grid minor;
 hold off;
 
-figure(999);
+figure(999); clf;
 style='-k';
 
 subplot(2,1,1)
 hold on;
 plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
-% scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
+stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
+xlabel('k'); ylabel('\phi(k)'); grid on;
 % xlim([0,max(LOG_STEP)]);
 hold off;
 
 subplot(2,1,2)
-stairs(LOG_TP, LOG_Y,style,'LineWidth',1.5)
-stairs(LOG_TP, LOG_YHAT,style,'LineWidth',1.5)
-ylabel('y(k)'); xlabel('u(k)'); grid on
+hold on
+stairs(LOG_TP, LOG_U,'LineWidth',1.5);
+stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
+ylabel('u(k) [%]'); xlabel('t [s]'); grid on
 % xlim([0,max(LOG_STEP)]);
-
+hold off
 set(gcf,'position',[200,400,650,400]);
 
 %%
