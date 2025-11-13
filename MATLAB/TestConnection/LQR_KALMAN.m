@@ -74,7 +74,7 @@ function plotdatarealtime()
             title("Real-Time System Response");
             xlabel("t [s]");
             ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-            legend(ax, "y","ref", "yhat", 'Location', 'southeast');
+            legend(ax, "y","ref", "yhat", 'Location', 'southwest');
             
         end
        
@@ -147,9 +147,9 @@ B_tilde(1:n) = B;
 % --- LQ weighting matrices ---
 Q_=[0.1 0 0;
     0 0.1 0;
-    0 0 1];
-R_=[0.1];
-Qz=[2];
+    0 0 10];
+R_=[1];
+Qz=[30];
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -161,8 +161,8 @@ Kx=K_LQ(1:n);           % state feedback part
 Kz=K_LQ(n + 1:end);        % integral feedback part
 
 % --- Kalman filter initialization ---    
-R=3; % measurement noise covariance
-Q=diag([0.2;0.2;1]);  % process noise covariance
+R=1; % measurement noise covariance
+Q=diag([0.2;0.2;0.1]);  % process noise covariance
 
 % Kalman initial
 P=zeros(size(Q));
@@ -189,7 +189,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -219,11 +219,11 @@ try
     plant_time = 0;
     
 
-    REF = 30;
+    REF = 35;
 
     U_STEP_SIZE = 5;
     
-    U_PB = 20;
+    U_PB = 30;
 
     step = 1;
     u = 0;
@@ -242,24 +242,24 @@ try
             continue;
         end
 
-        if is_init
-            u = u + udt;
-            u = max(0, min(u, U_PB));
-            if u >= U_PB
-                is_init = false;
-            end
-        else
-            u = U_PB;
-        end
+        % if is_init
+        %     u = u + udt;
+        %     u = max(0, min(u, U_PB));
+        %     if u >= U_PB
+        %         is_init = false;
+        %     end
+        % else
+        %     u = U_PB;
+        % end
 
         elapsed = time_elapsed - SYNC_TIME;
 
         if elapsed >= 15
-            REF = 30;
-        elseif elapsed >= 10
-            REF = 25;
-        elseif elapsed >= 5
             REF = 35;
+        elseif elapsed >= 10
+            REF = 30;
+        elseif elapsed >= 5
+            REF = 40;
         end
 
         x_hat = A*x_hat + B*u;
@@ -280,7 +280,7 @@ try
             z = z + e;
         end
 
-        u = U_PB + max(UMin, min(UMax, ux));
+        u = U_PB + max(-U_PB, min(100-U_PB, ux));
 
         
 
