@@ -22,10 +22,12 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 20;
+Tstop = 30;
 
-Ts = 0.05;
+Ts = 0.02;
 nsteps = floor(Tstop/Ts);
+
+U_PB = 30;
 
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
@@ -60,7 +62,7 @@ function plotdatarealtime()
             % hr = plot(ax, nan, nan, '.r');
             % hu = plot(ax, nan, nan, '.b');
             hy = stairs(ax, nan, nan);
-            hr = stairs(ax, nan, nan);
+            hr = stairs(ax, nan, nan, '--k');
             hu = stairs(ax, nan, nan);
             grid minor;
             title("Real-Time System Response");
@@ -115,7 +117,7 @@ try
     end
 
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -160,13 +162,13 @@ try
     chrom = [0.39 3.85 0.11];
     % chrom = [1 4 0.17];
     % chrom = [1 3.76 0.177];
-    chrom = [0.6 3.63 0.11];
-    chrom = [0.739 3.385 0.1];
-    chrom = [0.7 2.539 0.061];
-    chrom = [0.194 1.315 0.031];
-    chrom = [0.054 1.05 0.024]; % Ts = 0.05
-    chrom = [0.057 1.046 0.022]; % Ts = 0.05
-    chrom = [0.237 1.717 0.072];
+    % chrom = [0.6 3.63 0.11];
+    % chrom = [0.739 3.385 0.1];
+    % chrom = [0.7 2.539 0.061];
+    % chrom = [0.194 1.315 0.031];
+    % chrom = [0.054 1.05 0.024]; % Ts = 0.05
+    % chrom = [0.057 1.046 0.022]; % Ts = 0.05
+    % chrom = [0.237 1.717 0.072];
 
     if USE_GA_PID_PARAMS
         P = chrom(1);
@@ -178,14 +180,17 @@ try
         D = 0.0525;
     end
 
-    REF = 35;
+    REF_INIT = 35;
+    REF = REF_INIT;
+
+    REF_STEPS = [5, -5, 0, 10, -REF_INIT];
 
 
     e = 0;
     eint = 0;
     elast = plant_output;
 
-    U_PB = 30;
+    
     u = 0;
     udt = 1;
     is_init = true;
@@ -221,12 +226,16 @@ try
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        if elapsed >= 15
-            REF = 42.5;
+        if elapsed >= 25
+            REF = REF_INIT + REF_STEPS(5);
+        elseif elapsed >= 20
+            REF = REF_INIT + REF_STEPS(4);
+        elseif elapsed >= 15
+            REF = REF_INIT + REF_STEPS(3);
         elseif elapsed >= 10
-            REF = 40;
+            REF = REF_INIT + REF_STEPS(2);
         elseif elapsed >= 5
-            REF = 45;
+            REF = REF_INIT + REF_STEPS(1);
         end
 
         % if elapsed >= 5

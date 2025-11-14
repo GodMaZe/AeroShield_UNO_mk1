@@ -27,7 +27,7 @@ Tstop = 30;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
 Ts = 0.02;
-p = 20; % Prediction horizon
+p = 10; % Prediction horizon
 
 U_PB = 30;
 
@@ -37,8 +37,8 @@ nsteps = floor(Tstop/Ts);
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
 Ystop = 180; % deg
-UMax = 70;
-UMin = -30;
+UMax = 100;
+UMin = 0;
 
 global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF LOG_YHAT LOG_XHAT;
 
@@ -160,8 +160,8 @@ C_tilde = [C, eye(d)];
 [Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
-Q_mpc = [30];
-R_mpc = [15];
+Q_mpc = [1];
+R_mpc = [10];
 
 Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
@@ -171,18 +171,26 @@ H = Gamma'*N'*Q_*N*Gamma + R_;
 H = (H+H')/2; % for symmetry
 
 % Control input constraints
-u_lower = [0];
-u_upper = [100];
+u_lower = [UMin];
+u_upper = [UMax];
 
-U_upper = repmat(u_upper, p, 1);
 U_lower = repmat(u_lower, p, 1);
+U_upper = repmat(u_upper, p, 1);
+
+y_lower = [-50];
+y_upper = [80];
+
+Y_lower = repmat(y_lower, p, 1);
+Y_upper = repmat(y_upper, p, 1);
 
 % Constraint matrix for quadratic programming
 A_con = [Gamma;
-        -Gamma];
+        -Gamma;
+         N*Gamma;
+        -N*Gamma];
 
 % --- Kalman filter initialization ---    
-R=0.1; % measurement noise covariance
+R=0.01; % measurement noise covariance
 Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
 
 % Kalman initial
@@ -298,18 +306,24 @@ try
         P = P - K*C_tilde*P;
         % End Kalman
 
-        u_pred = u_ones*u;
+        
         
         if elapsed >= 0
             % Do MPC
+            u_pred = u_ones*u;
+
             Y_ref = repmat(REF, p, 1);
 
             b = (M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
-                    -U_lower + u_pred];
+                    -U_lower + u_pred;
+                    Y_upper - M*x_hat - N*u_pred;
+                    -Y_lower + M*x_hat + N*u_pred];
 
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
-            ux = delta_U(1:r, :);
+            if ~isempty(delta_U)
+                ux = delta_U(1:r, :);
+            end
             u = u + ux;
             % End MPC
         end
@@ -405,7 +419,7 @@ stairs(LOG_TP, LOG_YHAT);
 title("Real-Time System Response");
 xlabel("t [s]");
 ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-legend("y","ref", "u", 'Location', 'southeast');
+legend("y","ref", "yhat", 'Location', 'southeast');
 grid minor;
 hold off;
 
@@ -417,6 +431,7 @@ hold on;
 plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
+legend("ref","y","yhat");
 xlabel('k'); ylabel('\phi(k)'); grid on;
 % xlim([0,max(LOG_STEP)]);
 hold off;
