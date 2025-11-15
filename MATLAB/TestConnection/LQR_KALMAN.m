@@ -1,3 +1,4 @@
+%% 
 close all; clear;
 clc;
 
@@ -189,7 +190,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -344,6 +345,10 @@ catch er
     if exist("dfile_handle", "var")
         fclose(dfile_handle);
         clear dfile_handle;
+    end
+    for tim=timerfindall
+        stop(tim);
+        delete(tim);
     end
     rethrow(er);
 end

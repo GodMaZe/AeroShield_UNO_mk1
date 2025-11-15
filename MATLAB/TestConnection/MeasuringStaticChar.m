@@ -121,7 +121,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -238,6 +238,10 @@ catch er
         fclose(dfile_handle);
         clear dfile_handle;
     end
+    for tim=timerfindall
+        stop(tim);
+        delete(tim);
+    end
     rethrow(er);
 end
 
@@ -275,7 +279,7 @@ legend("y","ref", "u", 'Location', 'southeast');
 grid minor;
 hold off;
 
-figure(999);
+figure(999); clf;
 style='-k';
 
 subplot(2,1,1)
@@ -288,7 +292,7 @@ xlabel('k'); ylabel('\phi(k)'); grid on
 hold of;
 
 subplot(2,1,2)
-stairs(LOG_U, LOG_Y/LOG_U,style,'LineWidth',1.5)
+plot(LOG_U, LOG_Y,'.k','LineWidth',1.5)
 ylabel('y(k)'); xlabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 

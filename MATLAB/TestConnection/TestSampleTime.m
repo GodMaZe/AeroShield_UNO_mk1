@@ -117,7 +117,7 @@ try
     end
 
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -168,7 +168,8 @@ try
     % chrom = [0.194 1.315 0.031];
     % chrom = [0.054 1.05 0.024]; % Ts = 0.05
     chrom = [0.057 1.046 0.022]; % Ts = 0.05
-    chrom = [0.237 1.717 0.072];
+    % chrom = [0.237 1.717 0.072];
+    chrom = [0.325 1.831 0.025];
 
     if USE_GA_PID_PARAMS
         P = chrom(1);

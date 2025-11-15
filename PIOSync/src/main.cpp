@@ -138,7 +138,7 @@ void TaskSerial(void *pvParameters)
 {
     (void)pvParameters;
 
-    while(Serial.available())
+    while (Serial.available())
     {
         Serial.read(); // Clear any initial junk data
     }
@@ -147,9 +147,9 @@ void TaskSerial(void *pvParameters)
 
     // while(Serial.available() < 4);
 
-    xSemaphoreGive(mut_comms); // Allow data reading task to start
+    xSemaphoreGive(mut_comms);                      // Allow data reading task to start
     xSemaphoreTake(mut_calibration, portMAX_DELAY); // Wait for calibration to complete
-    xSemaphoreTake(mut_init, portMAX_DELAY); // Wait for initial data to be ready
+    xSemaphoreTake(mut_init, portMAX_DELAY);        // Wait for initial data to be ready
 
     float receivedValue = 0.0f;
     AeroData data;
@@ -162,13 +162,13 @@ void TaskSerial(void *pvParameters)
 
         while (recvByte(receivedValue))
         {
-            vTaskDelay(1/ portTICK_PERIOD_MS);
+            vTaskDelay(1 / portTICK_PERIOD_MS);
         }
         CONTROL_SIGNAL = receivedValue;
         CONTROL_OVERRIDE = true;
         control_time = micros();
         // Unlock waiting for matlab message
-        xSemaphoreGive(mut_waitMatlab);        
+        xSemaphoreGive(mut_waitMatlab);
     }
 }
 
@@ -212,24 +212,21 @@ void TaskReadData(void *pvParameters)
         // Wait for communication from matlab
         xSemaphoreTake(mut_waitMatlab, portMAX_DELAY);
         time_curr = micros();
-        
+
         data.potentiometer = AeroShield.referenceRead();
         controlSignal = CONTROL_OVERRIDE ? CONTROL_SIGNAL : data.potentiometer;
 
         AeroShield.actuatorWrite(controlSignal);
         outputSignal = AeroShield.sensorReadDegree();
-        
-        
-        
+
         data.time = static_cast<double>(time_curr) / 1e6;
         data.output = outputSignal;
         data.control = controlSignal;
         data.dt = static_cast<double>(time_curr - time_last) / 1e6;
         data.control_time = static_cast<double>(control_time) / 1e6;
-        
+
         time_last = time_curr;
 
         xQueueSend(AeroDataQueue, &data, 0);
-        
     }
 }

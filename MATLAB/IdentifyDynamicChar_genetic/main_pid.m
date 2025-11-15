@@ -15,7 +15,7 @@ if ~exist(FILENAME_TRAIN, "dir")
 end
 
 % Set the system
-Gs = Gs21; %GS21
+Gs = Gs20; %GS21
 
 if exist('bestchrom_pid.mat', 'file')
     load('bestchrom_pid.mat');

@@ -149,7 +149,7 @@ try
 
     REF = 0;
 
-    U_STEP_SIZE = -5;
+    U_STEP_SIZE = +5;
 
 
     

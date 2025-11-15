@@ -26,8 +26,8 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 30;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
-Ts = 0.02;
-p = 20; % Prediction horizon
+Ts = 0.05;
+p = 10; % Prediction horizon
 
 U_PB = 30;
 
@@ -213,7 +213,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
