@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 30;
 
-Ts = 0.02;
+Ts = 0.050;
 nsteps = floor(Tstop/Ts);
 
 U_PB = 30;
@@ -116,6 +116,8 @@ try
         clear scon;
     end
 
+    aerodata = AeroData;
+
 
     scon = serialport("COM3", 115200, "Timeout", 5);
     
@@ -128,15 +130,17 @@ try
 
     disp(sline);
 
-    sline = str2num(readline(scon));
-    disp(sline);
+    bytes = read(scon, aerodata.packetsize, "uint8");
+    aerodata = aerodata.parse(bytes);
+
+    disp(aerodata.tostring());
 
     init_plant_time = -1;
-    plant_output = sline(2);
-    plant_input = sline(3);
-    plant_potentiometer = sline(4);
-    plant_dt = sline(5);
-    plant_control_time = sline(6);
+    plant_output = aerodata.output;
+    plant_input = aerodata.control;
+    plant_potentiometer = aerodata.potentiometer;
+    plant_dt = aerodata.dt;
+    plant_control_time = aerodata.controltime;
 
     time_start = datetime("now");
     time_curr = time_start;
@@ -199,8 +203,9 @@ try
     SYNC_TIME = 10;
     Tstop = Tstop + SYNC_TIME;
     nsteps = floor(Tstop/Ts);
+    time_elapsed = 0;
     
-    while plant_time < Tstop
+    while time_elapsed < Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
@@ -272,21 +277,25 @@ try
 
         elast = plant_output;
 
+        u = 0;
+
         write(scon, u, "single");
         
         % Wait for the system to send a data message
-        sline = str2num(readline(scon));
+        bytes = read(scon, aerodata.packetsize, "uint8");
+        aerodata = aerodata.parse(bytes, false);
+
 
         if plant_time_init < 0
-            plant_time_init = sline(1);
+            plant_time_init = aerodata.time;
         end
 
-        plant_time = sline(1) - plant_time_init;
-        plant_output = sline(2);
-        plant_input = sline(3);
-        plant_potentiometer = sline(4);
-        plant_dt = sline(5);
-        plant_control_time = sline(6) - plant_time_init;
+        plant_time = aerodata.time - plant_time_init;
+        plant_output = aerodata.output;
+        plant_input = aerodata.control;
+        plant_potentiometer = aerodata.potentiometer;
+        plant_dt = aerodata.dt;
+        plant_control_time = aerodata.controltime - plant_time_init;
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time, REF];
@@ -306,7 +315,7 @@ try
         step = step + 1;
         time_last = time_curr;
 
-        if plant_time >= Tstop || plant_output >= Ystop
+        if time_elapsed >= Tstop || plant_output >= Ystop
             % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
             break;
         end

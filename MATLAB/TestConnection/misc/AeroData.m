@@ -4,15 +4,11 @@ classdef AeroData
     %   This object should have the same structure as the one defined
     %   within Arduino code, to match the sent bytes via serial comms.
     properties (SetAccess = private)
-        preamblesize uint32 = 4;
-        postamblesize uint32 = 2;
         nbytes uint32 = 24;
         packetsize uint32 = 0;
         isnormalized logical = false;
     end
     properties
-        preamble struct = struct("start_byte", 0, "packet_id", 0, "overhead_byte", 0, "nbytes_payload", 0);
-        postamble struct = struct("crc", 0, "stop_byte", 0);
         time double = 0; % long
         output double = 0.0; % float
         control double = 0.0; % float
@@ -41,7 +37,7 @@ classdef AeroData
         end
 
         function sz = size(obj)
-            sz = obj.preamblesize + obj.nbytes + obj.postamblesize;
+            sz = obj.nbytes;
         end
 
         function obj = reset(obj)
@@ -58,7 +54,6 @@ classdef AeroData
             %like structure.
             %   This object should represent the same structure within the
             %   Arduino device.
-            persistent oldbytes;
             if nargin <= 1
                 throw(MException("AeroData:parse_nargin_failed", "Not enougth input parameters."))
             end
@@ -67,44 +62,18 @@ classdef AeroData
                 throw(MException("AeroData:parse_nbytes_failed", "The number of bytes to be parsed is not equal to the number of bytes, defined within the AeroData class. Awaited number of bytes: " ...
                     + num2str(obj.packetsize) + " | Received bytes size: " + num2str(numel(bytes))));
             end
-            bytesorg = bytes;
+
             bytes = uint8(bytes);
-            old_time = obj.time;
             
-            % Construct the packet's preamble
-            obj.preamble.start_byte = bytes(1);
-            obj.preamble.packet_id = bytes(2);
-            obj.preamble.overhead_byte = bytes(3);
-            obj.preamble.nbytes_payload = bytes(4);
-
             % Construct the packet's body
-            obj.time = double(typecast(bytes(5:8), "uint32"));
-            obj.output = double(typecast(bytes(9:12), "single"));
-            obj.control = double(typecast(bytes(13:16), "single"));
-            obj.potentiometer = double(typecast(bytes(17:20), "single"));
-            obj.controltime = double(typecast(bytes(21:24), "uint32"));
-            obj.dt = double(typecast(bytes(25:28), "uint32"));
-
-            % Construct the packet's postamble
-            obj.postamble.crc = bytes(29);
-            obj.postamble.stop_byte = bytes(30);
+            obj.time = double(typecast(bytes(1:4), "uint32"));
+            obj.output = double(typecast(bytes(5:8), "single"));
+            obj.control = double(typecast(bytes(9:12), "single"));
+            obj.potentiometer = double(typecast(bytes(13:16), "single"));
+            obj.controltime = double(typecast(bytes(17:20), "uint32"));
+            obj.dt = double(typecast(bytes(21:24), "uint32"));
 
             obj.isnormalized = false;
-            
-            if old_time > obj.time
-                disp("Bytes org:");
-                disp(bytesorg);
-                disp("Bytes uint8:");
-                disp(bytes);
-                disp("Old bytes:");
-                disp(oldbytes);
-                disp("Old bytes uint8:");
-                disp(uint8(oldbytes));
-                fprintf("Old time: %f | New time: %f\n", old_time, obj.time);
-                % throw(MException("AeroData:timesync", "Error in the monotonically ascending time."));
-            end
-            
-            oldbytes = bytesorg;
 
             if nargin > 2 && ~shouldnormalize
                 return;
