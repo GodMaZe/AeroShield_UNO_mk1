@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 30;
 
-Ts = 0.050;
+Ts = 0.05;
 nsteps = floor(Tstop/Ts);
 
 U_PB = 30;
@@ -115,11 +115,7 @@ try
         scon.flush("input");
         clear scon;
     end
-
-    aerodata = AeroData;
-
-
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -130,6 +126,7 @@ try
 
     disp(sline);
 
+    aerodata = AeroData;
     bytes = read(scon, aerodata.packetsize, "uint8");
     aerodata = aerodata.parse(bytes);
 
@@ -277,13 +274,11 @@ try
 
         elast = plant_output;
 
-        u = 0;
-
         write(scon, u, "single");
         
         % Wait for the system to send a data message
         bytes = read(scon, aerodata.packetsize, "uint8");
-        aerodata = aerodata.parse(bytes, false);
+        aerodata = aerodata.parse(bytes);
 
 
         if plant_time_init < 0

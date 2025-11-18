@@ -27,7 +27,7 @@ Tstop = 30;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
-p = 10; % Prediction horizon
+p = 20; % Prediction horizon
 
 U_PB = 30;
 
@@ -160,14 +160,16 @@ C_tilde = [C, eye(d)];
 [Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
-Q_mpc = [1];
-R_mpc = [10];
+% Q_mpc = [1];
+% R_mpc = [10];
+Q_mpc=[0.01];
+R_mpc=[0.1];
 
 Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
 
 % Quadratic cost Hessian
-H = Gamma'*N'*Q_*N*Gamma + R_;
+H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
 H = (H+H')/2; % for symmetry
 
 % Control input constraints
@@ -213,7 +215,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM4", 115200, "Timeout", 5);
     
     sline = "";
 
@@ -224,15 +226,19 @@ try
 
     disp(sline);
 
-    sline = str2num(readline(scon));
-    disp(sline);
+    aerodata = AeroData;
+
+    bytes = read(scon, aerodata.packetsize, "uint8");
+    aerodata = aerodata.parse(bytes);
+
+    disp(aerodata.tostring());
 
     init_plant_time = -1;
-    plant_output = sline(2);
-    plant_input = sline(3);
-    plant_potentiometer = sline(4);
-    plant_dt = sline(5);
-    plant_control_time = sline(6);
+    plant_output = aerodata.output;
+    plant_input = aerodata.control;
+    plant_potentiometer = aerodata.potentiometer;
+    plant_dt = aerodata.dt;
+    plant_control_time = aerodata.controltime;
 
     time_start = datetime("now");
     time_curr = time_start;
@@ -314,13 +320,15 @@ try
 
             Y_ref = repmat(REF, p, 1);
 
-            b = (M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
+            b = 2*(M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
                     -U_lower + u_pred;
                     Y_upper - M*x_hat - N*u_pred;
                     -Y_lower + M*x_hat + N*u_pred];
 
+            tic
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
+            toc
             if ~isempty(delta_U)
                 ux = delta_U(1:r, :);
             end
@@ -331,18 +339,19 @@ try
         write(scon, u, "single");
         
         % Wait for the system to send a data message
-        sline = str2num(readline(scon));
+        bytes = read(scon, aerodata.packetsize, "uint8");
+        aerodata = aerodata.parse(bytes);
 
         if plant_time_init < 0
-            plant_time_init = sline(1);
+            plant_time_init = aerodata.time;
         end
 
-        plant_time = sline(1) - plant_time_init;
-        plant_output = sline(2);
-        plant_input = sline(3);
-        plant_potentiometer = sline(4);
-        plant_dt = sline(5);
-        plant_control_time = sline(6) - plant_time_init;
+        plant_time = aerodata.time - plant_time_init;
+        plant_output = aerodata.output;
+        plant_input = aerodata.control;
+        plant_potentiometer = aerodata.potentiometer;
+        plant_dt = aerodata.dt;
+        plant_control_time = aerodata.controltime - plant_time_init;
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time, REF];
