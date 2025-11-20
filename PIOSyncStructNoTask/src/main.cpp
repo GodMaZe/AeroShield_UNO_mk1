@@ -68,7 +68,7 @@ void setup()
 	AeroShield.calibrate();
 	AeroShield.referenceRead();
 
-	Serial.begin(115200);
+	Serial.begin(1000000);
 
 	while (!Serial)
 	{

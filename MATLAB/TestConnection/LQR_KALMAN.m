@@ -190,7 +190,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM3", 1000000, "Timeout", 5);
     
     sline = "";
 
