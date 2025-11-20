@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 30;
 
-Ts = 0.05;
+Ts = 0.02;
 nsteps = floor(Tstop/Ts);
 
 U_PB = 30;
@@ -115,7 +115,7 @@ try
         scon.flush("input");
         clear scon;
     end
-    scon = serialport("COM4", 115200, "Timeout", 5);
+    scon = serialport("COM3", 115200, "Timeout", 5);
     
     sline = "";
 
