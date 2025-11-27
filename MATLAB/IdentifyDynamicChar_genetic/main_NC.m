@@ -18,7 +18,7 @@ end
 dt = mean(diff(logsout.tp));
 
 % Set the system
-Gs = Gs21; %GS21
+Gs = Gs20; %GS21
 
 % Gs = c2d(Gs, dt);
 
@@ -34,23 +34,71 @@ end
 % r = ones(size(t))'*5;
 
 t = 0:dt:20;
-r = ones(size(t))'*5;
-% r(1:120) = 20;
-% r(121:end) = 1;
-r(1:100) = 20;
-r(100:250) = -15;
-r(250:350) = 10;
-r(350:500) = -20;
-r(500:750) = 0;
-r(750:850) = 5;
-r(850:end) = -15;
+ref = ones(size(t))'*5;
+% ref(1:120) = 20;
+% ref(121:end) = 1;
+ref(1:100) = 20;
+ref(100:250) = -15;
+ref(250:350) = 10;
+ref(350:500) = -20;
+ref(500:750) = 0;
+ref(750:850) = 5;
+ref(850:end) = -15;
+ref = ref + 30;
 
+%% Init model, Kalman
+% ----------------------------------
+% ----------------------------------
 
+% Define model parameters
+K = 1.3860;
+eta = 11.0669;
+omega = 7.8944;
+b = 0.0735;
+
+% State matrix A
+Ac = [-eta, 0, 0;
+      0, 0, 1;
+      omega^2, -omega^2, -2*b*omega];
+
+% Input matrix B
+Bc = [K*eta; 0; 0];
+
+% Output matrix C
+Cc = [0, 1, 0];
+
+sys = ss(Ac,Bc,Cc,0);
+sysd = c2d(sys, mean(diff(t)));
+
+[A, B, C, ~] = ssdata(sysd);
+
+n = size(A, 1);
+r = size(B, 2);
+m = size(C, 1);
+
+% --- Augmented system for integral action ---
+D = [1]; % Disturbance (the discrepancy between the model and real system)
+
+d = size(D, 1);
+
+A_tilde = [A, zeros(n, d);
+           zeros(d, n), D];
+B_tilde = [B; zeros(r, d)];
+
+C_tilde = [C, eye(d)];
+
+%% --- Kalman filter initialization ---    
+R=0.01; % measurement noise covariance
+Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
+
+% Kalman initial
+P=zeros(size(Q));
+x_hat=zeros(size(Q,1),1);
 
 %% Prepare Genetic
-numgen=500;	% number of generations
+numgen=5000;	% number of generations
 lpop=150;	% number of chromosomes in population
-W1size = 5;
+W1size = 9;
 W2size = 3;
 W3size = 2;
 layers = [W1size, W2size, W3size];
@@ -84,7 +132,7 @@ noise_amp = 0.012;
 
 %% DO GENETIC
 for gen=1:numgen
-    Fit=fitness_NC(Pop,layers, Gs, r, t, is_noise, noise_amp);
+    Fit=fitness_NC(Pop,layers, Gs, ref, t, is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
 
     evolution(gen)=min(Fit);	% convergence graph of the solution
 
@@ -121,7 +169,7 @@ for gen=1:numgen
             reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
             reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
             reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
-            Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
+            Gs, ref, t, x0, -100, 100, [], is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
         figure(2); clf;
         hold on;
         stairs(t, y, 'b');
@@ -162,7 +210,7 @@ x0 = zeros(numel(Gs.den) - 1, 1);
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
-    Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
+    Gs, ref, t, x0, -100, 100, [], is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
 
 figure(1);
 plot(evolution);
@@ -189,11 +237,11 @@ saveas(gcf, FILENAME_TRAIN + "/output_nn_best_train.png");
 %% Test Trained
 x0 = zeros(numel(Gs.den) - 1, 1);
 t = 0:dt:20;
-r = ones(size(t))';
-r(1:100) = 5;
-r(100:200) = -5;
-r(200:300) = 0;
-r(300:end) = 4;
+ref = ones(size(t))';
+ref(1:100) = 5;
+ref(100:200) = -5;
+ref(200:300) = 0;
+ref(300:end) = 4;
 
 if ~exist('layers', 'var') || ~exist('bestchrom', 'var') || ~exist('evolution', 'var')
     error('Variables "layers", "rezim", "bestchrom", and "evolution" must be defined in the workspace.');
@@ -207,7 +255,7 @@ W3size = layers(3);
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
-    Gs, r, t, x0, -100, 100, [], is_noise, noise_amp);
+    Gs, ref, t, x0, -100, 100, [], is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
 %%
 try
     close(3);

@@ -1,6 +1,6 @@
 % funkcia na simulaciu regulacie SISO s neuro-regulatorom, bez simulinku
 
-function[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(W1,W2,W3,Gs,r,t,x0,umin,umax,norms,noise,noise_amp)
+function[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(W1,W2,W3,Gs,r,t,x0,umin,umax,norms,noise,noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat)
 % W1, W2, W3 = maice váh
 % rezim = trenovanie / testovanie
 dt = mean(diff(t));
@@ -21,12 +21,15 @@ end
 
 if nargin<10 || isempty(norms)
     % defaultne normy
-    y_max   = 220;           % ocakavane max(|y|)
+    y_max   = 60;           % ocakavane max(|y|)
     d1y_max = 50;           % ocakavane max(|dy/dt|)
     e_max   = 10;
     ie_max  = 10;    % odhad pre integral
     de_max = 100;
     d1u_max = 800;
+    prop_max = 100;
+    error_max = 10;
+    u_max = umax;
 
     % y_max   = 1;           % ocakavane max(|y|)
     % d1y_max = 1;           % ocakavane max(|dy/dt|)
@@ -37,6 +40,7 @@ if nargin<10 || isempty(norms)
 
     Ny=1/y_max; Nd1y=1/d1y_max;
     Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
+    Nprop=1/prop_max; Ner=1/error_max; Nu=1/u_max;
 else
     Ny   = norms.Ny;
     Nd1y = norms.Nd1y;
@@ -71,12 +75,13 @@ ulast = 0;
 dulast = 0;
 elast = 0;
 eint = 0;
+y_hat = 0;
 
 
 
 x = x0;
 
-U_PB = 0;
+U_PB = 30;
 
 for i=1:numel(t)
     e(i) = r(i) - ylast;
@@ -84,9 +89,21 @@ for i=1:numel(t)
     eint = eint + e(i) * dt;
 
     % X=[ylast*Ny; dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u];
-    X=[-dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u];
+    X=[x_hat(1)*Nprop; 0*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e(i)*Ne; eint*Nie; de(i)*Nde; ulast*Nu; dulast*Nd1u];
+    % X=[-dylast*Nd1y; e(i)*Ne; eint*Nie; de(i)*Nde; dulast*Nd1u];
     % writenum2file(fhandle, X);
     X = max(min(X,1),-1); % orezanie na interval <-1,1>
+
+    % Do Kalman
+    x_hat = A_tilde*x_hat + B_tilde*ulast;
+
+    P = A_tilde*P*A_tilde' + Q;
+    K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
+    e1 = ylast - C_tilde*x_hat;
+    x_hat = x_hat + K*e1;
+    y_hat = C_tilde*x_hat;
+    P = P - K*C_tilde*P;
+    % End Kalman
     
     if size(W1, 2) ~= length(X)
         error('Nespravny pocet vstupov do NC podla vah W1 a vektora X.');
@@ -99,8 +116,9 @@ for i=1:numel(t)
     A2=tanh(3*A2);
     u(i)=W3*A2*umax;
 
-    usat(i) = U_PB + min(umax, max(umin, u(i)));
-
+    usat(i) = ulast + min(umax, max(-umax, u(i)));
+    usat(i) = min(umax, max(0, usat(i)));
+    
     du(i) = (usat(i) - ulast)/dt;
     
     % Call the system differential

@@ -6,7 +6,7 @@ addpath("./misc/MPC");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "mpckalman";
+FILENAME = "mpckalman_state";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -24,7 +24,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 30;
-SYNC_TIME = 20; % Time for the system to stabilize in the OP
+SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
 p = 20; % Prediction horizon
@@ -156,14 +156,22 @@ B_tilde = [B; zeros(r, d)];
 C_tilde = [C, eye(d)];
 
 %% --- MPC prediction matrices ---
-[M,N] = mpcfillmnoutput(A_tilde,B_tilde,C_tilde,p);  % build prediction matrices
+[M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
 [Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
 % Q_mpc = [1];
 % R_mpc = [10];
-Q_mpc=[0.01];
+Q_mpc_=[0.001 0 0;
+       0 15 0;
+       0 0 1.5];
 R_mpc=[0.1];
+Qd_mpc = [10];
+
+Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
+        zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
+
+
 
 Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
@@ -179,11 +187,11 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-y_lower = [-50];
-y_upper = [80];
+x_lower = [0; -300; -100; -10];
+x_upper = [300; 300; 100; 10];
 
-Y_lower = repmat(y_lower, p, 1);
-Y_upper = repmat(y_upper, p, 1);
+X_lower = repmat(x_lower, p, 1);
+X_upper = repmat(x_upper, p, 1);
 
 % Constraint matrix for quadratic programming
 A_con = [Gamma;
@@ -318,13 +326,16 @@ try
             % Do MPC
             u_pred = u_ones*u;
 
-            Y_ref = repmat(REF, p, 1);
+            x_test = x_hat;
+            x_test(2) = REF - x_test(end);
+            x_test(end) = 0;
+            X_ref = repmat(x_test, p, 1);
 
-            b = 2*(M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
+            b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
                     -U_lower + u_pred;
-                    Y_upper - M*x_hat - N*u_pred;
-                    -Y_lower + M*x_hat + N*u_pred];
+                    X_upper - M*x_hat - N*u_pred;
+                    -X_lower + M*(x_hat) + N*u_pred];
 
             tic
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
@@ -465,4 +476,12 @@ for i=1:size(LOG_XHAT, 2)
     ylabel("X" + num2str(i));
     grid minor;
 end
+hold off;
+
+%% Plot control error
+figure(24); clf;
+hold on;
+plot(LOG_TP, LOG_REF - LOG_Y);
+plot([LOG_TP(1), LOG_TP(end)], [0, 0]);
+grid minor;
 hold off;

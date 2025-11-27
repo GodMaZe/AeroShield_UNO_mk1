@@ -99,6 +99,56 @@ timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn'
 start(timerplotrealtime);
 
 
+%% Init model, Kalman
+% ----------------------------------
+% ----------------------------------
+
+% Define model parameters
+K = 1.3860;
+eta = 11.0669;
+omega = 7.8944;
+b = 0.0735;
+
+% State matrix A
+Ac = [-eta, 0, 0;
+      0, 0, 1;
+      omega^2, -omega^2, -2*b*omega];
+
+% Input matrix B
+Bc = [K*eta; 0; 0];
+
+% Output matrix C
+Cc = [0, 1, 0];
+
+sys = ss(Ac,Bc,Cc,0);
+sysd = c2d(sys, Ts);
+
+[A, B, C, ~] = ssdata(sysd);
+
+n = size(A, 1);
+r = size(B, 2);
+m = size(C, 1);
+
+% --- Augmented system for integral action ---
+D = [1]; % Disturbance (the discrepancy between the model and real system)
+
+d = size(D, 1);
+
+A_tilde = [A, zeros(n, d);
+           zeros(d, n), D];
+B_tilde = [B; zeros(r, d)];
+
+C_tilde = [C, eye(d)];
+
+%% --- Kalman filter initialization ---    
+R=0.01; % measurement noise covariance
+Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
+
+% Kalman initial
+P=zeros(size(Q));
+x_hat=zeros(size(Q,1),1);
+
+%% LOOP
 try
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
@@ -116,7 +166,7 @@ try
     end
 
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM3", 1e6, "Timeout", 5);
     
     sline = "";
 
@@ -127,15 +177,19 @@ try
 
     disp(sline);
 
-    sline = str2num(readline(scon));
-    disp(sline);
+    aerodata = AeroData;
+
+    bytes = read(scon, aerodata.packetsize, "uint8");
+    aerodata = aerodata.parse(bytes);
+
+    disp(aerodata.tostring());
 
     init_plant_time = -1;
-    plant_output = sline(2);
-    plant_input = sline(3);
-    plant_potentiometer = sline(4);
-    plant_dt = sline(5);
-    plant_control_time = sline(6);
+    plant_output = aerodata.output;
+    plant_input = aerodata.control;
+    plant_potentiometer = aerodata.potentiometer;
+    plant_dt = aerodata.dt;
+    plant_control_time = aerodata.controltime;
 
     time_start = datetime("now");
     time_curr = time_start;
@@ -157,6 +211,10 @@ try
     de_max = 100;
     d1u_max = 800;
 
+    prop_max = 100;
+    error_max = 10;
+    u_max = 100;
+
     % y_max   = 1;           % ocakavane max(|y|)
     % d1y_max = 1;           % ocakavane max(|dy/dt|)
     % de_max = 1;
@@ -166,6 +224,7 @@ try
 
     Ny=1/y_max; Nd1y=1/d1y_max;
     Ne=1/e_max; Nie=1/ie_max; Nd1u=1/d1u_max; Nde=1/de_max;
+    Nprop=1/prop_max; Ner=1/error_max; Nu=1/u_max;
 
     W1size = layers(1);
     W2size = layers(2);
@@ -176,7 +235,10 @@ try
     W3 = reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size);
 
     % Reference signal
-    REF = 42;
+    REF_INIT = 35;
+    REF = REF_INIT;
+
+    REF_STEPS = [5, -5, 0, 10, -REF_INIT];
     
     yinit = -1;
     dylast = 0;
@@ -192,8 +254,8 @@ try
     U_PB = 30;
     u = 0;
     udt = 1;
-    umax = 70;
-    umin = -30;
+    umax = 100;
+    umin = 0;
     is_init = true;
 
     SYNC_TIME = 10;
@@ -212,12 +274,16 @@ try
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        if elapsed >= 15
-            REF = 42;
+        if elapsed >= 25
+            REF = REF_INIT + REF_STEPS(5);
+        elseif elapsed >= 20
+            REF = REF_INIT + REF_STEPS(4);
+        elseif elapsed >= 15
+            REF = REF_INIT + REF_STEPS(3);
         elseif elapsed >= 10
-            REF = 37;
+            REF = REF_INIT + REF_STEPS(2);
         elseif elapsed >= 5
-            REF = 32;
+            REF = REF_INIT + REF_STEPS(1);
         end
 
         % if elapsed >= 5
@@ -233,9 +299,19 @@ try
                 is_init = false;
             end
         else
-            u = U_PB;
+            % u = U_PB;
         end
         
+        % Do Kalman
+        x_hat = A_tilde*x_hat + B_tilde*u;
+
+        P = A_tilde*P*A_tilde' + Q;
+        K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
+        e1 = plant_output - C_tilde*x_hat;
+        x_hat = x_hat + K*e1;
+        y_hat = C_tilde*x_hat;
+        P = P - K*C_tilde*P;
+        % End Kalman
         
         
         if elapsed >= 0
@@ -247,7 +323,9 @@ try
             eint = eint + e * time_delta;
         
             % X=[(ylast-yinit)*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
-            X=[-dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
+            % X=[-dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
+            X=[x_hat(1)*Nprop; 0*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e*Ne; eint*Nie; de*Nde; ulast*Nu; dulast*Nd1u];
+            % X=[x_hat(1)*Nprop; 0*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
             % writenum2file(fhandle, X);
             LOG_X = [LOG_X; X'];
             X = max(min(X,1),-1); % orezanie na interval <-1,1>
@@ -262,9 +340,10 @@ try
             A1=tanh(3*A1);
             A2=(W2*A1);   % 1./2. skryta vrstva
             A2=tanh(3*A2);
-            ux=W3*A2*(umax-U_PB);
+            ux=W3*A2*(umax);
         
-            u = u + min(umax-U_PB, max(-U_PB, ux));
+            u = u + min(umax, max(-umax, ux));
+            u = min(umax, max(0, u));
         end
 
         du = (u - ulast)/time_delta;
@@ -272,18 +351,19 @@ try
         write(scon, u, "single");
         
         % Wait for the system to send a data message
-        sline = str2num(readline(scon));
+        bytes = read(scon, aerodata.packetsize, "uint8");
+        aerodata = aerodata.parse(bytes);
 
         if plant_time_init < 0
-            plant_time_init = sline(1);
+            plant_time_init = aerodata.time;
         end
 
-        plant_time = sline(1) - plant_time_init;
-        plant_output = sline(2);
-        plant_input = sline(3);
-        plant_potentiometer = sline(4);
-        plant_dt = sline(5);
-        plant_control_time = sline(6) - plant_time_init;
+        plant_time = aerodata.time - plant_time_init;
+        plant_output = aerodata.output;
+        plant_input = aerodata.control;
+        plant_potentiometer = aerodata.potentiometer;
+        plant_dt = aerodata.dt;
+        plant_control_time = aerodata.controltime - plant_time_init;
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time, REF];
@@ -293,7 +373,7 @@ try
         LOG_TP = [LOG_TP, plant_time];
         LOG_CTRL_T = [LOG_CTRL_T, plant_control_time];
         LOG_Y = [LOG_Y, plant_output];
-        LOG_U = [LOG_U, plant_input];
+        LOG_U = [LOG_U, x_hat(2)];
         LOG_POT = [LOG_POT, plant_potentiometer];
         LOG_DTP = [LOG_DTP, plant_dt];
         LOG_DT = [LOG_DT, time_delta];

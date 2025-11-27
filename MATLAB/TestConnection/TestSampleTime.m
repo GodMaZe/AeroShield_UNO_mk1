@@ -115,7 +115,7 @@ try
         scon.flush("input");
         clear scon;
     end
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM3", 1e6, "Timeout", 5);
     
     sline = "";
 
