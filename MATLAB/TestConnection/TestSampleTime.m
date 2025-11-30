@@ -156,21 +156,17 @@ try
     % chrom = [0 2.75 0.05];
     % chrom = [0 3.09 0.06];
     % chrom = [0 2.75 0.05];
-    % chrom = [0 3.09 0.06];
     % chrom = [0.04 3.16 0.04];
     % chrom = [0.09 6.57 0.08];
-    % chrom = [0.88 5.62 0.17]; % Fix PID in GA
-    chrom = [0.39 3.85 0.11];
-    % chrom = [1 4 0.17];
-    % chrom = [1 3.76 0.177];
+    % chrom = [0.39 3.85 0.11];
+    chrom = [1 3.76 0.177];
     % chrom = [0.6 3.63 0.11];
-    % chrom = [0.739 3.385 0.1];
     % chrom = [0.7 2.539 0.061];
     % chrom = [0.194 1.315 0.031];
     % chrom = [0.054 1.05 0.024]; % Ts = 0.05
-    chrom = [0.057 1.046 0.022]; % Ts = 0.05
+    % chrom = [0.057 1.046 0.022]; % Ts = 0.05
     % chrom = [0.237 1.717 0.072];
-    chrom = [0.325 1.831 0.025];
+    % chrom = [0.325 1.831 0.025];
 
     if USE_GA_PID_PARAMS
         P = chrom(1);
@@ -387,3 +383,53 @@ xlabel('k'); ylabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
+
+%% Plot control error
+tidx = 1; % find(LOG_TP >= 5, 1);
+tmask = tidx:numel(LOG_REF);
+mLOG_STEP = LOG_STEP(tmask);
+mLOG_STEP = mLOG_STEP - mLOG_STEP(1);
+mLOG_TP = LOG_TP(tmask);
+mLOG_TP = mLOG_TP - mLOG_TP(1);
+mLOG_REF = LOG_REF(tmask);
+mLOG_Y   = LOG_Y(tmask);
+LOG_E = mLOG_REF - mLOG_Y;
+emean = mean(LOG_E);
+sLOG_E = LOG_E - emean;
+estd = std(sLOG_E);
+evar = estd^2;
+
+figure(24); clf;
+hold on;
+plot(mLOG_TP, sLOG_E);
+plot([mLOG_TP(1), mLOG_TP(end)], [0, 0]);
+title("Control error");
+subtitle("Mean square error: " + num2str(emean^2))
+grid minor;
+hold off;
+fprintf("Statistical data:\n Mean: %8.3f\n Var: %8.3f\n STD: %8.3f\n", emean, estd, evar);
+
+%% Plot the frequency analysis (fft) of the control error
+freq = (mLOG_STEP)*1/Ts/numel(mLOG_STEP);
+yf = fft(sLOG_E);
+
+figure(31); clf;
+semilogx(log10(freq), 20*log10(abs(yf)))
+xlabel("f [Hz]");
+ylabel("|A| [db]");
+title("Frequency characteristic");
+subtitle("Control Error");
+grid minor;
+grid on;
+saveas(gcf, "figures/pid_control_error_freq_char.fig", "fig");
+
+[pxx,f] = periodogram(sLOG_E,[],[],1/Ts);
+figure(32); clf;
+semilogx(log10(f),pxx);
+title("Periodicity");
+subtitle("Control Error");
+ylabel("Magnitude [-]");
+xlabel("f [Hz]");
+grid minor;
+grid on;
+saveas(gcf, "figures/pid_control_error_periodicity.fig", "fig");

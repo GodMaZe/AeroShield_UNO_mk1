@@ -164,8 +164,8 @@ C_tilde = [C, eye(d)];
 % R_mpc = [10];
 Q_mpc_=[0.001 0 0;
        0 15 0;
-       0 0 1.5];
-R_mpc=[0.1];
+       0 0 0.75];
+R_mpc=[0.5];
 Qd_mpc = [10];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
@@ -479,9 +479,51 @@ end
 hold off;
 
 %% Plot control error
+tidx = 1; % find(LOG_TP >= 5, 1);
+tmask = tidx:numel(LOG_REF);
+mLOG_STEP = LOG_STEP(tmask);
+mLOG_STEP = mLOG_STEP - mLOG_STEP(1);
+mLOG_TP = LOG_TP(tmask);
+mLOG_TP = mLOG_TP - mLOG_TP(1);
+mLOG_REF = LOG_REF(tmask);
+mLOG_Y   = LOG_Y(tmask);
+LOG_E = mLOG_REF - mLOG_Y;
+emean = mean(LOG_E);
+sLOG_E = LOG_E - emean;
+estd = std(sLOG_E);
+evar = estd^2;
+
 figure(24); clf;
 hold on;
-plot(LOG_TP, LOG_REF - LOG_Y);
-plot([LOG_TP(1), LOG_TP(end)], [0, 0]);
+plot(mLOG_TP, sLOG_E);
+plot([mLOG_TP(1), mLOG_TP(end)], [0, 0]);
+title("Control error");
+subtitle("Mean square error: " + num2str(emean^2))
 grid minor;
 hold off;
+fprintf("Statistical data:\n Mean: %8.3f\n Var: %8.3f\n STD: %8.3f\n", emean, estd, evar);
+
+%% Plot the frequency analysis (fft) of the control error
+freq = (mLOG_STEP)*1/Ts/numel(mLOG_STEP);
+yf = fft(sLOG_E);
+
+figure(31); clf;
+semilogx(log10(freq), 20*log10(abs(yf)))
+xlabel("f [Hz]");
+ylabel("|A| [db]");
+title("Frequency characteristic");
+subtitle("Control Error");
+grid minor;
+grid on;
+saveas(gcf, "figures/state_mpc_control_error_freq_char.fig", "fig");
+
+[pxx,f] = periodogram(sLOG_E,[],[],1/Ts);
+figure(32); clf;
+semilogx(log10(f),pxx);
+title("Periodicity");
+subtitle("Control Error");
+ylabel("Magnitude [-]");
+xlabel("f [Hz]");
+grid minor;
+grid on;
+saveas(gcf, "figures/state_mpc_control_error_periodicity.fig", "fig");
