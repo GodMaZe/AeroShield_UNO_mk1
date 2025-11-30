@@ -22,10 +22,12 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 20;
+Tstop = 30;
+SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
 Ts = 0.02;
 nsteps = floor(Tstop/Ts);
+Tstop = Tstop + SYNC_TIME;
 
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
@@ -204,15 +206,14 @@ try
     % Load the neural network controller
     load("bestchrom_nn");
 
-    y_max   = 220;           % ocakavane max(|y|)
-    d1y_max = 50;           % ocakavane max(|dy/dt|)
-    e_max   = 10;
-    ie_max  = 10;    % odhad pre integral
-    de_max = 100;
-    d1u_max = 800;
-
+    y_max   = 210;           % ocakavane max(|y|)
+    d1y_max = 2408.8;           % ocakavane max(|dy/dt|)
+    e_max   = 210;
+    ie_max  = 2297.6;    % odhad pre integral
+    de_max = 964.17;
+    d1u_max = 4801.9;
     prop_max = 100;
-    error_max = 10;
+    error_max = 45;
     u_max = 100;
 
     % y_max   = 1;           % ocakavane max(|y|)
@@ -257,10 +258,6 @@ try
     umax = 100;
     umin = 0;
     is_init = true;
-
-    SYNC_TIME = 10;
-    Tstop = Tstop + SYNC_TIME;
-    nsteps = floor(Tstop/Ts);
     
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -324,11 +321,11 @@ try
         
             % X=[(ylast-yinit)*Ny; dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
             % X=[-dylast*Nd1y; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
-            X=[x_hat(1)*Nprop; 0*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e*Ne; eint*Nie; de*Nde; ulast*Nu; dulast*Nd1u];
+            X=[x_hat(1)*Nprop; ylast*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e*Ne; eint*Nie; de*Nde; ulast*Nu; dulast*Nd1u];
             % X=[x_hat(1)*Nprop; 0*Ny; x_hat(3)*Nd1y; x_hat(4)*Ner; e*Ne; eint*Nie; de*Nde; dulast*Nd1u];
             % writenum2file(fhandle, X);
             LOG_X = [LOG_X; X'];
-            X = max(min(X,1),-1); % orezanie na interval <-1,1>
+            % X = max(min(X,1),-1); % orezanie na interval <-1,1>
             % disp(X);
             
             if size(W1, 2) ~= length(X)
@@ -340,10 +337,10 @@ try
             A1=tanh(3*A1);
             A2=(W2*A1);   % 1./2. skryta vrstva
             A2=tanh(3*A2);
-            ux=W3*A2*(umax);
+            ux= ulast + W3*A2*(umax);
         
-            u = u + min(umax, max(-umax, ux));
-            u = min(umax, max(0, u));
+            % u = u + min(umax, max(-umax, ux));
+            u = min(umax, max(umin, ux));
         end
 
         du = (u - ulast)/time_delta;
@@ -373,7 +370,7 @@ try
         LOG_TP = [LOG_TP, plant_time];
         LOG_CTRL_T = [LOG_CTRL_T, plant_control_time];
         LOG_Y = [LOG_Y, plant_output];
-        LOG_U = [LOG_U, x_hat(2)];
+        LOG_U = [LOG_U, u];
         LOG_POT = [LOG_POT, plant_potentiometer];
         LOG_DTP = [LOG_DTP, plant_dt];
         LOG_DT = [LOG_DT, time_delta];

@@ -3,10 +3,10 @@ N = size(pop, 1);
 fit = zeros(N,1);
 npoles = numel(Gs.den) - 1;
 
-c1 = 1.5; % weight for error (e)
-c2 = 0.4; % weight for control effort (de)
-c3 = 0.7; % max(u)
-c4 = 0.01; % Change in the control input in time (du)
+c1 = 10; % weight for error (e)
+c2 = 1; % weight for control effort (de)
+c3 = 0.45; % max(u)
+c4 = 0.001; % Change in the control input in time (du)
 
 umax = 100;
 umin = 0;
@@ -47,14 +47,15 @@ parfor i = 1:N
     W3 = reshape(W3v, 1, n_h2);
 
     x0 = zeros(npoles, 1);
+    x0(1) = 38.5;
 
-    [tt,y,dy,w,e,de,u,usat] = sim_ncFF_VIR25(W1, W2, W3, Gs, ref, t, x0, umin, umax, [], is_noise, noise_K,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
+    [tt,y,dy,w,e,de,u,usat, du,~] = sim_ncFF_VIR25(W1, W2, W3, Gs, ref, t, x0, umin, umax, [], is_noise, noise_K,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
 
 
     IAE = sum(abs(e)) * dt; % Integral of Absolute Error
     IADE = sum(abs(de)) * dt; % Integral of Absolute Derivative of Error
     IUOUTBOUNDS = sum(u < umin | u > umax); % Integral of Control input out of the bounds set by the real system
-    IADU = sum(abs(gradient(u, dt)));
+    IADU = sum(abs(du));
 
     fit(i) = c1 * IAE + c2 * IADE + c3 * IUOUTBOUNDS + c4 * IADU;
     if isnan(fit(i))

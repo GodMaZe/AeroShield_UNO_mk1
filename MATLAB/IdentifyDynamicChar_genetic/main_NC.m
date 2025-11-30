@@ -33,18 +33,18 @@ end
 % t = 0:round(dt,2):5;
 % r = ones(size(t))'*5;
 
-t = 0:dt:20;
-ref = ones(size(t))'*5;
+t = 0:dt:5;
+ref = ones(size(t))'*5+30;
 % ref(1:120) = 20;
 % ref(121:end) = 1;
-ref(1:100) = 20;
-ref(100:250) = -15;
-ref(250:350) = 10;
-ref(350:500) = -20;
-ref(500:750) = 0;
-ref(750:850) = 5;
-ref(850:end) = -15;
-ref = ref + 30;
+% ref(1:200) = -2.5;
+% ref(200:250) = 5;
+% ref(250:350) = -5;
+% ref(350:500) = 0;
+% ref(500:750) = +5;
+% ref(750:850) = +10;
+% ref(850:end) = 0;
+% ref = ref + 30;
 
 %% Init model, Kalman
 % ----------------------------------
@@ -94,9 +94,10 @@ Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
 % Kalman initial
 P=zeros(size(Q));
 x_hat=zeros(size(Q,1),1);
+x_hat(2) = 38.5;
 
 %% Prepare Genetic
-numgen=5000;	% number of generations
+numgen=500;	% number of generations
 lpop=150;	% number of chromosomes in population
 W1size = 9;
 W2size = 3;
@@ -131,6 +132,7 @@ noise_amp = 0.012;
 
 
 %% DO GENETIC
+tic;
 for gen=1:numgen
     Fit=fitness_NC(Pop,layers, Gs, ref, t, is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
 
@@ -165,28 +167,30 @@ for gen=1:numgen
 
     if mod(gen, numgen/10) == 0
         x0 = zeros(numel(Gs.den) - 1, 1);
-        [t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(...
+        x0(end) = 38.5;
+        [t,y,dy,w,e,de,u,usat,du,y_hat]=sim_ncFF_VIR25(...
             reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
             reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
             reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
             Gs, ref, t, x0, -100, 100, [], is_noise, noise_amp,A_tilde,B_tilde,C_tilde,Q,R,P,x_hat);
         figure(2); clf;
         hold on;
-        stairs(t, y, 'b');
+        stairs(t, usat);
         stairs(t, w, 'r--');
-        stairs(t, u);
+        stairs(t, y, 'LineWidth', 1.5);
+        stairs(t, y_hat, 'LineWidth', 1.5);        
         title('Output and Reference Signal');
         subtitle("Gen = " + num2str(gen));
         xlabel('t [s]');
         ylabel('response [-]');
-        legend('y', 'r','u');
+        legend('u', 'ref', 'y','y_{hat}');
         grid on;
         hold on;
         saveas(gcf, FILENAME_TRAIN + "/output_nn_best_train_gen_" + num2str(gen) + ".png");
     end
     fprintf('Generation %d completed.\n', gen);
 end
-
+toc;
 save(FILENAME_TRAIN + "/bestchrom_nn.mat", 'bestchrom', 'layers', 'best', "evolution");
 
 %% Save and Draw Best
@@ -206,7 +210,7 @@ W3size = layers(3);
 
 x0 = zeros(numel(Gs.den) - 1, 1);
 
-[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(...
+[t,y,dy,w,e,de,u,usat,du,~]=sim_ncFF_VIR25(...
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
@@ -224,7 +228,7 @@ figure(2);
 hold on;
 stairs(t, y, 'b');
 stairs(t, w, 'r--');
-stairs(t, u);
+stairs(t, usat);
 title('Output and Reference Signal');
 subtitle("Train");
 xlabel('Time [s]');
@@ -238,8 +242,8 @@ saveas(gcf, FILENAME_TRAIN + "/output_nn_best_train.png");
 x0 = zeros(numel(Gs.den) - 1, 1);
 t = 0:dt:20;
 ref = ones(size(t))';
-ref(1:100) = 5;
-ref(100:200) = -5;
+ref(1:100) = -5;
+ref(100:200) = +5;
 ref(200:300) = 0;
 ref(300:end) = 4;
 
@@ -251,7 +255,7 @@ W1size = layers(1);
 W2size = layers(2);
 W3size = layers(3);
 
-[t,y,dy,w,e,de,u,du]=sim_ncFF_VIR25(...
+[t,y,dy,w,e,de,u,usat,du,~]=sim_ncFF_VIR25(...
     reshape(bestchrom(1:W1size*W2size), W2size, W1size), ...
     reshape(bestchrom(W1size*W2size+1:W1size*W2size+W2size*W3size), W3size, W2size), ...
     reshape(bestchrom(W1size*W2size+W2size*W3size+1:end), 1, W3size), ...
@@ -265,7 +269,7 @@ figure(3);
 hold on;
 stairs(t, y);
 stairs(t, w, 'k--');
-stairs(t, u, 'r')
+stairs(t, usat, 'r')
 title('Output and Reference Signal');
 subtitle("Test");
 xlabel('Time [s]');
