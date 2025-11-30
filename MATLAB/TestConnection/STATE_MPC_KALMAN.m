@@ -27,7 +27,7 @@ Tstop = 30;
 SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
-p = 20; % Prediction horizon
+p = 15; % Prediction horizon
 
 U_PB = 30;
 
