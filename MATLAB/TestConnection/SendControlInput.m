@@ -22,9 +22,9 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 10;
+Tstop = 60;
 
-Ts = 0.05;
+Ts = 0.02;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
