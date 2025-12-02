@@ -273,7 +273,7 @@ try
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
 
-        if time_delta < Ts
+        if step > 0 & time_delta < Ts
             continue;
         end
 

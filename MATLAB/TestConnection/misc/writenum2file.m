@@ -3,7 +3,7 @@ function writenum2file(filehandle, data, verbose, Ts, dt)
 %   Write the measured data into a file in csv format, while
 %being able to display the measurement within the console, indicating
 %stability of the sampling period.
-fprintf(filehandle, getdataformat(data,"%8.3f",",",1), data);
+fprintf(filehandle, getdataformat(data,"%f",",",1), data);
 
 if nargin > 2
     if verbose

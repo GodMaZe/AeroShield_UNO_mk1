@@ -281,7 +281,7 @@ try
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
 
-        if time_delta < Ts
+        if step > 0 && time_delta < Ts
             continue;
         end
 
@@ -337,9 +337,9 @@ try
                     X_upper - M*x_hat - N*u_pred;
                     -X_lower + M*(x_hat) + N*u_pred];
 
-            tic
+            % tic
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
-            toc
+            % toc
             if ~isempty(delta_U)
                 ux = delta_U(1:r, :);
             end

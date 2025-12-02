@@ -5,7 +5,7 @@ addpath("./misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "dataFile";
+FILENAME = "impulse";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -22,12 +22,10 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 30;
+Tstop = 20;
 
 Ts = 0.02;
 nsteps = floor(Tstop/Ts);
-
-U_PB = 30;
 
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
@@ -55,14 +53,14 @@ function plotdatarealtime()
     % ----------------------------------
     try
         if isempty(hy) || isempty(hr) || isempty(hu)
-            f = figure("Name","Plot-RealTime","GraphicsSmoothing","on","Renderer","opengl","RendererMode","auto");
+            f = figure("Name","Plot-RealTime");
             ax = axes(f);
             hold on;
             % hy = plot(ax, nan, nan, '.k');
             % hr = plot(ax, nan, nan, '.r');
             % hu = plot(ax, nan, nan, '.b');
             hy = stairs(ax, nan, nan);
-            hr = stairs(ax, nan, nan, '--k');
+            hr = stairs(ax, nan, nan);
             hu = stairs(ax, nan, nan);
             grid minor;
             title("Real-Time System Response");
@@ -115,7 +113,8 @@ try
         scon.flush("input");
         clear scon;
     end
-    scon = serialport("COM3", 1e6, "Timeout", 5);
+
+    scon = serialport("COM3", 1000000, "Timeout", 5);
     
     sline = "";
 
@@ -147,58 +146,11 @@ try
     plant_time = 0;
     step = 0;
 
-    % REF = plant_potentiometer;
+    REF = 0;
 
-    USE_GA_PID_PARAMS = true;
-
-    chrom = [0.1633    4.6267    0.159];
-    % chrom = [0    2.2    0.1]; % Home
-    % chrom = [0 2.75 0.05];
-    % chrom = [0 3.09 0.06];
-    % chrom = [0 2.75 0.05];
-    % chrom = [0.04 3.16 0.04];
-    % chrom = [0.09 6.57 0.08];
-    % chrom = [0.39 3.85 0.11];
-    chrom = [1 3.76 0.177];
-    % chrom = [0.6 3.63 0.11];
-    % chrom = [0.7 2.539 0.061];
-    % chrom = [0.194 1.315 0.031];
-    % chrom = [0.054 1.05 0.024]; % Ts = 0.05
-    % chrom = [0.057 1.046 0.022]; % Ts = 0.05
-    % chrom = [0.237 1.717 0.072];
-    % chrom = [0.325 1.831 0.025];
-
-    if USE_GA_PID_PARAMS
-        P = chrom(1);
-        I = chrom(2);
-        D = chrom(3);
-    else
-        P = 0.01;
-        I = 1.5;
-        D = 0.0525;
-    end
-
-    REF_INIT = 35;
-    REF = REF_INIT;
-
-    REF_STEPS = [5, -5, 0, 10, -REF_INIT];
-
-
-    e = 0;
-    eint = 0;
-    elast = plant_output;
-
+    u = 100;
     
-    u = 0;
-    udt = 1;
-    is_init = true;
-
-    SYNC_TIME = 10;
-    Tstop = Tstop + SYNC_TIME;
-    nsteps = floor(Tstop/Ts);
-    time_elapsed = 0;
-    
-    while time_elapsed < Tstop
+    while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
@@ -207,75 +159,12 @@ try
             continue;
         end
 
-        % write(scon, 5*(sin(step/2/pi)) + 20, "single");
-
-        % u = 10;
-        % 
-        % if time_elapsed >= 7.5
-        %     u = 20;
-        % elseif time_elapsed >= 5.0
-        %     u = 10;
-        % elseif time_elapsed >= 2.5
-        %     u = 20;
-        % else
-        %     u = 10;
-        % end
-        % 
-        % write(scon, u, "single");
-
-        elapsed = time_elapsed - SYNC_TIME;
-
-        if elapsed >= 25
-            REF = REF_INIT + REF_STEPS(5);
-        elseif elapsed >= 20
-            REF = REF_INIT + REF_STEPS(4);
-        elseif elapsed >= 15
-            REF = REF_INIT + REF_STEPS(3);
-        elseif elapsed >= 10
-            REF = REF_INIT + REF_STEPS(2);
-        elseif elapsed >= 5
-            REF = REF_INIT + REF_STEPS(1);
-        end
-
-        % if elapsed >= 5
-        %     REF = 5 * sin(0.5*elapsed) + 38;
-        % end
-
-        % REF = plant_potentiometer;
-        
-        if is_init
-            u = u + udt;
-            u = max(0, min(u, U_PB));
-            if u >= U_PB
-                is_init = false;
-            end
-        else
-            u = U_PB;
-        end
-        
-        e = REF - plant_output;
-        
-        if elapsed >= 0
-            
-            eint = max(-85, min(85, (eint + e * time_delta)));
-            de = -(plant_output - elast)/time_delta;
-            
-            uP = P * e;
-            uI = I * eint;
-            uD = D * de;
-            u = u + uP + uI + uD;
-            
-            u = max(0, min(100, u));
-        end
-
-        elast = plant_output;
-
         write(scon, u, "single");
+        
         
         % Wait for the system to send a data message
         bytes = read(scon, aerodata.packetsize, "uint8");
         aerodata = aerodata.parse(bytes);
-
 
         if plant_time_init < 0
             plant_time_init = aerodata.time;
@@ -289,7 +178,7 @@ try
         plant_control_time = aerodata.controltime - plant_time_init;
 
         % Write the data into a file
-        data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, plant_control_time, REF];
+        data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
         writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
 
         LOG_T = [LOG_T, time_elapsed];
@@ -305,8 +194,9 @@ try
 
         step = step + 1;
         time_last = time_curr;
+        u = 0;
 
-        if time_elapsed >= Tstop || plant_output >= Ystop
+        if plant_time >= Tstop || plant_output >= Ystop
             % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
             break;
         end
@@ -351,26 +241,12 @@ save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPAT
 % ===========================
 %   Plot Results
 % ===========================
-
-figure(1); clf;
-hold on;
-stairs(LOG_TP, LOG_Y);
-stairs(LOG_TP, LOG_REF);
-stairs(LOG_TP, LOG_U);
-title("Real-Time System Response");
-xlabel("t [s]");
-ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-legend("y","ref", "u", 'Location', 'southeast');
-grid minor;
-hold off;
-
-
-figure(999);
-style='-k';
+figure(999); clf;
+style='--k';
 
 subplot(2,1,1)
 hold on;
-plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
+plot(LOG_TP, LOG_REF,style,"LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 % scatter(LOG_TP, LOG_Y, '.k');
 xlabel('k'); ylabel('\phi(k)'); grid on
@@ -378,58 +254,8 @@ xlabel('k'); ylabel('\phi(k)'); grid on
 hold of;
 
 subplot(2,1,2)
-stairs(LOG_TP,LOG_U,style,'LineWidth',1.5)
+stairs(LOG_TP,LOG_U,'LineWidth',1.5)
 xlabel('k'); ylabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
-
-%% Plot control error
-tidx = 1; % find(LOG_TP >= 5, 1);
-tmask = tidx:numel(LOG_REF);
-mLOG_STEP = LOG_STEP(tmask);
-mLOG_STEP = mLOG_STEP - mLOG_STEP(1);
-mLOG_TP = LOG_TP(tmask);
-mLOG_TP = mLOG_TP - mLOG_TP(1);
-mLOG_REF = LOG_REF(tmask);
-mLOG_Y   = LOG_Y(tmask);
-LOG_E = mLOG_REF - mLOG_Y;
-emean = mean(LOG_E);
-sLOG_E = LOG_E - emean;
-estd = std(sLOG_E);
-evar = estd^2;
-
-figure(24); clf;
-hold on;
-plot(mLOG_TP, sLOG_E);
-plot([mLOG_TP(1), mLOG_TP(end)], [0, 0]);
-title("Control error");
-subtitle("Mean square error: " + num2str(emean^2))
-grid minor;
-hold off;
-fprintf("Statistical data:\n Mean: %8.3f\n Var: %8.3f\n STD: %8.3f\n", emean, estd, evar);
-
-%% Plot the frequency analysis (fft) of the control error
-freq = (mLOG_STEP)*1/Ts/numel(mLOG_STEP);
-yf = fft(sLOG_E);
-
-figure(31); clf;
-semilogx(log10(freq), 20*log10(abs(yf)))
-xlabel("f [Hz]");
-ylabel("|A| [db]");
-title("Frequency characteristic");
-subtitle("Control Error");
-grid minor;
-grid on;
-saveas(gcf, "figures/pid_control_error_freq_char.fig", "fig");
-
-[pxx,f] = periodogram(sLOG_E,[],[],1/Ts);
-figure(32); clf;
-semilogx(log10(f),pxx);
-title("Periodicity");
-subtitle("Control Error");
-ylabel("Magnitude [-]");
-xlabel("f [Hz]");
-grid minor;
-grid on;
-saveas(gcf, "figures/pid_control_error_periodicity.fig", "fig");
