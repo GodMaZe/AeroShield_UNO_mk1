@@ -58,4 +58,5 @@ grid minor;
 grid on;
 xlabel('t [s]');
 ylabel("$\varphi$ [deg]", "Interpreter", "latex");
+title("Impulse characteristic");
 legend show;
