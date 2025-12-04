@@ -1,6 +1,7 @@
 #include <AeroShield.h>
 #include <arduino-timer.h>
 
+
 struct __attribute__((packed)) AeroData
 {
 	unsigned long time;
@@ -20,6 +21,7 @@ union AeroDataUnion
 // ---------------------------------------------------------
 
 constexpr static int BUILT_IN_LED_PIN = 13; // PIN pre zabudovanu LED
+constexpr static int PIEZO_SPEAKER_PIN = 9;  // PIN pre piezo reproduktor
 
 // --------------------------------------------------------- BUILD-IN LED BLINK
 const unsigned long T_sample = 2000; // perioda vzorkovania v ms
@@ -49,7 +51,13 @@ int recvByte(float &output)
 
 void DoMeasurement()
 {
-	AeroShield.actuatorWrite(AeroDataInstance.data.control);
+	if (AeroDataInstance.data.control > 50.0f){
+		tone(PIEZO_SPEAKER_PIN, 1000); // Play tone at 1000 Hz
+	}
+	else{
+		noTone(PIEZO_SPEAKER_PIN); // Stop tone
+	}
+	AeroShield.actuatorWrite(0.0f);
 	AeroDataInstance.data.control_time = micros();
 	AeroDataInstance.data.output = AeroShield.sensorReadDegree();
 	AeroDataInstance.data.potentiometer = AeroShield.referenceRead();
@@ -63,6 +71,7 @@ bool TaskBlinkLED(void *);
 void setup()
 {
 	pinMode(BUILT_IN_LED_PIN, OUTPUT); // for LED
+	pinMode(PIEZO_SPEAKER_PIN, OUTPUT); // for piezo speaker
 
 	AeroShield.begin();
 	AeroShield.calibrate();
