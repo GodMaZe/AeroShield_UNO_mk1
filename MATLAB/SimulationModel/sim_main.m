@@ -1,4 +1,6 @@
-% Simulation parameters
+clear;
+clc;
+%% Simulation parameters
 L = 0.1; % m
 R = 0.02; % m
 m1 = 0.035; % kg
@@ -16,6 +18,10 @@ LR2 = LR^2;
 c1 = m1*L_2 + m2 * LR;
 c2 = m1*L2_4 + m2 * LR2;
 
+x0 = deg2rad(180);
+dx0 = 0;
+
+%% Simulate the model
 sim("sim_pendulum.slx");
 
 %% Load the variables from the logsout var
