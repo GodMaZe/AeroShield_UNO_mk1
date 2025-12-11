@@ -1,8 +1,8 @@
 close all; clear;
 clc;
 
-addpath("./misc");
-addpath("./misc/MPC");
+addpath("../misc");
+addpath("../misc/MPC");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";

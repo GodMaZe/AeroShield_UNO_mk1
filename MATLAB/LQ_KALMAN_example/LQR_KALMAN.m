@@ -2,7 +2,7 @@
 close all; clear;
 clc;
 
-addpath("./misc");
+addpath("../misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";

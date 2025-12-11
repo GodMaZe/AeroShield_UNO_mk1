@@ -1,5 +1,5 @@
 addpath("./genetic");
-addpath("./misc");
+addpath("../misc");
 clear;
 close all;
 
