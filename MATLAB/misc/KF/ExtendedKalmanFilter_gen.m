@@ -1,4 +1,4 @@
-classdef ExtendedKalmanFilter
+classdef ExtendedKalmanFilter_gen
     properties
         f           % state transition: x_next = f(x,u)
         h           % measurement: y = h(x,u)
@@ -18,7 +18,7 @@ classdef ExtendedKalmanFilter
     end
 
     methods
-        function obj = ExtendedKalmanFilter(f,h,initialState,varargin)
+        function obj = ExtendedKalmanFilter_gen(f,h,initialState,varargin)
             % obj = ExtendedKalmanFilter(f,h,initialState,Name,Value...)
             p = inputParser;
             addRequired(p,'f');

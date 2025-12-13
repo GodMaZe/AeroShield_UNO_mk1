@@ -1,3 +1,30 @@
+%% Simulation parameters
+L = 0.1005; % m
+R = 0.0175; % m
+m1 = 0.0540; % kg
+m2 = 0.0965; % kg
+g = 9.81; % m/s^2
+xi = 0.0003; % damping coefficient
+mu = 0.00015;
+
+% Define simulation v02 parameters
+I_T = 1/3*m1*L^2 + 2/5*m2*(R)^2 + m2*(L+R)^2;
+M_1 = m1*L/2 + m2*(L+R);
+G_1 = g*M_1;
+
+% Helpful variables
+L_2 = L/2;
+LR = L + R;
+L2_4 = L_2^2;
+LR2 = LR^2;
+
+
+c1 = m1*L_2 + m2 * LR;
+c2 = m1*L2_4 + m2 * LR2;
+
+x0 = deg2rad(45);
+dx0 = 0;
+
 % Pendulum EKF example
 rng(0);
 
@@ -9,7 +36,9 @@ T = 10;
 N = floor(T/dt);
 
 % Continuous dynamics: x = [theta; omega]
-f_cont = @(x) [x(2); - (g/L) * sin(x(1)) - 1*x(2)];
+saturation = @(x) min(1, max(x, -1));
+
+f_cont = @(x) [x(2); -1/I_T * (xi*x(2) + mu*g*(m1 + m2)*saturation(x(1)) + G_1*sin(x(1)))];
 
 % Discrete transition via RK4
 stateTransitionFcn = @(x) rk4_step(x, f_cont, dt);
@@ -22,8 +51,8 @@ Fjac = @(x) discreteJacobian(x, f_cont, dt);
 Hjac = @(x) [1 0];
 
 % Initial true state and EKF initial state
-x_true = [1.2; 0.0];         % true initial
-x0_est = x_true + [0.1; 0.2];% initial estimate
+x_true = [x0; dx0];         % true initial
+x0_est = x_true + [0.01; 0.02]; % initial estimate
 
 % Noise covariances
 Q = diag([1e-6, 1e-4]);      % process noise (state)
