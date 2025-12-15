@@ -75,6 +75,7 @@ classdef KalmanFilter
             obj.xhat = obj.A * obj.xhat + obj.B * u;
             obj.P = obj.A * obj.P * obj.A' + obj.Q;
         end
+
         function [obj, yhat] = update(obj, u, y)
             if nargin < 2, u = zeros(size(obj.B, 2), 1); end
             ypred = obj.predict_output(u);
@@ -83,8 +84,12 @@ classdef KalmanFilter
             e1 = y - ypred;
             obj.xhat = obj.xhat + K * e1;
             obj.P = (obj.I - K * obj.C) * obj.P;
+            % Using the Joseph form for numerical stability, symmetry, and positive semidefiniteness preservation.
+            % obj.P = (obj.I - K * obj.C) * obj.P * (obj.I - K * obj.C) + K * obj.R * K';
+            % obj.P = 0.5 * (obj.P + obj.P'); % Enforce exact symmetry
             yhat = obj.predict_output(u);
         end
+
         function ypred = predict_output(obj, u)
             ypred = obj.C * obj.xhat + obj.D * u;
         end
