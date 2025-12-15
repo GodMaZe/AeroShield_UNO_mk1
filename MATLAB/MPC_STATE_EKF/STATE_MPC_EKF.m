@@ -4,6 +4,7 @@ clc;
 addpath("../misc");
 addpath("../misc/MPC");
 addpath("../misc/functions");
+addpath("../misc/models");
 addpath("../misc/KF");
 
 %% Prepare the environment for the measurement
@@ -150,7 +151,7 @@ C_tilde = [C, eye(d)];
 Q_mpc_=[10 0;
         0 0.75];
 R_mpc=[0.5];
-Qd_mpc = [10];
+Qd_mpc = [1];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
@@ -171,8 +172,8 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-x_lower = [-300; -100; -10];
-x_upper = [300; 100; 10];
+x_lower = [-100; -300; -10];
+x_upper = [100; 300; 10];
 
 X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
@@ -183,7 +184,7 @@ A_con = [Gamma;
          N*Gamma;
         -N*Gamma];
 
-% --- Kalman filter initialization ---    
+%% --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
 Q=diag([0.1;0.1;0.1]);  % process noise covariance
 
@@ -191,10 +192,13 @@ Q=diag([0.1;0.1;0.1]);  % process noise covariance
 x_hat=zeros(size(Q,1),1);
 P=eye(numel(x_hat))*var(x_hat);
 
-[fx, hx, Fx, Hx] = pendulum.nonlinear(Ts);
+[fx, hx, Fx, Hx] = pendulum.nonlinear(1e-6,false,true);
+
+
 
 ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
+%% Try connecting and running the measurement
 try
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
@@ -288,8 +292,8 @@ try
         end
 
         % Do Kalman
-        [ekf, yhat] = ekf.step(u, plant_output);
-        x_hat = ekf.xhat;
+        [ekf, y_hat] = ekf.step(u, deg2rad(plant_output));
+        x_hat = rad2deg(ekf.xhat);
         % End Kalman
 
         
@@ -299,7 +303,7 @@ try
             u_pred = u_ones*u;
 
             x_test = x_hat;
-            x_test(2) = REF - x_test(end);
+            x_test(1) = REF - x_test(end);
             x_test(end) = 0;
             X_ref = repmat(x_test, p, 1);
 
@@ -350,7 +354,7 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
-        LOG_YHAT = [LOG_YHAT, y_hat];
+        LOG_YHAT = [LOG_YHAT, rad2deg(y_hat)];
         LOG_XHAT = [LOG_XHAT; x_hat'];
         LOG_UX = [LOG_UX, ux];
 
