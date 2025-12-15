@@ -109,10 +109,6 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
-
 %% Init model, MPC, Kalman
 % ----------------------------------
 % ----------------------------------
@@ -141,20 +137,24 @@ B_tilde = [B; zeros(r, d)];
 
 C_tilde = [C, eye(d)];
 
+% A_tilde = A;
+% B_tilde = B;
+% C_tilde = C;
+
 %% --- MPC prediction matrices ---
 [M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
 [Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
-% Q_mpc = [1];
-% R_mpc = [10];
 Q_mpc_=[10 0;
         0 0.75];
 R_mpc=[0.5];
-Qd_mpc = [1];
+Qd_mpc = [10];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
+
+% Q_mpc = Q_mpc_;
 
 
 
@@ -172,8 +172,8 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-x_lower = [-100; -300; -10];
-x_upper = [100; 300; 10];
+x_lower = [-100; -300; -100];
+x_upper = [100; 300; 100];
 
 X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
@@ -198,8 +198,14 @@ P=eye(numel(x_hat))*var(x_hat);
 
 ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
+kf = KalmanFilter(A_tilde,B_tilde,C_tilde,'Q',Q,'R',R,'x0',x_hat,'P0',P);
+
 %% Try connecting and running the measurement
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -292,8 +298,11 @@ try
         end
 
         % Do Kalman
-        [ekf, y_hat] = ekf.step(u, deg2rad(plant_output));
+        [ekf, y_hat] = ekf.step(u/666.66, deg2rad(plant_output));
         x_hat = rad2deg(ekf.xhat);
+        % [kf, y_hat] = kf.step(u/666.66, plant_output);
+        % x_hat = kf.xhat;
+        y_hat = rad2deg(y_hat);
         % End Kalman
 
         
@@ -304,7 +313,6 @@ try
 
             x_test = x_hat;
             x_test(1) = REF - x_test(end);
-            x_test(end) = 0;
             X_ref = repmat(x_test, p, 1);
 
             b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
@@ -354,7 +362,7 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
-        LOG_YHAT = [LOG_YHAT, rad2deg(y_hat)];
+        LOG_YHAT = [LOG_YHAT, y_hat];
         LOG_XHAT = [LOG_XHAT; x_hat'];
         LOG_UX = [LOG_UX, ux];
 

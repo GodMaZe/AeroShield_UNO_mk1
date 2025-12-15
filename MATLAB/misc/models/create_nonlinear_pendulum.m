@@ -28,7 +28,7 @@ h = @(x,u) x(1);
 Hx = @(x, u) [1, 0];
 
 if w_disturbance
-    f_cont = @(x, u) [x(2); -1/pendulum.I_T * (pendulum.xi*x(2) + Fc(x) + pendulum.G_1*sin(x(1))); 1] ...
+    f_cont = @(x, u) [x(2) + x(3); -1/pendulum.I_T * (pendulum.xi*x(2) + Fc(x) + pendulum.G_1*sin(x(1))); x(3)] ...
     + [0; 1/pendulum.I_T; 0] * u(1);
 
     h = @(x, u) x(1)+x(3);
