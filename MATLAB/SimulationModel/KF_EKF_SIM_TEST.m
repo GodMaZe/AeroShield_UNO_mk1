@@ -27,17 +27,17 @@ Gsd = ss(A, B, C, D, Ts);
 
 u = 0.05;
 
-% f_cont = @(x, u) [x(2); -1/I_T * (xi*x(2) + mu*g*(m1 + m2)*tanh(x(1)) + G_1*sin(x(1)))] + [0; 1/I_T] * u(1);
+% f_cont = @(x, u) [x(2); -1/I_T * (xi*x(2) + mu*g*(m1 + m2)*tanh(x(2)) + G_1*sin(x(1)))] + [0; 1/I_T] * u(1);
 % f = @(x,u) rk4_step(f_cont, x, u, Ts); % Important to use the rk4 step for precise and safe integration
 % h = @(x,u) x(1);
 % 
 % Fx = @(x, u) discrete_jacobian(f_cont, x, u, Ts);
 % Hx = @(x, u) [1, 0];
 
-[f, h, Fx, Hx] = pendulum.nonlinear(Ts);
+[f, h, Fx, Hx] = pendulum.nonlinear(Ts, true);
 
 kf = KalmanFilter(A,B,C,'D',D,'Q',Q,'R',R,'x0',x0,'P0',P0);
-ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2),'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P0,'epstol',1e-6);
+ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2),'Q',Q,'R',R,'P0',P0,'epstol',1e-6);
 eekf = extendedKalmanFilter(f, h, x0, ...
     'StateCovariance', eye(2)*0.1, ...
     'ProcessNoise', Q, ...

@@ -3,6 +3,7 @@ clc;
 
 addpath("../misc");
 addpath("../misc/MPC");
+addpath("../misc/KF");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
@@ -106,10 +107,6 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
-
 %% Init model, MPC, Kalman
 % ----------------------------------
 % ----------------------------------
@@ -164,9 +161,9 @@ C_tilde = [C, eye(d)];
 % R_mpc = [10];
 Q_mpc_=[0.001 0 0;
        0 15 0;
-       0 0 0.75];
-R_mpc=[0.5];
-Qd_mpc = [10];
+       0 0 0.785];
+R_mpc=[0.6];
+Qd_mpc = [5];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
@@ -201,13 +198,17 @@ A_con = [Gamma;
 
 % --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
-Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
+Q=diag([0.01;0.01;0.1;0.1]);  % process noise covariance
 
 % Kalman initial
 P=zeros(size(Q));
 x_hat=zeros(size(Q,1),1);
 
+%% Try measurement
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -274,8 +275,11 @@ try
     
 
     u_ones = ones(p, r);
-    
-    
+
+%% Kalman filter init
+    kf = KalmanFilter(A_tilde, B_tilde, C_tilde, 'Q', Q, 'R', R, 'P0', P, 'x0', x_hat);
+
+%% Measurement loop
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
@@ -310,14 +314,8 @@ try
         end
 
         % Do Kalman
-        x_hat = A_tilde*x_hat + B_tilde*u;
-
-        P = A_tilde*P*A_tilde' + Q;
-        K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
-        e1 = plant_output - C_tilde*x_hat;
-        x_hat = x_hat + K*e1;
-        y_hat = C_tilde*x_hat;
-        P = P - K*C_tilde*P;
+        [kf, y_hat] = kf.step(u, aerodata.output);
+        x_hat = kf.xhat;
         % End Kalman
 
         
@@ -328,6 +326,7 @@ try
 
             x_test = x_hat;
             x_test(2) = REF - x_test(end);
+            x_test(3) = x_test(3) * 0.05;
             x_test(end) = 0;
             X_ref = repmat(x_test, p, 1);
 
@@ -394,34 +393,12 @@ try
 
 catch er
     % Send a final command and close the serial port
-    if exist("scon", "var")
-        write(scon, 0.0, 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
-    end
+    close_connection(scon, dfile_handle);
     rethrow(er);
 end
 
 %% close conns
-if exist("scon", "var")
-    write(scon, 0.0, 'single');
-    clear scon;
-end
-if exist("dfile_handle", "var")
-    fclose(dfile_handle);
-    clear dfile_handle;
-end
-for tim=timerfindall
-    stop(tim);
-    delete(tim);
-end
+close_connection(scon, dfile_handle);
 
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
@@ -488,6 +465,7 @@ mLOG_TP = mLOG_TP - mLOG_TP(1);
 mLOG_REF = LOG_REF(tmask);
 mLOG_Y   = LOG_Y(tmask);
 LOG_E = mLOG_REF - mLOG_Y;
+RMSE = sqrt(mean(LOG_E.^2));
 emean = mean(LOG_E);
 sLOG_E = LOG_E - emean;
 estd = std(sLOG_E);
@@ -498,7 +476,7 @@ hold on;
 plot(mLOG_TP, sLOG_E);
 plot([mLOG_TP(1), mLOG_TP(end)], [0, 0]);
 title("Control error");
-subtitle("Mean square error: " + num2str(emean^2))
+subtitle("RMSE: " + num2str(RMSE))
 grid minor;
 hold off;
 fprintf("Statistical data:\n Mean: %8.3f\n Var: %8.3f\n STD: %8.3f\n", emean, estd, evar);

@@ -1,6 +1,12 @@
 classdef ExtendedKalmanFilter
-    %EXTENDEDKALMANFILTER Summary of this class goes here
-    %   Detailed explanation goes here
+    %EXTENDEDKALMANFILTER Class handling all the Extended Kalman Filter logic, simply create
+    %the ExtendedKalmanFilter object as such:
+    %
+    %   ekf = ExtendedKalmanFilter(f,h,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'x0',x0,'P0',P)
+    % 
+    % and within the measurement loop call the function:
+    %
+    %   [ekf, yhat] = ekf.step(u,y_measured)
 
     properties
         f   % state transition: x(k+1) = f(x, u)

@@ -26,10 +26,10 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 30;
+Tstop = 10;
 SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
-Ts = 0.05;
+Ts = 0.02;
 p = 15; % Prediction horizon
 
 U_PB = 30;
@@ -172,8 +172,8 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-x_lower = [-100; -300; -100];
-x_upper = [100; 300; 100];
+x_lower = [-100; -300; -10];
+x_upper = [100; 300; 10];
 
 X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
@@ -186,7 +186,7 @@ A_con = [Gamma;
 
 %% --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
-Q=diag([0.1;0.1;0.1]);  % process noise covariance
+Q=diag([0.1; 0.1; 0.1]);  % process noise covariance
 
 % Kalman initial
 x_hat=zeros(size(Q,1),1);
@@ -196,7 +196,7 @@ P=eye(numel(x_hat))*var(x_hat);
 
 
 
-ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
+ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
 kf = KalmanFilter(A_tilde,B_tilde,C_tilde,'Q',Q,'R',R,'x0',x_hat,'P0',P);
 
@@ -300,9 +300,18 @@ try
         % Do Kalman
         [ekf, y_hat] = ekf.step(u/666.66, deg2rad(plant_output));
         x_hat = rad2deg(ekf.xhat);
-        % [kf, y_hat] = kf.step(u/666.66, plant_output);
-        % x_hat = kf.xhat;
+        % [kf, y_hat] = kf.step(u/666.66, deg2rad(plant_output));
+        % x_hat = rad2deg(kf.xhat);
         y_hat = rad2deg(y_hat);
+
+        % x_hat = A_tilde*x_hat + B_tilde*u;
+        % 
+        % P = A_tilde*P*A_tilde' + Q;
+        % K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
+        % e1 = plant_output - C_tilde*x_hat;
+        % x_hat = x_hat + K*e1;
+        % y_hat = C_tilde*x_hat;
+        % P = P - K*C_tilde*P;
         % End Kalman
 
         
@@ -313,6 +322,7 @@ try
 
             x_test = x_hat;
             x_test(1) = REF - x_test(end);
+            x_test(end) = 0;
             X_ref = repmat(x_test, p, 1);
 
             b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
@@ -378,34 +388,12 @@ try
 
 catch er
     % Send a final command and close the serial port
-    if exist("scon", "var")
-        write(scon, 0.0, 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
-    end
+    close_connection(scon, dfile_handle);
     rethrow(er);
 end
 
 %% close conns
-if exist("scon", "var")
-    write(scon, 0.0, 'single');
-    clear scon;
-end
-if exist("dfile_handle", "var")
-    fclose(dfile_handle);
-    clear dfile_handle;
-end
-for tim=timerfindall
-    stop(tim);
-    delete(tim);
-end
+close_connection(scon, dfile_handle);
 
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);

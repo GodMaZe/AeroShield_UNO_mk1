@@ -5,7 +5,7 @@ addpath("../misc");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "impulse";
+FILENAME = "impulse_char";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -94,11 +94,11 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
 
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -204,33 +204,29 @@ try
 
 catch er
     % Send a final command and close the serial port
-    if exist("scon", "var")
-        write(scon, 0.0, 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
-    end
+    close_connection(scon, dfile_handle);
     rethrow(er);
 end
 
 %% close conns
-if exist("scon", "var")
-    write(scon, 0.0, 'single');
-    clear scon;
-end
-if exist("dfile_handle", "var")
-    fclose(dfile_handle);
-    clear dfile_handle;
-end
-for tim=timerfindall
-    stop(tim);
-    delete(tim);
+close_connection(scon, dfile_handle);
+
+function close_connection(scon, dfile_handle)
+    if exist("scon", "var")
+        fprintf("Closing serial communication...\n");
+        write(scon, [0, 0], 'single');
+        clear scon;
+    end
+    if exist("dfile_handle", "var")
+        fprintf("Closing file stream...\n");
+        fclose(dfile_handle);
+        clear dfile_handle;
+    end
+    for tim=timerfindall
+        fprintf("Closing timer thread: %s...\n", tim.Name);
+        stop(tim);
+        delete(tim);
+    end
 end
 
 %% Save the measurement

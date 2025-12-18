@@ -1,6 +1,12 @@
 classdef KalmanFilter
-    %KALMANFILTER Summary of this class goes here
-    %   Detailed explanation goes here
+    %KALMANFILTER Class handling all the Kalman Filter logic, simply create
+    %the KalmanFilter object as such:
+    %
+    %   kf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P)
+    % 
+    % and within the measurement loop call the function:
+    %
+    %   [kf, yhat] = kf.step(u,y_measured)
 
     properties
         A   % system state matrix (n x n)
