@@ -10,6 +10,8 @@ addpath("../misc/models");
 x0 = deg2rad(45);
 dx0 = 0;
 
+mT = 12.03/1000; % kg
+
 Ts = 0.05;
 
 Q = [0.01 0;
@@ -34,10 +36,10 @@ u = 0.05;
 % Fx = @(x, u) discrete_jacobian(f_cont, x, u, Ts);
 % Hx = @(x, u) [1, 0];
 
-[f, h, Fx, Hx] = pendulum.nonlinear(Ts, true);
+[f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
 
 kf = KalmanFilter(A,B,C,'D',D,'Q',Q,'R',R,'x0',x0,'P0',P0);
-ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2),'Q',Q,'R',R,'P0',P0,'epstol',1e-6);
+ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2), 'Q',Q,'R',R,'P0',P0,'epstol',1e-6);
 eekf = extendedKalmanFilter(f, h, x0, ...
     'StateCovariance', eye(2)*0.1, ...
     'ProcessNoise', Q, ...
@@ -50,9 +52,26 @@ step_options.Amplitude = u;
 step_options.InitialState = x0;
 step_options.Delay = 30;
 
-[y, t] = step(Gsd, step_options);
-
+% [y, t] = step(Gsd, step_options);
+t = 0:Ts:60;
 nsteps = numel(t);
+
+xs = zeros(2, nsteps);
+ys = zeros(nsteps, 1);
+
+xs(:, 1) = x0;
+u = 0;
+for i=2:nsteps
+    if Ts*i > 30
+        u = 0.05;
+    end
+    selector = max(i - 1, 1);
+    xs(:, selector + 1) = f(xs(:, selector), u);
+    ys(selector) = h(xs(:, selector + 1), u);
+end
+
+
+
 
 ykf = zeros(nsteps, 1);
 yekf = zeros(nsteps, 1);
@@ -63,8 +82,10 @@ xeekf = zeros(nsteps, 2);
 uf = zeros(nsteps, 1);
 
 %%
+y = ys;
+x = xs;
 u = 0;
-for i=1:nsteps
+for i=2:nsteps
     if Ts*i > 30
         u = 0.05;
     end
@@ -99,8 +120,9 @@ stairs(t, rad2deg(ykf), 'r--');
 % plot(t, movmean(rad2deg(ykf), 10));
 stairs(t, rad2deg(yekf), 'g-.');
 stairs(t, rad2deg(yeekf), 'm--');
+% plot(t, rad2deg(ys), 'b');
 % stairs(t, yfx, 'k');
-legend('Gs', "KF: " + num2str(MSE_KF), "EKF: " + num2str(MSE_EKF), "EEKF: " + num2str(MSE_EEKF));
+legend('Gs', "KF: " + num2str(MSE_KF), "EKF: " + num2str(MSE_EKF), "EEKF: " + num2str(MSE_EEKF), 'y');
 xlabel('Time (s)');
 ylabel('Output');
 title('Kalman Filter vs Extended Kalman Filter');
@@ -114,6 +136,7 @@ hold on;
 plot(t, xkf(:, 2), 'r--', 'DisplayName', 'KF2');
 plot(t, xekf(:, 2), 'g-.', 'DisplayName', 'EKF2');
 plot(t, xeekf(:, 2), 'm--', 'DisplayName', 'EEKF2');
+plot(t, xs(2, :), 'b', 'DisplayName', 'dy');
 plot(t, uf, '--k', 'DisplayName', 'u')
 legend show;
 grid minor;

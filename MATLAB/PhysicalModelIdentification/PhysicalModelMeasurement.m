@@ -153,7 +153,7 @@ try
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
 
-        if time_delta < Ts
+        if step > 0 && time_delta < Ts
             continue;
         end
 
@@ -205,35 +205,12 @@ try
     end
 
 catch er
-    % Send a final command and close the serial port
-    if exist("scon", "var")
-        write(scon, 0.0, 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
-    end
+    close_connection(scon, dfile_handle);
     rethrow(er);
 end
 
 %% close conns
-if exist("scon", "var")
-    write(scon, 0.0, 'single');
-    clear scon;
-end
-if exist("dfile_handle", "var")
-    fclose(dfile_handle);
-    clear dfile_handle;
-end
-for tim=timerfindall
-    stop(tim);
-    delete(tim);
-end
+close_connection(scon, dfile_handle);
 
 %% Save the measurement
 LOG_Y = LOG_Y - mean(LOG_Y(end-50:end));
@@ -244,21 +221,26 @@ save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPAT
 % ===========================
 %   Plot Results
 % ===========================
-figure(999);
+figure(123); clf;
+stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
+title("Measurement output");
+xlabel('t [s]'); ylabel('\phi(t) [deg]'); grid minor; grid on;
+
+
+figure(999); clf;
 style='-k';
 
 subplot(2,1,1)
 hold on;
 plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
-% scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
-hold of;
+xlabel('t [s]'); ylabel('\phi(t) [deg]'); grid on
+title("Measurement output with zero reference");
+hold off;
 
 subplot(2,1,2)
 stairs(LOG_TP,LOG_U,style,'LineWidth',1.5)
-xlabel('k'); ylabel('u(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
+xlabel('t [s]'); ylabel('u(t) [%PWM]'); grid on
+title("Control output");
 
 set(gcf,'position',[200,400,650,400]);

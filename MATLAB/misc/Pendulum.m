@@ -24,7 +24,7 @@ classdef Pendulum
 
             obj.g = g; % Assign gravitational acceleration to the object
 
-            obj.I_T = 1/3*obj.m1*obj.L^2 + 2/5*obj.m2*obj.R^2 + obj.m2*(obj.L+obj.R)^2;
+            obj.I_T = 1/3*obj.m1*obj.L^2 + 2/5*obj.m2*obj.R^2 + obj.m2*(obj.L + obj.R)^2;
             obj.M_1 = obj.m1*obj.L/2 + obj.m2*(obj.L+obj.R);
             obj.G_1 = obj.g*obj.M_1;
         end
@@ -51,6 +51,14 @@ classdef Pendulum
                 w_disturbance = false; % Default disturbance value (in case we are trying to identify the deviation from real system)
             end
             [f, h, Fx, Hx] = create_nonlinear_pendulum(obj, Ts, use_saturation, w_disturbance);
+        end
+
+        function [s] = tostring(obj)
+            s = sprintf("g = %f, I_T = %f, M_1 = %f, G_1 = %f", obj.g, obj.I_T, obj.M_1, obj.G_1);
+        end
+
+        function print(obj)
+            fprintf('%s\n', obj.tostring());
         end
     end
 end

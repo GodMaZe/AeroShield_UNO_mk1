@@ -27,7 +27,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 10;
-SYNC_TIME = 10; % Time for the system to stabilize in the OP
+SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
 Ts = 0.02;
 p = 15; % Prediction horizon
@@ -120,7 +120,7 @@ options = optimoptions('quadprog', ...
 
 pendulum = Pendulum();
 
-[A, B, C, ~] = pendulum.ss_discrete(Ts);
+[A, B, C, ~] = pendulum.ss();
 
 n = size(A, 1);
 r = size(B, 2);
@@ -131,36 +131,37 @@ D = [1]; % Disturbance (the discrepancy between the model and real system)
 
 d = size(D, 1);
 
-A_tilde = [A, zeros(n, d);
-           zeros(d, n), D];
-B_tilde = [B; zeros(r, d)];
+% A_tilde = [A, zeros(n, d);
+%            zeros(d, n), D];
+% B_tilde = [B; zeros(r, d)];
+% 
+% C_tilde = [C, eye(d)];
 
-C_tilde = [C, eye(d)];
+A_tilde = A;
+B_tilde = B;
+C_tilde = C;
 
-% A_tilde = A;
-% B_tilde = B;
-% C_tilde = C;
 
-%% --- MPC prediction matrices ---
-[M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
-[Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
-Q_mpc_=[10 0;
+Q_mpc_=[15 0;
         0 0.75];
-R_mpc=[0.5];
+R_mpc=[0.6];
 Qd_mpc = [10];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
 
-% Q_mpc = Q_mpc_;
+Q_mpc = Q_mpc_;
 
 
 
 Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
 
+%% --- MPC prediction matrices ---
+[M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
+[Gamma] = mpcfillgamma(r,p);
 % Quadratic cost Hessian
 H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
 H = (H+H')/2; % for symmetry
@@ -172,29 +173,28 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-x_lower = [-100; -300; -10];
-x_upper = [100; 300; 10];
+x_lower = [-100; -300; -100];
+x_upper = [100; 300; 100];
 
 X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
 
 % Constraint matrix for quadratic programming
 A_con = [Gamma;
-        -Gamma;
-         N*Gamma;
-        -N*Gamma];
+        -Gamma;];
+
+        %  N*Gamma;
+        % -N*Gamma];
 
 %% --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
-Q=diag([0.1; 0.1; 0.1]);  % process noise covariance
+Q=diag([0.1; 0.1]);  % process noise covariance
 
 % Kalman initial
 x_hat=zeros(size(Q,1),1);
 P=eye(numel(x_hat))*var(x_hat);
 
-[fx, hx, Fx, Hx] = pendulum.nonlinear(1e-6,false,true);
-
-
+[fx, hx, Fx, Hx] = pendulum.nonlinear(1e-9,false,false);
 
 ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
@@ -307,7 +307,8 @@ try
         % x_hat = A_tilde*x_hat + B_tilde*u;
         % 
         % P = A_tilde*P*A_tilde' + Q;
-        % K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
+        % S = (C_tilde*P*C_tilde' + R);
+        % K = P*C_tilde'/S;
         % e1 = plant_output - C_tilde*x_hat;
         % x_hat = x_hat + K*e1;
         % y_hat = C_tilde*x_hat;
@@ -318,18 +319,24 @@ try
         
         if elapsed >= 0
             % Do MPC
+            % [M,N] = mpcfillmnstate(Fx(x_hat,u),[0;1/pendulum.I_T;0],p);  % build prediction matrices
+            % % Quadratic cost Hessian
+            % H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
+            % H = (H+H')/2; % for symmetry
             u_pred = u_ones*u;
 
             x_test = x_hat;
             x_test(1) = REF - x_test(end);
+            % x_test(2) = 0;
             x_test(end) = 0;
             X_ref = repmat(x_test, p, 1);
 
             b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
-                    -U_lower + u_pred;
-                    X_upper - M*x_hat - N*u_pred;
-                    -X_lower + M*(x_hat) + N*u_pred];
+                    -U_lower + u_pred;];
+                   
+                    % X_upper - M*x_hat - N*u_pred;
+                    % -X_lower + M*(x_hat) + N*u_pred];
 
             % tic
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
