@@ -1,9 +1,22 @@
 clear; close all; clc;
 
+load("best_model_2o");
+
 s = tf('s');
-omega_0 = 5;
+omega_0 = 1;
 xi = 0.1;
-Gs = omega_0^2 / (s^2 + 2*xi*omega_0*s + omega_0^2);
+Gs = omega_0^3 / (s^3 + 4*xi*omega_0*s^2 + 4*xi^2*omega_0^2*s + omega_0^3);
+
+K = 1;
+T1 = 0.5;
+Gs = K/(T1*s+1);
+
+a = P.Denominator{1};
+b = P.Numerator{1};
+TPs = -1./roots(a);
+TP1 = TPs(1);
+TP2 = TPs(2);
+K = sum(b(end)/a(end));
 
 % Define the time vector for simulation
 Ts = 0.05;
@@ -52,15 +65,25 @@ disp(zeros);
 
 save("system", "Gs", "Gsd");
 
-Tw = 0.3;
+%% Controller
+Tw = 0.15;
 Gyw = 1/(Tw*s + 1);
+
+
+R = 1/Gs * Gyw/(1 - Gyw);
+
+Kp = (TP1 + TP2)/K/Tw;
+Ki = 1/K/Tw;
+Kd = TP1*TP2/K/Tw;
+
+G = R*Gs;
 
 Gywd = c2d(Gyw, Ts);
 
-R = 1/Gsd * Gywd/(1 - Gywd);
+Rd = 1/Gsd * Gywd/(1 - Gywd);
 
 % Simulate the closed-loop response with the PID controller
-sysClosedLoop = feedback(R * Gsd, 1);
+sysClosedLoop = feedback(R * Gs, 1);
 [yClosedLoop, tClosedLoop] = step(sysClosedLoop, t);
 
 % Plot the closed-loop step response
