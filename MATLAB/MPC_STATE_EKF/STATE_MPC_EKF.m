@@ -7,6 +7,9 @@ addpath("../misc/functions");
 addpath("../misc/models");
 addpath("../misc/KF");
 
+% Script for loading all the system-wide matlab configurations
+loadconfigs;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "mpc_ekf_state";
@@ -112,7 +115,7 @@ end
 %% Init model, MPC, Kalman
 % ----------------------------------
 % ----------------------------------
-options = optimoptions('quadprog', ...
+options = optimoptions("quadprog", ...
                        'ConstraintTolerance', 1e-5, ...
                        'OptimalityTolerance',1e-5, ...
                        'Display', 'off');
@@ -120,7 +123,7 @@ options = optimoptions('quadprog', ...
 
 pendulum = Pendulum();
 
-[A, B, C, ~] = pendulum.ss();
+[A, B, C, ~] = pendulum.ss_discrete(Ts);
 
 n = size(A, 1);
 r = size(B, 2);
@@ -131,11 +134,11 @@ D = [1]; % Disturbance (the discrepancy between the model and real system)
 
 d = size(D, 1);
 
-% A_tilde = [A, zeros(n, d);
-%            zeros(d, n), D];
-% B_tilde = [B; zeros(r, d)];
-% 
-% C_tilde = [C, eye(d)];
+A_tilde = [A, zeros(n, d);
+           zeros(d, n), D];
+B_tilde = [B; zeros(r, d)];
+
+C_tilde = [C, eye(d)];
 
 A_tilde = A;
 B_tilde = B;
@@ -146,8 +149,9 @@ C_tilde = C;
 % --- MPC weighting matrices ---
 Q_mpc_=[15 0;
         0 0.75];
+Q_mpc_=[1];
 R_mpc=[0.6];
-Qd_mpc = [10];
+Qd_mpc = [0.001];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
@@ -160,10 +164,11 @@ Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
 
 %% --- MPC prediction matrices ---
-[M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
+[M,N] = mpcfillmnoutput(A_tilde,B_tilde,C_tilde,p);  % build prediction matrices
 [Gamma] = mpcfillgamma(r,p);
 % Quadratic cost Hessian
 H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
+% H = 2*(N'*Q_*N + R_);
 H = (H+H')/2; % for symmetry
 
 % Control input constraints
@@ -173,33 +178,39 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-x_lower = [-100; -300; -100];
-x_upper = [100; 300; 100];
+x_lower = [-100; -300];% -100];
+x_upper = [100; 300];% 100];
 
 X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
 
+y_lower = [-pi/3];
+y_upper = [7*pi/6];
+
+Y_lower = repmat(y_lower, p, 1);
+Y_upper = repmat(y_upper, p, 1);
+
 % Constraint matrix for quadratic programming
+I = eye(size(Gamma));
 A_con = [Gamma;
-        -Gamma;];
+        -Gamma;
+         N*Gamma;
+        -N*Gamma];
 
-        %  N*Gamma;
-        % -N*Gamma];
+%% --- Kalman filter initialization --- 
+[f, h, Fx, Hx] = pendulum.nonlinear(Ts, false, false);
 
-%% --- Kalman filter initialization ---    
-R=0.01; % measurement noise covariance
-Q=diag([0.1; 0.1]);  % process noise covariance
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+Q = diag([deg2rad(0.01)^2 deg2rad(1/Ts)^2]);
 
-% Kalman initial
-x_hat=zeros(size(Q,1),1);
-P=eye(numel(x_hat))*var(x_hat);
+x0 = [0; 0];
+P = diag(ones(size(x0))*var(x0));
 
-[fx, hx, Fx, Hx] = pendulum.nonlinear(1e-9,false,false);
+ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
 
-ekf = ExtendedKalmanFilter(fx, hx, x_hat, 1, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
+kf = KalmanFilter(A_tilde,B_tilde,C_tilde,'Q',Q,'R',R,'x0',x0,'P0',P);
 
-kf = KalmanFilter(A_tilde,B_tilde,C_tilde,'Q',Q,'R',R,'x0',x_hat,'P0',P);
-
+x_hat = x0;
 %% Try connecting and running the measurement
 try
     timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
@@ -221,7 +232,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1e6, "Timeout", 5);
+    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
     
     sline = "";
 
@@ -298,11 +309,11 @@ try
         end
 
         % Do Kalman
-        [ekf, y_hat] = ekf.step(u/666.66, deg2rad(plant_output));
-        x_hat = rad2deg(ekf.xhat);
-        % [kf, y_hat] = kf.step(u/666.66, deg2rad(plant_output));
-        % x_hat = rad2deg(kf.xhat);
-        y_hat = rad2deg(y_hat);
+        % [ekf, y_hat] = ekf.step(u/666.66, deg2rad(plant_output));
+        % x_hat = ekf.xhat;
+        [kf, y_hat] = kf.step(u/666.66, deg2rad(plant_output));
+        x_hat = kf.xhat;
+        % y_hat = rad2deg(y_hat);
 
         % x_hat = A_tilde*x_hat + B_tilde*u;
         % 
@@ -325,21 +336,22 @@ try
             % H = (H+H')/2; % for symmetry
             u_pred = u_ones*u;
 
-            x_test = x_hat;
-            x_test(1) = REF - x_test(end);
-            % x_test(2) = 0;
-            x_test(end) = 0;
-            X_ref = repmat(x_test, p, 1);
-
-            b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
+            % x_test = x_hat;
+            % x_test(1) = deg2rad(REF) - x_test(3);
+            % x_test(3) = 0;
+            
+            Y_ref = repmat((REF), p, 1);
+            
+            Mx = M*(rad2deg(x_hat));
+            Nu = N*u_pred;
+            b = 2*(Mx + Nu - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
-                    -U_lower + u_pred;];
-                   
-                    % X_upper - M*x_hat - N*u_pred;
-                    % -X_lower + M*(x_hat) + N*u_pred];
+                    -U_lower + u_pred;
+                    Y_upper - Mx - Nu;
+                    -Y_lower + Mx + Nu];
 
             % tic
-            delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
+            delta_U = quadprog(H, b, A_con, b_con, [], [], [], [], [], options);
             % toc
             if ~isempty(delta_U)
                 ux = delta_U(1:r, :);
@@ -379,8 +391,8 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
-        LOG_YHAT = [LOG_YHAT, y_hat];
-        LOG_XHAT = [LOG_XHAT; x_hat'];
+        LOG_YHAT = [LOG_YHAT, rad2deg(y_hat)];
+        LOG_XHAT = [LOG_XHAT; rad2deg(x_hat)'];
         LOG_UX = [LOG_UX, ux];
 
         time_last = time_curr;

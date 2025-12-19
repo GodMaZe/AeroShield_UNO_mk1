@@ -37,9 +37,12 @@ if w_disturbance
     Hx = @(x, u) [1 0 1];
 end
 
-Fx = @(x, u) discrete_jacobian(f_cont, x, u, dt);
+
 % f = @(x,u) euler_step(f_cont, x, u, dt);
 f = @(x,u) rk4_step(f_cont, x, u, dt); % Important to use the rk4 step for precise and safe integration
+% f = f_cont;
+
+Fx = @(x, u) discrete_jacobian(f, x, u, dt);
 
 
 

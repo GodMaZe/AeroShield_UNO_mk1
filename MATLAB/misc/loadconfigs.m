@@ -1,0 +1,3 @@
+CF_BAUDRATE = 250000;
+CF_TIMEOUT = 5; % s
+

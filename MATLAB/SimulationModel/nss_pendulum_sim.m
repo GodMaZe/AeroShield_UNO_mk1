@@ -1,3 +1,6 @@
+addpath("../misc")
+addpath("../misc/KF");
+
 Ts = 0.05;
 Tstop = 60;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
@@ -13,6 +16,17 @@ x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
+Q = diag([0.01 0.001]); % Process noise covariance
+R = 0.1; % Measurement noise covariance
+P = diag(ones(size(x0))) * var(x0);
+ekf = ExtendedKalmanFilter(f, h, x0, 1, "Fx", Fx, "Hx", Hx, "Q", Q, "R", R, "P0", P);
+
+ekf_yhat = zeros(nsteps, 1);
+ekf_x = zeros(size(x));
+
+ekf_yhat(1) = x0(1);
+ekf_x(:, 1) = x0;
+
 for step=2:nsteps
     if step >= nsteps/2
         u = 0.05;
@@ -27,18 +41,36 @@ for step=2:nsteps
     % x(:, step) = [x1; x2]; % Update the state vector
     % x(:, step) = rk4_step(f, x(:, step - 1), u, Ts);
     % x(:, step) = euler_step(f, x(:, step - 1), u, Ts);
-    x(:, step) = f(x(:, step - 1), u);
+    w = chol(Q) * randn(2, 1);
+    x(:, step) = f(x(:, step - 1), u) + w;
+    [ekf, yhat] = ekf.step(u, x(1, step));
+    ekf_yhat(step) = yhat;
+    ekf_x(:, step) = ekf.xhat;
 end
 
+%% Plot
 figure(1); clf;
 hold on;
-plot(t, rad2deg(x));
-plot([0, t(end)], [0, 0], 'k');
+plot(t, rad2deg(x(1, :)));
+plot(t, rad2deg(ekf_x(1, :)));
 hold off;
 xlabel('Time (s)');
 ylabel('State Variables');
-title('Pendulum State Over Time');
-legend show;
+title('Pendulum angular position');
+legend("y","y_{ekf}");
+grid minor;
+grid on;
+
+figure(2); clf;
+hold on;
+plot(t, rad2deg(x(2, :)));
+plot([0, t(end)], [0, 0], 'k');
+plot(t, rad2deg(ekf_x(2, :)));
+hold off;
+xlabel('Time (s)');
+ylabel('State Variables');
+title('Pendulum angular velocity');
+legend("y","0-line","dy_{ekf}");
 grid minor;
 grid on;
 

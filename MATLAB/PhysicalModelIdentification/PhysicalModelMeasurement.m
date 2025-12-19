@@ -3,6 +3,8 @@ clc;
 
 addpath("../misc");
 
+loadconfigs;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "physicalMeasurement";
@@ -19,19 +21,20 @@ FILEPATH = getfilename(DDIR, FILENAME, DateString);
 FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 
 % The names of the parameters to write into the file
-OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
+OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref", "yhat", "xhat_0", "xhat_1"];
+% OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref", "yhat", "xhat_0", "xhat_1", "dhat"];
 
 %% Declare all the necessary variables
 Tstop = 30;
 
-Ts = 0.02;
+Ts = 0.05;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
 % the following value
 Ystop = 180; % deg
 
-global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
+global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF LOG_YHAT LOG_XHAT;
 
 % Logging vectors
 LOG_T = [];
@@ -44,9 +47,11 @@ LOG_DT = [];
 LOG_STEP = [];
 LOG_CTRL_T = [];
 LOG_REF = [];
+LOG_YHAT = [];
+LOG_XHAT = [];
 
 function plotdatarealtime()
-    global LOG_T LOG_Y LOG_U LOG_REF;
+    global LOG_TP LOG_Y LOG_YHAT LOG_REF;
     persistent hy hr hu;
     % ----------------------------------
     % Plot the measured data in real time
@@ -66,7 +71,7 @@ function plotdatarealtime()
             title("Real-Time System Response");
             xlabel("t [s]");
             ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-            legend(ax, "y","ref", "u", 'Location', 'southeast');
+            legend(ax, "y", "yhat", 'Location', 'southeast');
             
         end
        
@@ -81,11 +86,11 @@ function plotdatarealtime()
         end
 
         mask = last_n_points:nsteps;
-        t = LOG_T(mask);
+        t = LOG_TP(mask);
 
         set(hy, 'YData', LOG_Y(mask), 'XData', t);
-        set(hr, 'YData', LOG_REF(mask), 'XData', t);
-        set(hu, 'YData', LOG_U(mask), 'XData', t);
+        % set(hr, 'YData', LOG_REF(mask), 'XData', t);
+        set(hu, 'YData', LOG_YHAT(mask), 'XData', t);
         drawnow limitrate nocallbacks;
     catch err
        fprintf(2, "Plot thread: " + err.message + "\n");
@@ -94,11 +99,13 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
+
 
 
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -114,7 +121,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1000000, "Timeout", 5);
+    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
     
     sline = "";
 
@@ -147,7 +154,24 @@ try
     step = 0;
 
     REF = 0;
-    
+
+    pendulum = Pendulum();
+
+    [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false, false);
+
+    R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+    % Q = diag([deg2rad(0.01*Ts)^2 deg2rad(1/Ts)^2 deg2rad(0.0001)^2]);
+    Q = diag([deg2rad(0.01*Ts)^2 deg2rad(1/Ts)^2]);
+
+    % x0 = [-pi/3; 0; 0];
+    x0 = [-pi/3; 0];
+    P = diag(ones(size(x0))*var(x0));
+
+    ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
+    % ekf = ExtendedKalmanFilter(f,h,x0,1,'Q',Q,'R',R,'P0',P,"epstol",Ts);
+
+    u = 0;
+
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
@@ -157,11 +181,23 @@ try
             continue;
         end
 
+        % Do EKF
+        [ekf, yhat] = ekf.step(u/666.666, deg2rad(aerodata.output));
+        xhat = ekf.xhat;
+
         if(plant_time <= 2)
-            write(scon, 100, "single");
+            u = 30;
+        elseif (plant_time <= 4)
+            u = 10;
+        elseif (plant_time <= 10)
+            u = 100;
         else
-            write(scon, 0, "single");
+            u = 0;
         end
+
+        
+
+        write(scon, u, "single");
         
         % write(scon, aerodata.potentiometer, "single");
         
@@ -181,7 +217,7 @@ try
         plant_control_time = aerodata.controltime - plant_time_init;
 
         % Write the data into a file
-        data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
+        data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF, rad2deg(yhat), rad2deg(xhat')];
         writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
 
         LOG_T = [LOG_T, time_elapsed];
@@ -194,6 +230,8 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
+        LOG_YHAT = [LOG_YHAT, rad2deg(yhat)];
+        LOG_XHAT = [LOG_XHAT; rad2deg(xhat')];
 
         step = step + 1;
         time_last = time_curr;
@@ -213,20 +251,39 @@ end
 close_connection(scon, dfile_handle);
 
 %% Save the measurement
-LOG_Y = LOG_Y - mean(LOG_Y(end-50:end));
-logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
+% LOG_Y = LOG_Y - mean(LOG_Y(end-50:end));
+% logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, LOG_YHAT, LOG_XHAT(:, 1)', LOG_XHAT(:, 2)', LOG_XHAT(:, 3)', 'VariableNames', OUTPUT_NAMES);
+logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, LOG_YHAT, LOG_XHAT(:, 1)', LOG_XHAT(:, 2)', 'VariableNames', OUTPUT_NAMES);
 save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
 
 %%
 % ===========================
 %   Plot Results
 % ===========================
-figure(123); clf;
+figure(1); clf;
+hold on;
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
+stairs(LOG_TP,LOG_YHAT,'LineWidth',1.5);
+hold off;
 title("Measurement output");
+legend("y","yhat");
 xlabel('t [s]'); ylabel('\phi(t) [deg]'); grid minor; grid on;
 
+%%
+figure(123); clf;
+hold on;
+for i=1:size(LOG_XHAT, 2)
+    subplot(size(LOG_XHAT, 2), 1, i);
+    stairs(LOG_TP, LOG_XHAT(:, i));
+    title("$\hat{X}_{" + num2str(i) + "}$ observation", 'Interpreter', 'latex');
+    ylabel("X_" + num2str(i));
+    grid minor;
+    grid on;
+end
+xlabel("t [s]");
+hold off;
 
+%%
 figure(999); clf;
 style='-k';
 
