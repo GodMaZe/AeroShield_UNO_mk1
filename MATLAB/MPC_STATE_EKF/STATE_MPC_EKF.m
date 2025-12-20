@@ -201,7 +201,7 @@ A_con = [Gamma;
 [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false, false);
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(1/Ts)^2]);
+Q = diag([deg2rad(0.01)^2 deg2rad(Ts)^2]);
 
 x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));

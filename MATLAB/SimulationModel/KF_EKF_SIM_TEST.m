@@ -14,9 +14,8 @@ mT = 12.03/1000; % kg
 
 Ts = 0.05;
 
-Q = [0.01 0;
-     0 0.01];
-R = 0.01;
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+Q = diag([deg2rad(0.01)^2 deg2rad(Ts)^2]);
 x0 = [x0;dx0];
 P0 = eye(2)*var(x0);
 
@@ -39,7 +38,7 @@ u = 0.05;
 [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
 
 kf = KalmanFilter(A,B,C,'D',D,'Q',Q,'R',R,'x0',x0,'P0',P0);
-ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2), 'Q',Q,'R',R,'P0',P0,'epstol',1e-6);
+ekf = ExtendedKalmanFilter(f,h,x0, size(B, 2), 'Q',Q,'R',R,'P0',P0,'epstol',Ts);
 eekf = extendedKalmanFilter(f, h, x0, ...
     'StateCovariance', eye(2)*0.1, ...
     'ProcessNoise', Q, ...
@@ -66,11 +65,10 @@ for i=2:nsteps
         u = 0.05;
     end
     selector = max(i - 1, 1);
-    xs(:, selector + 1) = f(xs(:, selector), u);
+    w = chol(Q) * randn(size(x0));
+    xs(:, selector + 1) = f(xs(:, selector), u) + w;
     ys(selector) = h(xs(:, selector + 1), u);
 end
-
-
 
 
 ykf = zeros(nsteps, 1);
@@ -115,7 +113,7 @@ MSE_EEKF = (mean(rad2deg(y - yeekf).^2));
 
 figure;
 hold on;
-plot(t, rad2deg(y), 'k');
+stairs(t, rad2deg(y), 'k');
 stairs(t, rad2deg(ykf), 'r--');
 % plot(t, movmean(rad2deg(ykf), 10));
 stairs(t, rad2deg(yekf), 'g-.');
@@ -133,11 +131,11 @@ hold off;
 figure;
 hold on;
 % Plot the state estimates
-plot(t, xkf(:, 2), 'r--', 'DisplayName', 'KF2');
-plot(t, xekf(:, 2), 'g-.', 'DisplayName', 'EKF2');
-plot(t, xeekf(:, 2), 'm--', 'DisplayName', 'EEKF2');
-plot(t, xs(2, :), 'b', 'DisplayName', 'dy');
-plot(t, uf, '--k', 'DisplayName', 'u')
+stairs(t, xkf(:, 2), 'r--', 'DisplayName', 'KF2');
+stairs(t, xekf(:, 2), 'g-.', 'DisplayName', 'EKF2');
+stairs(t, xeekf(:, 2), 'm--', 'DisplayName', 'EEKF2');
+stairs(t, xs(2, :), 'b.', 'DisplayName', 'dy');
+stairs(t, uf, '--k', 'DisplayName', 'u')
 legend show;
 grid minor;
 grid on;

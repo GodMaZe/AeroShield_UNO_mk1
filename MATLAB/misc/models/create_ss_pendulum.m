@@ -13,8 +13,10 @@ arguments (Output)
 end
 
 A = [0 1;
-    % chyba v implementacii sucheho trenia
-    -pendulum.G_1/pendulum.I_T -(pendulum.xi+pendulum.mu*pendulum.g*(pendulum.m1+pendulum.m2))/pendulum.I_T];
+    % chyba v implementacii sucheho trenia: Fc =
+    %  * tanh(x2) <- ako
+    % ten tanh implementovat
+    -pendulum.G_1/pendulum.I_T -(pendulum.xi+pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2))/pendulum.I_T];
 B = [0; 1/pendulum.I_T];
 C = [1 0];
 D = 0;

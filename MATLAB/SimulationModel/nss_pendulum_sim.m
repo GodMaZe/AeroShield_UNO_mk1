@@ -1,6 +1,9 @@
 addpath("../misc")
 addpath("../misc/KF");
+addpath("../misc/models");
+addpath("../misc/functions");
 
+%% Do the simulation
 Ts = 0.05;
 Tstop = 60;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
@@ -9,6 +12,7 @@ nsteps = numel(t);
 u = 0.00;
 pendulum = Pendulum();
 [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
+[A,B,C,D] = pendulum.ss_discrete(Ts);
 
 x0 = [pi/4; 0];
 x1 = x0(1);
@@ -16,10 +20,15 @@ x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
-Q = diag([0.01 0.001]); % Process noise covariance
-R = 0.1; % Measurement noise covariance
-P = diag(ones(size(x0))) * var(x0);
-ekf = ExtendedKalmanFilter(f, h, x0, 1, "Fx", Fx, "Hx", Hx, "Q", Q, "R", R, "P0", P);
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+Q = diag([deg2rad(0.01)^2 deg2rad(Ts)^2]);
+
+x0 = [0; 0];
+P = diag(ones(size(x0))*var(x0));
+
+% ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
+
+ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
 
 ekf_yhat = zeros(nsteps, 1);
 ekf_x = zeros(size(x));
@@ -70,7 +79,7 @@ hold off;
 xlabel('Time (s)');
 ylabel('State Variables');
 title('Pendulum angular velocity');
-legend("y","0-line","dy_{ekf}");
+legend("dy","0-line","dy_{ekf}");
 grid minor;
 grid on;
 
