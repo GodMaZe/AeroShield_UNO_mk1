@@ -21,14 +21,14 @@ x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(Ts)^2]);
+Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
 
-x0 = [0; 0];
+% x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
 
-% ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
+ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
 
-ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
+% ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
 
 ekf_yhat = zeros(nsteps, 1);
 ekf_x = zeros(size(x));
@@ -58,28 +58,58 @@ for step=2:nsteps
 end
 
 %% Plot
+SKIP_STEPS = 50;
+select_mask = SKIP_STEPS:nsteps;
+e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
+e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
+RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
+RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
+
+
 figure(1); clf;
+tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
+ax1 = nexttile([2 1]);
 hold on;
-plot(t, rad2deg(x(1, :)));
-plot(t, rad2deg(ekf_x(1, :)));
+stairs(ax1, t, (x(1, :)));
+stairs(ax1, t, (ekf_x(1, :)));
 hold off;
-xlabel('Time (s)');
-ylabel('State Variables');
-title('Pendulum angular position');
-legend("y","y_{ekf}");
+ylabel(ax1, "$x_1\ \left[rad\right]$", "Interpreter", "latex");
+title(ax1, 'Pendulum angular position');
+subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
+legend(ax1, "y","y_{ekf}");
 grid minor;
 grid on;
 
+ax2 = nexttile;
+errorbar(ax2, t(select_mask), zeros(size(e_phi)), e_phi, '.');
+title(ax2, "Simulated and observed state x_1: difference squared");
+xlabel(ax2, "t [s]");
+ylabel(ax2, "$\Delta x_1^{2}\ \left[rad\right]^2$", "Interpreter", "latex");
+grid minor;
+grid on;
+
+
+
 figure(2); clf;
+tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
+ax1 = nexttile([2 1]);
 hold on;
-plot(t, rad2deg(x(2, :)));
-plot([0, t(end)], [0, 0], 'k');
-plot(t, rad2deg(ekf_x(2, :)));
+stairs(ax1, t, (x(2, :)));
+plot(ax1, [0, t(end)], [0, 0], '--r');
+stairs(ax1, t, (ekf_x(2, :)));
 hold off;
-xlabel('Time (s)');
-ylabel('State Variables');
-title('Pendulum angular velocity');
-legend("dy","0-line","dy_{ekf}");
+ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
+title(ax1, 'Pendulum angular velocity');
+subtitle(ax1, "RMSE: " + num2str(RMSE_X2) + " rad s^{-1}")
+legend(ax1, "dy","0-line","dy_{ekf}");
+grid minor;
+grid on;
+
+ax2 = nexttile;
+errorbar(ax2, t(select_mask), zeros(size(e_dphi)), e_dphi, '.');
+title(ax2, "Simulated and observed state x_2: difference squared");
+xlabel(ax2, "t [s]");
+ylabel(ax2, "$\Delta x_2^{2}\ \left[\frac{rad}{s}\right]^2$", "Interpreter", "latex");
 grid minor;
 grid on;
 
