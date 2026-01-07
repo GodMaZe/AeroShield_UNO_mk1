@@ -57,7 +57,7 @@ classdef ExtendedKalmanFilter
             p.addParameter('Fx', []);
             p.addParameter('Hx', []);
             p.addParameter('Q', eye(size(x0)));
-            p.addParameter('R', eye(size(h(x0, 0))));
+            p.addParameter('R', eye(size(h(0, x0, 0))));
             p.addParameter('P0', eye(size(x0)));
             p.addParameter('epstol', 1e-6);
             p.parse(f, h, x0, ninputs, varargin{:});
@@ -81,13 +81,14 @@ classdef ExtendedKalmanFilter
             obj.Zi = zeros(obj.ninputs, 1); % Zero input vector (placeholder for the input vector passed into the step function)
         end
 
-        function [obj, yhat] = step(obj, u, y)
-            if nargin < 2, u = obj.Zi; end
-            obj = obj.predict(u);
-            if nargin < 3 || isempty(y)
-                yhat = obj.predict_output(u);
+        function [obj, yhat] = step(obj, t, u, y)
+            if nargin < 3, u = obj.Zi; end
+            obj = obj.predict(t, u);
+            if nargin < 4 || isempty(y)
+                yhat = obj.predict_output(t, u);
+                fprintf("I am here!\n");
             else
-                [obj, yhat] = obj.update(y, u);
+                [obj, yhat] = obj.update(t, y, u);
             end
         end
 
@@ -102,31 +103,31 @@ classdef ExtendedKalmanFilter
     end
 
     methods (Access = private)
-        function obj = predict(obj, u)
+        function obj = predict(obj, t, u)
             if nargin < 2, u = obj.Zi; end
-            obj.xhat = obj.f(obj.xhat, u);
+            obj.xhat = obj.f(t, obj.xhat, u);
             if obj.is_JacobianState
-                A = obj.Fx(obj.xhat, u);
+                A = obj.Fx(t, obj.xhat, u);
             else
                 A = obj.estimateNumericJacobian(@(x) obj.f(x, u), obj.xhat);
             end
             obj.P = A * obj.P * A' + obj.Q; % State covariance prediction
         end
 
-        function ypred = predict_output(obj, u)
-           ypred = obj.h(obj.xhat, u);
+        function ypred = predict_output(obj, t, u)
+           ypred = obj.h(t, obj.xhat, u);
         end
 
-        function [obj, yhat] = update(obj, y, u)
+        function [obj, yhat] = update(obj, t, y, u)
             assert(~isempty(y), "The feedback output cannot be left empty.");
-            if nargin < 3, u = obj.Zi; end
+            if nargin < 4, u = obj.Zi; end
             if obj.is_JacobianMeasurement
-                C = obj.Hx(obj.xhat, u);
+                C = obj.Hx(t, obj.xhat, u);
             else
-                C = obj.estimateNumericJacobian(@(x) obj.h(x, u), obj.xhat);
+                C = obj.estimateNumericJacobian(@(x) obj.h(t, x, u), obj.xhat);
             end
             % predicted output without correction
-            ypred = obj.predict_output(u);
+            ypred = obj.predict_output(t, u);
             % measurement
             S = C * obj.P * C' + obj.R;
             % correcting the Kalman Gain matrix
@@ -141,19 +142,19 @@ classdef ExtendedKalmanFilter
             % Using the Joseph form for numerical stability, symmetry, and positive semidefiniteness preservation.
             obj.P = (obj.I - obj.K * C) * obj.P * (obj.I - obj.K * C)' + obj.K * obj.R * obj.K';
             obj.P = 0.5 * (obj.P + obj.P'); % Enforce exact symmetry
-            yhat = obj.predict_output(u);
+            yhat = obj.predict_output(t, u);
         end
 
-        function J = estimateNumericJacobian(obj, f, x)
+        function J = estimateNumericJacobian(obj, h, x)
             % Calculate the numerical finite-difference Jacobian of f(x)
-            fx = f(x);
+            fx = h(x);
             m = numel(fx);
             n = numel(x);
             J = zeros(m, n);
             for i = 1:n
                 x1 = x;
                 x1(i) = x1(i) + obj.epstol; % (x + h)
-                fx1 = f(x1); % f(x + h)
+                fx1 = h(x1); % f(x + h)
                 % df/dx = \lim_{h -> 0} \frac{f(x + h) - f(x)}{h}
                 J(:, i) = (fx1 - fx) / obj.epstol;
             end

@@ -4,8 +4,8 @@ addpath("../misc/models");
 addpath("../misc/functions");
 
 %% Do the simulation
-Ts = 0.05;
-Tstop = 60;
+Ts = 0.001;
+Tstop = 8.5;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
@@ -14,7 +14,7 @@ pendulum = Pendulum();
 [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-x0 = [pi/4; 0];
+x0 = [-pi/3; 0];
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
@@ -28,6 +28,10 @@ P = diag(ones(size(x0))*var(x0));
 
 ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
 
+fprintf("Init EKF:\n\n");
+disp(ekf.xhat);
+fprintf("========\n");
+
 % ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
 
 ekf_yhat = zeros(nsteps, 1);
@@ -36,10 +40,10 @@ ekf_x = zeros(size(x));
 ekf_yhat(1) = x0(1);
 ekf_x(:, 1) = x0;
 
+U = zeros(nsteps, 1);
+
 for step=2:nsteps
-    if step >= nsteps/2
-        u = 0.05;
-    end
+    
     % X = x(:, step - 1);
     % x2 = X(2) + [0 1] * Ts * f(X, u);
     % X(2) = x2;
@@ -48,17 +52,32 @@ for step=2:nsteps
     % x(:, step) = X;
     % 
     % x(:, step) = [x1; x2]; % Update the state vector
-    % x(:, step) = rk4_step(f, x(:, step - 1), u, Ts);
+    % x(:, step + 1) = rk4_step(f, t(step), x(:, step), u, Ts);
     % x(:, step) = euler_step(f, x(:, step - 1), u, Ts);
-    w = chol(Q) * randn(2, 1);
-    x(:, step) = f(x(:, step - 1), u) + w;
-    [ekf, yhat] = ekf.step(u, x(1, step));
+
+    
+
+    if step >= nsteps/2
+        u = 0.0028;
+    end
+
+    U(step) = u;
+    
+    w = chol(Q) * randn(2, 1)*0;
+    x(:, step) = f(t(step-1), x(:, step-1), u) + w;
+
+    [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
+    
     ekf_yhat(step) = yhat;
     ekf_x(:, step) = ekf.xhat;
+
+    if step < 5
+        disp(ekf.xhat)
+    end
 end
 
 %% Plot
-SKIP_STEPS = 50;
+SKIP_STEPS = 1;
 select_mask = SKIP_STEPS:nsteps;
 e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
 e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
@@ -70,8 +89,8 @@ figure(1); clf;
 tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
 ax1 = nexttile([2 1]);
 hold on;
-stairs(ax1, t, (x(1, :)));
-stairs(ax1, t, (ekf_x(1, :)));
+stairs(ax1, t, rad2deg(x(1, :)));
+stairs(ax1, t, rad2deg(ekf_x(1, :)));
 hold off;
 ylabel(ax1, "$x_1\ \left[rad\right]$", "Interpreter", "latex");
 title(ax1, 'Pendulum angular position');
@@ -97,6 +116,7 @@ hold on;
 stairs(ax1, t, (x(2, :)));
 plot(ax1, [0, t(end)], [0, 0], '--r');
 stairs(ax1, t, (ekf_x(2, :)));
+stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
 hold off;
 ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
 title(ax1, 'Pendulum angular velocity');

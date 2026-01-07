@@ -6,11 +6,13 @@ classdef Pendulum
     properties
         L = 0.1005; % m
         R = 0.0175; % m
-        m1 = 0.0540; % kg
-        m2 = 0.0965; % kg
+        % m1 = 0.0540; % kg
+        % m2 = 0.0965; % kg
+        m1 = 0.003; % kg
+        m2 = 0.012; % kg
         g = 9.81; % m/s^2
-        xi = 0.0003; % damping coefficient
-        mu = 0.00015; % coloumb friction coefficient
+        xi = 0.00013; % damping coefficient
+        mu = 0.00000629; % coloumb friction coefficient
         I_T = 0;    % Moment of inertia
         M_1 = 0;    % Mass "torque" (being used in the gravitational torque)
         G_1 = 0;    % Gravitational torque
