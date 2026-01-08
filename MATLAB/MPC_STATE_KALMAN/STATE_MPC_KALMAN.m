@@ -146,7 +146,7 @@ D = [1]; % Disturbance (the discrepancy between the model and real system)
 
 d = size(D, 1);
 
-A_tilde = [A, zeros(n, d);
+A_tilde = [A, eye(n, d);
            zeros(d, n), D];
 B_tilde = [B; zeros(r, d)];
 
@@ -154,16 +154,15 @@ C_tilde = [C, eye(d)];
 
 %% --- MPC prediction matrices ---
 [M,N] = mpcfillmnstate(A_tilde,B_tilde,p);  % build prediction matrices
-[Gamma] = mpcfillgamma(r,p);
 
 % --- MPC weighting matrices ---
 % Q_mpc = [1];
 % R_mpc = [10];
 Q_mpc_=[0.001 0 0;
-       0 15 0;
-       0 0 0.785];
-R_mpc=[0.6];
-Qd_mpc = [5];
+       0 5 0;
+       0 0 0.5];
+R_mpc=[1];
+Qd_mpc = [1];
 
 Q_mpc = [Q_mpc_ zeros(size(Q_mpc_, 1), size(Qd_mpc, 2));
         zeros(size(Qd_mpc, 1), size(Q_mpc_, 2)), Qd_mpc];
@@ -174,15 +173,19 @@ Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
 
 % Quadratic cost Hessian
-H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
-H = (H+H')/2; % for symmetry
+H = 2*(N'*Q_*N + R_);
+H = (H + H')/2; % for symmetry
 
 % Control input constraints
 u_lower = [UMin];
 u_upper = [UMax];
 
-U_lower = repmat(u_lower, p, 1);
-U_upper = repmat(u_upper, p, 1);
+du_min = u_lower - U_PB;
+du_max = u_lower - U_PB;
+
+U_lower = repmat(du_min, p, 1);
+U_upper = repmat(du_max, p, 1);
+
 
 x_lower = [0; -300; -100; -10];
 x_upper = [300; 300; 100; 10];
@@ -191,10 +194,12 @@ X_lower = repmat(x_lower, p, 1);
 X_upper = repmat(x_upper, p, 1);
 
 % Constraint matrix for quadratic programming
-A_con = [Gamma;
-        -Gamma;
-         N*Gamma;
-        -N*Gamma];
+Irp = eye(r*p);
+A_ineq_u = [Irp;
+        -Irp];
+
+b_ineq_u = [U_upper;
+            -U_lower];
 
 % --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
@@ -224,7 +229,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1e6, "Timeout", 5);
+    scon = serialport("COM3", 250000, "Timeout", 5);
     
     sline = "";
 
@@ -278,7 +283,7 @@ try
 
 %% Kalman filter init
     kf = KalmanFilter(A_tilde, B_tilde, C_tilde, 'Q', Q, 'R', R, 'P0', P, 'x0', x_hat);
-
+    I = eye(size(P));
 %% Measurement loop
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
@@ -314,35 +319,44 @@ try
         end
 
         % Do Kalman
-        [kf, y_hat] = kf.step(u, aerodata.output);
-        x_hat = kf.xhat;
+        % [kf, y_hat] = kf.step(u, aerodata.output);
+        % x_hat = kf.xhat;
+
+        % predict kalman
+        x_hat = A_tilde * x_hat + B_tilde * u;
+        P = A_tilde * P * A_tilde' + Q;
+
+        % update kalman
+        S = C_tilde * P * C_tilde' + R;
+        K = (S'\(C_tilde*P'))';
+        e = aerodata.output - C_tilde * x_hat;
+        x_hat = x_hat + K * e;
+        y_hat = C_tilde*x_hat;
+        P = (I - K*C_tilde) * P;
         % End Kalman
 
         
         
         if elapsed >= 0
             % Do MPC
-            u_pred = u_ones*u;
+            % u_pred = u_ones*u;
 
-            x_test = x_hat;
-            x_test(2) = REF - x_test(end);
-            x_test(3) = x_test(3) * 0.05;
-            x_test(end) = 0;
-            X_ref = repmat(x_test, p, 1);
+            x_error = [x_hat(1); 0 - x_hat(2); REF - x_hat(4) - x_hat(3); 0];
+            X_ref = repmat(x_error, p, 1);
 
-            b = 2*(M*(x_hat) + N*u_pred - X_ref)'*Q_*N*Gamma;
-            b_con = [U_upper - u_pred;
-                    -U_lower + u_pred;
-                    X_upper - M*x_hat - N*u_pred;
-                    -X_lower + M*(x_hat) + N*u_pred];
+            b = 2*(N'*Q_*M*x_error);
+            % b_con = [U_upper - u_pred;
+            %         -U_lower + u_pred;
+            %         X_upper - M*x_hat - N*u_pred;
+            %         -X_lower + M*(x_hat) + N*u_pred];
 
             % tic
-            delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
+            delta_U = quadprog(H, b, A_ineq_u, b_ineq_u, [], [], [], [],[], options);
             % toc
             if ~isempty(delta_U)
                 ux = delta_U(1:r, :);
             end
-            u = u + ux;
+            u = U_PB + ux;
             % End MPC
         end
 

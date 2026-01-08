@@ -86,7 +86,7 @@ classdef KalmanFilter
             if nargin < 2, u = zeros(size(obj.B, 2), 1); end
             ypred = obj.predict_output(u);
             S = obj.C * obj.P * obj.C' + obj.R;
-            K = obj.P * obj.C' / S;
+            K = (S'\(obj.C * obj.P'))';
             e1 = y - ypred;
             obj.xhat = obj.xhat + K * e1;
             obj.P = (obj.I - K * obj.C) * obj.P;

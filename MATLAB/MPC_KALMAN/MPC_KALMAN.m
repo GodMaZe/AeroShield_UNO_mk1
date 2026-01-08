@@ -215,7 +215,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1e6, "Timeout", 5);
+    scon = serialport("COM3", 250000, "Timeout", 5);
     
     sline = "";
 
@@ -303,8 +303,8 @@ try
 
         % Do Kalman
         x_hat = A_tilde*x_hat + B_tilde*u;
-
         P = A_tilde*P*A_tilde' + Q;
+        
         K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
         e1 = plant_output - C_tilde*x_hat;
         x_hat = x_hat + K*e1;
