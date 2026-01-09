@@ -148,7 +148,7 @@ B_tilde(1:n) = B;
 % --- LQ weighting matrices ---
 % Q_=[0.01 0 0;
 %     0 10 0;
-%     0 0 0.75];
+%     0 0 5];
 Q_=diag([10 0.75]);
 R_=[0.1];
 Qz=[5];
@@ -165,6 +165,9 @@ Kz=K_LQ(n + 1:end);        % integral feedback part
 % --- Kalman filter initialization ---    
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
 Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
+
+% R = 3;
+% Q = diag([0.1 0.1 0.1]);
 
 % Kalman initial
 P=zeros(size(Q));
@@ -230,13 +233,13 @@ try
     REF_INIT = 35;
     REF = REF_INIT;
 
-    REF_STEPS = [5, -5, 0, 10, -REF_INIT];
+    REF_STEPS = [-REF_INIT+90, -5, 0, 10, -REF_INIT];
 
     U_STEP_SIZE = 5;
     
     U_PB = 30;
 
-    step = 1;
+    step = 0;
     u = 0;
     ux = 0;
     udt = U_STEP_SIZE/10;
@@ -289,13 +292,18 @@ try
         % y_hat = C*x_hat;
         % P = P - K*C*P;
 
+        % The problem is with the input matrix B. It is too large of an
+        % input for the simple pendulum, the control input should be scaled
+        % down as it represents directly the torque applied to the arm, not
+        % the %PWM value.
         [KF, y_hat] = KF.step(u/666.66, deg2rad(aerodata.output));
         y_hat = rad2deg(y_hat);
         x_hat = rad2deg(KF.get_xhat());
+        % x_hat = KF.get_xhat();
 
         if elapsed >= 0
             ux = Kx*x_hat + Kz*z;
-            e = REF - y_hat;
+            e = REF - aerodata.output;
             z = z + e;
         end
 

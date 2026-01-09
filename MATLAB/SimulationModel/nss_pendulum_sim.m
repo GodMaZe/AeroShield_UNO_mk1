@@ -14,7 +14,7 @@ pendulum = Pendulum();
 [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-x0 = [-pi/3; 0];
+x0 = [0; 0];
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
@@ -57,8 +57,8 @@ for step=2:nsteps
 
     
 
-    if step >= nsteps/2
-        u = 0.0028;
+    if step == 2
+        u = 100/666.66;
     end
 
     U(step) = u;
