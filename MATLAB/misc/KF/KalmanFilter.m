@@ -68,6 +68,10 @@ classdef KalmanFilter
             end
         end
 
+        function [xhat] = get_xhat(obj)
+            xhat = obj.xhat;
+        end
+
         function obj = reset(obj)
             obj.xhat = obj.x0;
             obj.P = obj.P0;

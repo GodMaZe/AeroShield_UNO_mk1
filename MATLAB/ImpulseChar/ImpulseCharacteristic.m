@@ -3,6 +3,9 @@ clc;
 
 addpath("../misc");
 
+
+loadconfigs;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "impulse_char";
@@ -114,7 +117,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1000000, "Timeout", 5);
+    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
     
     sline = "";
 

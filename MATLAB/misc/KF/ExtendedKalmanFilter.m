@@ -109,7 +109,7 @@ classdef ExtendedKalmanFilter
             if obj.is_JacobianState
                 A = obj.Fx(t, obj.xhat, u);
             else
-                A = obj.estimateNumericJacobian(@(x) obj.f(x, u), obj.xhat);
+                A = obj.estimateNumericJacobian(@(x) obj.f(t, x, u), obj.xhat);
             end
             obj.P = A * obj.P * A' + obj.Q; % State covariance prediction
         end

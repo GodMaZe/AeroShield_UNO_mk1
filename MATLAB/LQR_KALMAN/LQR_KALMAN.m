@@ -3,6 +3,8 @@ close all; clear;
 clc;
 
 addpath("../misc");
+addpath("../misc/KF");
+addpath("../misc/models")
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
@@ -24,7 +26,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 30;
-SYNC_TIME = 20; % Time for the system to stabilize in the OP
+SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
 Ts = 0.1;
 
@@ -127,7 +129,9 @@ Cc = [0, 1, 0];
 sys = ss(Ac,Bc,Cc,0);
 sysd = c2d(sys, Ts);
 
-[A, B, C, ~] = ssdata(sysd);
+% [A, B, C, ~] = ssdata(sysd);
+pendulum = Pendulum();
+[A, B, C, D] = pendulum.ss_discrete(Ts);
 
 n = size(A, 1);
 r = size(B, 2);
@@ -142,11 +146,12 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 % --- LQ weighting matrices ---
-Q_=[0.01 0 0;
-    0 0.1 0;
-    0 0 15];
+% Q_=[0.01 0 0;
+%     0 10 0;
+%     0 0 0.75];
+Q_=diag([10 0.75]);
 R_=[0.1];
-Qz=[30];
+Qz=[5];
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -158,8 +163,8 @@ Kx=K_LQ(1:n);           % state feedback part
 Kz=K_LQ(n + 1:end);        % integral feedback part
 
 % --- Kalman filter initialization ---    
-R=1; % measurement noise covariance
-Q=diag([0.1;0.1;0.1]);  % process noise covariance
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
 
 % Kalman initial
 P=zeros(size(Q));
@@ -189,7 +194,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 1000000, "Timeout", 5);
+    scon = serialport("COM3", 250000, "Timeout", 5);
     
     sline = "";
 
@@ -237,6 +242,8 @@ try
     udt = U_STEP_SIZE/10;
     is_init = true;
     e = 0;
+
+    KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
     
     
     while plant_time < Tstop
@@ -272,18 +279,23 @@ try
             REF = REF_INIT + REF_STEPS(1);
         end
 
-        x_hat = A*x_hat + B*u;
+        % x_hat = A*x_hat + B*u;
+        % 
+        % P = A*P*A' + Q;
+        % S = (C*P*C' + R);
+        % K = (S'\(C*P'))';
+        % e1 = plant_output - C*x_hat;
+        % x_hat = x_hat + K*e1;
+        % y_hat = C*x_hat;
+        % P = P - K*C*P;
 
-        P = A*P*A' + Q;
-        K = P*C'/(C*P*C' + R);
-        e1 = plant_output - C*x_hat;
-        x_hat = x_hat + K*e1;
-        y_hat = C*x_hat;
-        P = P - K*C*P;
+        [KF, y_hat] = KF.step(u/666.66, deg2rad(aerodata.output));
+        y_hat = rad2deg(y_hat);
+        x_hat = rad2deg(KF.get_xhat());
 
         if elapsed >= 0
             ux = Kx*x_hat + Kz*z;
-            e = REF - plant_output;
+            e = REF - y_hat;
             z = z + e;
         end
 

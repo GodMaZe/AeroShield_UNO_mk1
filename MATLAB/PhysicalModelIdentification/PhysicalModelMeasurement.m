@@ -195,9 +195,9 @@ try
             u = 0;
         end
 
-        
+        write(scon, 0, "single");
 
-        write(scon, u, "single");
+        % write(scon, u, "single");
         
         % write(scon, aerodata.potentiometer, "single");
         

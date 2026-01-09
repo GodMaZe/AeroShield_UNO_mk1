@@ -66,8 +66,8 @@ for i=2:nsteps
     end
     selector = max(i - 1, 1);
     w = chol(Q) * randn(size(x0));
-    xs(:, selector + 1) = f(xs(:, selector), u) + w;
-    ys(selector) = h(xs(:, selector + 1), u);
+    xs(:, selector + 1) = f(t(i), xs(:, selector), u) + w;
+    ys(selector) = h(t(i), xs(:, selector + 1), u);
 end
 
 
