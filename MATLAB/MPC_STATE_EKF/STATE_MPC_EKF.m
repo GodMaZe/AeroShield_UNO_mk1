@@ -309,9 +309,9 @@ try
         end
 
         % Do Kalman
-        % [ekf, y_hat] = ekf.step(u/666.66, deg2rad(plant_output));
+        % [ekf, y_hat] = ekf.step(plant_time, u/666.66, deg2rad(plant_output));
         % x_hat = ekf.xhat;
-        [kf, y_hat] = kf.step(u/666.66, deg2rad(plant_output));
+        [kf, y_hat] = kf.step(u, deg2rad(plant_output));
         x_hat = kf.xhat;
         % y_hat = rad2deg(y_hat);
 

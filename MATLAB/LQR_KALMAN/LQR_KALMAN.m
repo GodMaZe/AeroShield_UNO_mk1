@@ -26,9 +26,9 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 30;
-SYNC_TIME = 0; % Time for the system to stabilize in the OP
+SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
-Ts = 0.1;
+Ts = 0.05;
 
 Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
@@ -128,50 +128,6 @@ Cc = [0, 1, 0];
 
 sys = ss(Ac,Bc,Cc,0);
 sysd = c2d(sys, Ts);
-
-% [A, B, C, ~] = ssdata(sysd);
-pendulum = Pendulum();
-[A, B, C, D] = pendulum.ss_discrete(Ts);
-
-n = size(A, 1);
-r = size(B, 2);
-m = size(C, 1);
-
-% --- Augmented system for integral action ---
-B_tilde=zeros(n+m, r);
-
-A_tilde = [A, zeros(n, m);
-           -C, eye(m, m)];
-
-B_tilde(1:n) = B;
-
-% --- LQ weighting matrices ---
-% Q_=[0.01 0 0;
-%     0 10 0;
-%     0 0 5];
-Q_=diag([10 0.75]);
-R_=[0.1];
-Qz=[5];
-Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
-        zeros(size(Qz, 1), size(Q_, 2)), Qz];
-
-% --- Solve Discrete-time Algebraic Riccati Equation ---
-[P_LQ,~,K_LQ]= dare(A_tilde, B_tilde, Q_tilde, R_);
-K_LQ = -K_LQ;
-
-Kx=K_LQ(1:n);           % state feedback part
-Kz=K_LQ(n + 1:end);        % integral feedback part
-
-% --- Kalman filter initialization ---    
-R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
-
-% R = 3;
-% Q = diag([0.1 0.1 0.1]);
-
-% Kalman initial
-P=zeros(size(Q));
-x_hat=zeros(size(Q,1),1);
     
 % Initialize control variables
 z=0;
@@ -233,7 +189,7 @@ try
     REF_INIT = 35;
     REF = REF_INIT;
 
-    REF_STEPS = [-REF_INIT+90, -5, 0, 10, -REF_INIT];
+    REF_STEPS = [-REF_INIT+23, -5, 0, 10, -REF_INIT];
 
     U_STEP_SIZE = 5;
     
@@ -246,9 +202,64 @@ try
     is_init = true;
     e = 0;
 
+    %% Init system and Kalman Filter
+    % [A, B, C, ~] = ssdata(sysd);
+    pendulum = Pendulum();
+    [A, B, C, D] = pendulum.ss_discrete(Ts);
+    [f, h, Fx, Hx] = pendulum.nonlinear(Ts);
+    
+    if exist("pendulum", "var")
+        n = pendulum.n;
+        m = pendulum.m;
+        r = pendulum.r;
+    else
+        n = size(A, 1);
+        r = size(B, 2);
+        m = size(C, 1);   
+    end
+    
+    
+    % --- Augmented system for integral action ---
+    B_tilde=zeros(n+m, r);
+    
+    A_tilde = [A, zeros(n, m);
+               -C, eye(m, m)];
+    
+    B_tilde(1:n) = B;
+    
+    % --- LQ weighting matrices ---
+    % Q_=[0.01 0 0;
+    %     0 10 0;
+    %     0 0 7];
+    Q_=diag([10 5]);
+    R_=[0.001];
+    Qz=[15];
+    Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
+            zeros(size(Qz, 1), size(Q_, 2)), Qz];
+
+    % --- Solve Discrete-time Algebraic Riccati Equation ---
+    [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+    K_LQ = -K_LQ;
+    
+    Kx=K_LQ(1:n);           % state feedback part
+    Kz=K_LQ(n + 1:end);        % integral feedback part
+    
+    
+    % --- Kalman filter initialization ---    
+    R = deg2rad(3); % Measurement noise (from datasheet)
+    Q = diag(deg2rad([0.1 Ts^2]));
+    
+    % R = 3;
+    % Q = diag([0.1 0.1 1]);
+    
+    % Kalman initial
+    P=zeros(size(Q));
+    x_hat=zeros(size(Q,1),1);
+
     KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
-    
-    
+    % EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
+
+    %% Loop
     while plant_time < Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
@@ -282,30 +293,48 @@ try
             REF = REF_INIT + REF_STEPS(1);
         end
 
-        % x_hat = A*x_hat + B*u;
-        % 
-        % P = A*P*A' + Q;
-        % S = (C*P*C' + R);
-        % K = (S'\(C*P'))';
-        % e1 = plant_output - C*x_hat;
-        % x_hat = x_hat + K*e1;
-        % y_hat = C*x_hat;
-        % P = P - K*C*P;
-
         % The problem is with the input matrix B. It is too large of an
         % input for the simple pendulum, the control input should be scaled
         % down as it represents directly the torque applied to the arm, not
         % the %PWM value.
-        [KF, y_hat] = KF.step(u/666.66, deg2rad(aerodata.output));
-        y_hat = rad2deg(y_hat);
-        x_hat = rad2deg(KF.get_xhat());
+        % [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
+        % y_hat = y_hat;
+        % x_hat = EKF.get_xhat();
+
+        [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
+        y_hat = y_hat;
+        x_hat = KF.get_xhat();
+
+        % [KF, y_hat] = KF.step(u, aerodata.output);
+        % y_hat = y_hat;
         % x_hat = KF.get_xhat();
 
         if elapsed >= 0
+            if exist("EKF", "var")
+                A = Fx(plant_time, x_hat, u);
+                C = Hx(plant_time, x_hat, u);
+
+                A_tilde = [A, zeros(n, m);
+                           -C, eye(m, m)];
+
+                % --- Solve Discrete-time Algebraic Riccati Equation ---
+                [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+                K_LQ = -K_LQ;
+                
+                Kx=K_LQ(1:n);           % state feedback part
+                Kz=K_LQ(n + 1:end);        % integral feedback part
+            end
+
             ux = Kx*x_hat + Kz*z;
-            e = REF - aerodata.output;
+            e = deg2rad(REF) - y_hat; % EKF
+            % e = REF - y_hat; % OPT Params
             z = z + e;
         end
+
+        
+
+        y_hat = rad2deg(y_hat);
+        x_hat = rad2deg(x_hat);
 
         u = U_PB + max(-U_PB, min(100-U_PB, ux));
 
@@ -413,6 +442,7 @@ stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
 xlabel('k'); ylabel('\phi(k)'); grid on;
 % xlim([0,max(LOG_STEP)]);
+legend("ref","y","yhat");
 hold off;
 
 subplot(2,1,2)
@@ -421,6 +451,7 @@ stairs(LOG_TP, LOG_U,'LineWidth',1.5);
 stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
 ylabel('u(k) [%]'); xlabel('t [s]'); grid on
 % xlim([0,max(LOG_STEP)]);
+legend("u","ux");
 hold off
 set(gcf,'position',[200,400,650,400]);
 

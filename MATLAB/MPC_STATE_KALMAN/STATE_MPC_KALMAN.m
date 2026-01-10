@@ -319,20 +319,20 @@ try
         end
 
         % Do Kalman
-        % [kf, y_hat] = kf.step(u, aerodata.output);
-        % x_hat = kf.xhat;
+        [kf, y_hat] = kf.step(u, aerodata.output);
+        x_hat = kf.xhat;
 
         % predict kalman
-        x_hat = A_tilde * x_hat + B_tilde * u;
-        P = A_tilde * P * A_tilde' + Q;
-
-        % update kalman
-        S = C_tilde * P * C_tilde' + R;
-        K = (S'\(C_tilde*P'))';
-        e = aerodata.output - C_tilde * x_hat;
-        x_hat = x_hat + K * e;
-        y_hat = C_tilde*x_hat;
-        P = (I - K*C_tilde) * P;
+        % x_hat = A_tilde * x_hat + B_tilde * u;
+        % P = A_tilde * P * A_tilde' + Q;
+        % 
+        % % update kalman
+        % S = C_tilde * P * C_tilde' + R;
+        % K = (S'\(C_tilde*P'))';
+        % e = aerodata.output - C_tilde * x_hat;
+        % x_hat = x_hat + K * e;
+        % y_hat = C_tilde*x_hat;
+        % P = (I - K*C_tilde) * P;
         % End Kalman
 
         
@@ -341,7 +341,7 @@ try
             % Do MPC
             % u_pred = u_ones*u;
 
-            x_error = [x_hat(1); 0 - x_hat(2); REF - x_hat(4) - x_hat(3); 0];
+            x_error = [x_hat(1); REF - x_hat(2) - x_hat(4); 0 - x_hat(3); 0];
             X_ref = repmat(x_error, p, 1);
 
             b = 2*(N'*Q_*M*x_error);

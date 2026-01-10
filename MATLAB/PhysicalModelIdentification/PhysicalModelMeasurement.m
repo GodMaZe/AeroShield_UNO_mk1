@@ -181,23 +181,25 @@ try
             continue;
         end
 
+        % u = 0;
+
         % Do EKF
-        [ekf, yhat] = ekf.step(u/666.666, deg2rad(aerodata.output));
+        [ekf, yhat] = ekf.step(plant_time, u, deg2rad(aerodata.output));
         xhat = ekf.xhat;
 
-        if(plant_time <= 2)
-            u = 30;
-        elseif (plant_time <= 4)
+        if(plant_time <= 10)
+            u = 15;
+        elseif (plant_time <= 15)
             u = 10;
-        elseif (plant_time <= 10)
-            u = 100;
+        elseif (plant_time <= 25)
+            u = 20;
         else
             u = 0;
         end
 
-        write(scon, 0, "single");
+        % write(scon, 0, "single");
 
-        % write(scon, u, "single");
+        write(scon, u, "single");
         
         % write(scon, aerodata.potentiometer, "single");
         

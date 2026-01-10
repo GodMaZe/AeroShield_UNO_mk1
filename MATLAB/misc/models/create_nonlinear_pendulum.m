@@ -17,7 +17,7 @@ end
 if use_saturation
     NL = @(x) min(1, max(-1, x));
 else
-    NL = @(x) tanh(x*1e6);
+    NL = @(x) tanh(x*1e2);
 end
 
 dt = Ts;
@@ -28,29 +28,26 @@ function x2 = dx2(t, x, u, vel_tol)
         vel_tol = 1e-4;
     end
 
-    iscoloumb = false;
+    % iscoloumb = false;
     
     function tau_c = friction_coloumb(t, x, u, vel_tol)
         
-        if abs(x(2)) <= vel_tol
-            if t == 0 && x(1) ~= 0
-                tau_c = pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2)*NL(x(2));
-            else
-                tau_c = -pendulum.G_1*sin(x(1));
-            end
-            
-            fprintf("Inside coloumb!\n");
-            iscoloumb = true;
-        else
-            tau_c = pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2)*NL(x(2));
-        end
+        tau_c = pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2)*NL(x(2));
+        % if abs(x(2)) <= vel_tol && abs(tau_g) > abs(tau_c)
+        %     % fprintf("tau_c = %f | tau_g = %f\n", tau_c, tau_g);
+        %     tau_c = -tau_g;
+        %     % iscoloumb = true;
+        % 
+        % end
     end
+
     % The passive effect of the frictional forces is incorrectly modeled
+    tau_g = pendulum.G_1*sin(x(1));
     Fs = pendulum.xi*x(2) + friction_coloumb(t, x, u, vel_tol);
-    x2 = (1/pendulum.I_T) * (-Fs - pendulum.G_1*sin(x(1)) + u(1));
-    if iscoloumb
-        fprintf("x2 = %f\n", x2);
-    end
+    x2 = (1/pendulum.I_T) * (-Fs - tau_g + pendulum.Ku*u(1));
+    % if iscoloumb
+    %     fprintf("x2 = %f\n", x2);
+    % end
 end
 
 f_cont = @(t, x, u) [

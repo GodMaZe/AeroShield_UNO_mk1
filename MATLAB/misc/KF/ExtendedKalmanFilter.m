@@ -96,6 +96,10 @@ classdef ExtendedKalmanFilter
             K = obj.K; % Return the current Kalman gain matrix
         end
 
+        function xhat = get_xhat(obj)
+            xhat = obj.xhat; % Return the current state estimate
+        end
+
         function obj = reset(obj)
             obj.xhat = obj.x0;
             obj.P = obj.P0;

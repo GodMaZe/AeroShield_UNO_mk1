@@ -18,7 +18,7 @@ A = [0 1;
     % tanh implementovat
     % 
     -pendulum.G_1/pendulum.I_T -(pendulum.xi+pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2))/pendulum.I_T];
-B = [0; 1/pendulum.I_T];
+B = [0; pendulum.Ku/pendulum.I_T];
 C = [1 0];
 D = 0;
 

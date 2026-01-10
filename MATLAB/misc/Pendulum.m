@@ -16,6 +16,10 @@ classdef Pendulum
         I_T = 0;    % Moment of inertia
         M_1 = 0;    % Mass "torque" (being used in the gravitational torque)
         G_1 = 0;    % Gravitational torque
+        Ku = 1/4163; % The input koefficient to convert %PWM to [Nm].
+        n = 2; % Number of states and the order of the differential eq. describing the system.
+        m = 1; % The number of outputs of the system.
+        r = 1; % The number of inputs of the system.
     end
 
     methods
