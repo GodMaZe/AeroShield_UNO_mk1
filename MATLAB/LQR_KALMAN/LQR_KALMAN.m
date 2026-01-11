@@ -28,7 +28,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 30;
 SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
-Ts = 0.05;
+Ts = 0.1;
 
 Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
@@ -109,25 +109,25 @@ end
 % ----------------------------------
 % ----------------------------------
 
-% Define model parameters
-K = 1.3860;
-eta = 11.0669;
-omega = 7.8944;
-b = 0.0735;
-
-% State matrix A
-Ac = [-eta, 0, 0;
-      0, 0, 1;
-      omega^2, -omega^2, -2*b*omega];
-
-% Input matrix B
-Bc = [K*eta; 0; 0];
-
-% Output matrix C
-Cc = [0, 1, 0];
-
-sys = ss(Ac,Bc,Cc,0);
-sysd = c2d(sys, Ts);
+% % Define model parameters
+% K = 1.3860;
+% eta = 11.0669;
+% omega = 7.8944;
+% b = 0.0735;
+% 
+% % State matrix A
+% Ac = [-eta, 0, 0;
+%       0, 0, 1;
+%       omega^2, -omega^2, -2*b*omega];
+% 
+% % Input matrix B
+% Bc = [K*eta; 0; 0];
+% 
+% % Output matrix C
+% Cc = [0, 1, 0];
+% 
+% sys = ss(Ac,Bc,Cc,0);
+% sysd = c2d(sys, Ts);
     
 % Initialize control variables
 z=0;
@@ -246,8 +246,8 @@ try
     
     
     % --- Kalman filter initialization ---    
-    R = deg2rad(3); % Measurement noise (from datasheet)
-    Q = diag(deg2rad([0.1 Ts^2]));
+    R = (0.015); % Measurement noise (from datasheet)
+    Q = diag(([0.001 (0.001*Ts)]));
     
     % R = 3;
     % Q = diag([0.1 0.1 1]);
@@ -256,8 +256,8 @@ try
     P=zeros(size(Q));
     x_hat=zeros(size(Q,1),1);
 
-    KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
-    % EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
+    % KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
+    EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
     %% Loop
     while plant_time < Tstop
@@ -297,17 +297,19 @@ try
         % input for the simple pendulum, the control input should be scaled
         % down as it represents directly the torque applied to the arm, not
         % the %PWM value.
-        % [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
-        % y_hat = y_hat;
-        % x_hat = EKF.get_xhat();
-
-        [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
+        [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
         y_hat = y_hat;
-        x_hat = KF.get_xhat();
+        x_hat = EKF.get_xhat();
+
+        % [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
+        % y_hat = y_hat;
+        % x_hat = KF.get_xhat();
 
         % [KF, y_hat] = KF.step(u, aerodata.output);
         % y_hat = y_hat;
         % x_hat = KF.get_xhat();
+
+        u = U_PB;
 
         if elapsed >= 0
             if exist("EKF", "var")
@@ -329,14 +331,14 @@ try
             e = deg2rad(REF) - y_hat; % EKF
             % e = REF - y_hat; % OPT Params
             z = z + e;
-        end
 
-        
+            u = u + max(-U_PB, min(100-U_PB, ux));
+        end
 
         y_hat = rad2deg(y_hat);
         x_hat = rad2deg(x_hat);
 
-        u = U_PB + max(-U_PB, min(100-U_PB, ux));
+        
 
         
 
