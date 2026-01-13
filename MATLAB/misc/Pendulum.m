@@ -49,14 +49,14 @@ classdef Pendulum
             [A, B, C, D] = create_ss_pendulum(obj, Ts);
         end
 
-        function [f, h, Fx, Hx] = nonlinear(obj, Ts, use_saturation, w_disturbance)
+        function [f, b, h, Fx, Bu, Hx] = nonlinear(obj, Ts, use_saturation, w_disturbance)
             arguments (Input)
                 obj;
                 Ts = 0.01; % Sample time for discrete state-space model
                 use_saturation = false; % Use saturation for coloumb friction or hyperbolic tangent.
                 w_disturbance = false; % Default disturbance value (in case we are trying to identify the deviation from real system)
             end
-            [f, h, Fx, Hx] = create_nonlinear_pendulum(obj, Ts, use_saturation, w_disturbance);
+            [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, use_saturation, w_disturbance);
         end
 
         function [s] = tostring(obj)

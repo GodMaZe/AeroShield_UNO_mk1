@@ -11,8 +11,8 @@ nsteps = numel(t);
 
 u = 0.00;
 pendulum = Pendulum();
-[f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
-[A,B,C,D] = pendulum.ss_discrete(Ts);
+[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
+[A, B, C, D] = pendulum.ss_discrete(Ts);
 
 x0 = [-pi/3; 0];
 x1 = x0(1);
@@ -20,8 +20,8 @@ x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
-R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
+R = (0.015); % Measurement noise (from datasheet)
+Q = diag(([0.001 (0.001*Ts)]));
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -32,34 +32,88 @@ fprintf("Init EKF:\n\n");
 disp(ekf.xhat);
 fprintf("========\n");
 
-% ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
-
 ekf_yhat = zeros(nsteps, 1);
 ekf_x = zeros(size(x));
 
 ekf_yhat(1) = x0(1);
 ekf_x(:, 1) = x0;
 
+%% LQR Setup
+n = pendulum.n;
+m = pendulum.m;
+r = pendulum.r;
+
+% --- Augmented system for integral action ---
+B_tilde=zeros(n+m, r);
+
+A_tilde = [A, zeros(n, m);
+           -C, eye(m, m)];
+
+B_tilde(1:n) = B;
+
+Q_=diag([10 5]);
+R_=[0.001];
+Qz=[15];
+Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
+        zeros(size(Qz, 1), size(Q_, 2)), Qz];
+
+[P_LQ, ~, K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R);
+K_LQ = -K_LQ;
+Kx = K_LQ(1:n);
+Kz = K_LQ((n+1):end);
+
+%% LOOP
 U = zeros(nsteps, 1);
+
+U_PB = 20; % %PWM
+
+REF = 25; % deg
 
 for step=2:nsteps
 
     if step >= nsteps/2
-        u = 25;
+        REF = 35;
     end
 
-    U(step) = u;
+    if step > 0
+        if exist("EKF", "var")
+            A = Fx(plant_time, x_hat, u);
+            C = Hx(plant_time, x_hat, u);
+
+            A_tilde = [A, zeros(n, m);
+                       -C, eye(m, m)];
+
+            % --- Solve Discrete-time Algebraic Riccati Equation ---
+            [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+            K_LQ = -K_LQ;
+            
+            Kx=K_LQ(1:n);           % state feedback part
+            Kz=K_LQ(n + 1:end);        % integral feedback part
+        end
+
+        ux = Kx*x_hat + Kz*z;
+        e = deg2rad(REF) - y_hat;
+        z = z + e;
+
+        u = U_PB + max(-U_PB, min(100-U_PB, ux));
+    else
+        u = U_PB;
+    end
     
     w = chol(Q) * randn(2, 1) * 0;
     x(:, step) = f(t(step-1), x(:, step-1), u) + w;
-    [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
-    
-    ekf_yhat(step) = yhat;
+    [ekf, y_hat] = ekf.step(t(step - 1), u, x(1, step - 1));
+    y_hat = y_hat;
+    x_hat = ekf.get_xhat();
+
+    U(step) = u;
+
+    ekf_yhat(step) = y_hat;
     ekf_x(:, step) = ekf.xhat;
 
-    if step < 5
-        disp(ekf.xhat)
-    end
+    % if step < 5
+    %     disp(ekf.xhat)
+    % end
 end
 
 %% Plot

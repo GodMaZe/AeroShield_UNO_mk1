@@ -27,7 +27,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 %% Declare all the necessary variables
 Tstop = 20;
 
-Ts = 0.02;
+Ts = 0.05;
 nsteps = floor(Tstop/Ts);
 
 % Stop the measurement when the value of the output reaches or overtakes
@@ -214,24 +214,6 @@ end
 %% close conns
 close_connection(scon, dfile_handle);
 
-function close_connection(scon, dfile_handle)
-    if exist("scon", "var")
-        fprintf("Closing serial communication...\n");
-        write(scon, [0, 0], 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fprintf("Closing file stream...\n");
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        fprintf("Closing timer thread: %s...\n", tim.Name);
-        stop(tim);
-        delete(tim);
-    end
-end
-
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
 save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
@@ -246,15 +228,15 @@ style='--k';
 subplot(2,1,1)
 hold on;
 plot(LOG_TP, LOG_REF,style,"LineWidth",1.5);
-stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
+plot(LOG_TP,LOG_Y,'LineWidth',1.5);
 % scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
+xlabel('t [s]'); ylabel('\phi(t) [deg]'); grid on
 % xlim([0,max(LOG_STEP)]);
 hold of;
 
 subplot(2,1,2)
 stairs(LOG_TP,LOG_U,'LineWidth',1.5)
-xlabel('k'); ylabel('u(k)'); grid on
+xlabel('t [s]'); ylabel('u(t)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);

@@ -4,14 +4,14 @@ addpath("../misc/models");
 addpath("../misc/functions");
 
 %% Do the simulation
-Ts = 0.001;
-Tstop = 8.5;
+Ts = 0.05;
+Tstop = 20;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
 u = 0.00;
 pendulum = Pendulum();
-[f, h, Fx, Hx] = pendulum.nonlinear(Ts, false);
+[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
 x0 = [0; 0];
@@ -21,7 +21,7 @@ x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(Ts/2)^2]);
+Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2/Ts)]);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -58,12 +58,14 @@ for step=2:nsteps
     
 
     if step == 2
-        u = 100/666.66;
+        u = 100;
+    else
+        u = 0;
     end
 
     U(step) = u;
     
-    w = chol(Q) * randn(2, 1)*0;
+    w = chol(Q) * randn(2, 1) * 0;
     x(:, step) = f(t(step-1), x(:, step-1), u) + w;
 
     [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
@@ -92,7 +94,7 @@ hold on;
 stairs(ax1, t, rad2deg(x(1, :)));
 stairs(ax1, t, rad2deg(ekf_x(1, :)));
 hold off;
-ylabel(ax1, "$x_1\ \left[rad\right]$", "Interpreter", "latex");
+ylabel(ax1, "$x_1\ \left[deg\right]$", "Interpreter", "latex");
 title(ax1, 'Pendulum angular position');
 subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
 legend(ax1, "y","y_{ekf}");
@@ -116,7 +118,7 @@ hold on;
 stairs(ax1, t, (x(2, :)));
 plot(ax1, [0, t(end)], [0, 0], '--r');
 stairs(ax1, t, (ekf_x(2, :)));
-stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
+% stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
 hold off;
 ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
 title(ax1, 'Pendulum angular velocity');
@@ -134,33 +136,3 @@ grid minor;
 grid on;
 
 fprintf("Velocity mean: %f\n", mean(x(2, :)));
-return;
-
-% Parameters
-m = 1;       % mass (kg)
-k = 4;       % stiffness (N/m)
-omega = sqrt(k/m);
-
-% ODE function (anonymous)
-springODE = @(t,y) [ y(2); -(k/m)*y(1) ];
-
-% Initial conditions: x(0)=1 m, x'(0)=0 m/s
-y0 = [1; 0];
-
-% Time span
-tspan = [0 10];
-
-% Solve with ode45
-[t,y] = ode45(springODE, tspan, y0);
-
-% Plot displacement and velocity
-figure(2); clf;
-subplot(2,1,1)
-plot(t,y(:,1))
-ylabel('x (m)')
-title('Mass-Spring Response')
-
-subplot(2,1,2)
-plot(t,y(:,2))
-ylabel('v (m/s)')
-xlabel('time (s)')

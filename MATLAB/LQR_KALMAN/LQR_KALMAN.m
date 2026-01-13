@@ -4,7 +4,8 @@ clc;
 
 addpath("../misc");
 addpath("../misc/KF");
-addpath("../misc/models")
+addpath("../misc/models");
+addpath("../misc/functions");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
@@ -206,7 +207,7 @@ try
     % [A, B, C, ~] = ssdata(sysd);
     pendulum = Pendulum();
     [A, B, C, D] = pendulum.ss_discrete(Ts);
-    [f, h, Fx, Hx] = pendulum.nonlinear(Ts);
+    [f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
     
     if exist("pendulum", "var")
         n = pendulum.n;
@@ -220,6 +221,10 @@ try
     
     
     % --- Augmented system for integral action ---
+    if exist("Fx","var") && exist("Hx","var")
+        A = Fx(0, [0; 0], 0);
+        C = Hx(0, [0; 0], 0);
+    end
     B_tilde=zeros(n+m, r);
     
     A_tilde = [A, zeros(n, m);
@@ -396,24 +401,6 @@ end
 %% close conns
 close_connection(scon, dfile_handle);
 
-function close_connection(scon, dfile_handle)
-    if exist("scon", "var")
-        fprintf("Closing serial communication...\n");
-        write(scon, [0, 0], 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fprintf("Closing file stream...\n");
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        fprintf("Closing timer thread: %s...\n", tim.Name);
-        stop(tim);
-        delete(tim);
-    end
-end
-
 %% Save the measurement
 logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
 save(FILEPATH_MAT, "Tstop","SYNC_TIME","U_PB", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME", "U_STEP_SIZE");
@@ -442,7 +429,7 @@ hold on;
 plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
-xlabel('k'); ylabel('\phi(k)'); grid on;
+xlabel('t [s]'); ylabel('\phi(k)'); grid on;
 % xlim([0,max(LOG_STEP)]);
 legend("ref","y","yhat");
 hold off;
@@ -451,7 +438,7 @@ subplot(2,1,2)
 hold on
 stairs(LOG_TP, LOG_U,'LineWidth',1.5);
 stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
-ylabel('u(k) [%]'); xlabel('t [s]'); grid on
+ylabel('u(t) [%]'); xlabel('t [s]'); grid on
 % xlim([0,max(LOG_STEP)]);
 legend("u","ux");
 hold off
