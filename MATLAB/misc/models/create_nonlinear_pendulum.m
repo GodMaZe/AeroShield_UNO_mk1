@@ -52,8 +52,9 @@ function x2 = dx2(t, x, u, vel_tol)
     % end
 end
 
-b = @(t, x, u) [0; pendulum.Ku/pendulum.I_T*u(1)];
 Bu = @(t, x, u) [0; pendulum.Ku/pendulum.I_T];
+b = @(t, x, u) Bu(t, x, u)*u(1);
+
 
 f_cont = @(t, x, u) [
     x(2);

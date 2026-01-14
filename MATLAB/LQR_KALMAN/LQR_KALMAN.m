@@ -27,7 +27,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 30;
-SYNC_TIME = 5; % Time for the system to stabilize in the OP
+SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
 Ts = 0.1;
 
@@ -221,9 +221,10 @@ try
     
     
     % --- Augmented system for integral action ---
-    if exist("Fx","var") && exist("Hx","var")
+    if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
         A = Fx(0, [0; 0], 0);
         C = Hx(0, [0; 0], 0);
+        B = Bu(0, [0; 0], 0);
     end
     B_tilde=zeros(n+m, r);
     
@@ -320,9 +321,12 @@ try
             if exist("EKF", "var")
                 A = Fx(plant_time, x_hat, u);
                 C = Hx(plant_time, x_hat, u);
+                B = Bu(plant_time, x_hat, u);
 
                 A_tilde = [A, zeros(n, m);
                            -C, eye(m, m)];
+
+                B_tilde(1:n, :) = B; 
 
                 % --- Solve Discrete-time Algebraic Riccati Equation ---
                 [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
@@ -343,9 +347,6 @@ try
         y_hat = rad2deg(y_hat);
         x_hat = rad2deg(x_hat);
 
-        
-
-        
 
         write(scon, u, "single");
         

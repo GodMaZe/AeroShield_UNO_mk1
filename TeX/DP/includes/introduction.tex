@@ -1,56 +1,15 @@
-Písanie záverečnej práce je nevyhnutnou súčasťou štúdia na vysokej škole.
-Študenti sa s~touto činnosťou často stretávajú po prvýkrát na konci bakalárskeho štúdia.
-Príprava obsiahlejšieho textu je náročná úloha,
-ktorá zväčša trvá niekoľko týždňov alebo mesiacov.
-Pri finalizácii a~formátovaní do výslednej podoby často panuje neistota a~medzi študentami sa šíria protichodné informácie.
-Tento dokument slúži ako odporúčaná šablóna pre všetkých študentov FEI STU.
-Môžu ju využiť v~plnej miere, alebo len ako inšpiráciu vytvorenia vlastnej výslednej podoby.
-Zároveň obsahuje návody a~rady,
-ako sa vysporiadať s~problémami,
-ktoré sa môžu pri písaní práce vyskytnúť.
+World around us is ever changing and dynamic. To effectively synthesize and analyze such systems, we resort to mathematical modeling.
+Mathematical models help us understand the behavior of systems, predict their responses to various inputs, and design control strategies to achieve desired outcomes.
 
-Dokument je vytvorený v systéme na sadzbu textu \LaTeX\ použitím upravenej verzie obľúbenej šablóny
-FEIstyle, verzia 2.0.0. Príručka je po formálnej a vizuálnej stránke navrhnutá tak,
-aby zodpovedala požiadavkám kladeným na záverečnú prácu vrátane poradia jednotlivých častí.
-Niektoré časti sú povinné (napr. obálka, titulný list, abstrakt),
-iné sú voliteľné (zoznam obrázkov, tabuliek, poďakovanie).
-Odporúčame študentom prečítať si aspoň prvú kapitolu tejto príručky, aby získali istotu pri začatí práce.
+Within this thesis we will be focusing on a single system, analyze it from the perspective of identification and control design.
+Identifying the system's inputs, outputs, dynamics and static characteristics. To better illustrate the process hidden behind simple terminology of system identification and control design.
+We will attempt to cover the entire process from the ground up, starting from system analysis, model derivation, identification, controller design, simulation, implementation and finally comparison of the different approaches used throughout the thesis.
+The goal is to provide a comprehensive guide of the entire process of system identification, controller design, and validation, such that the reader can apply these concepts to other systems in the future.
+The methods used within the thesis will mainly focus on non-linear system identification and non-linear control design, as these methods are more general and can be applied to a wider range of systems, without the limitation of linearization around a certain operating point (\acrshort{op}).
+Experiments will be proposed and conducted to gather necessary data for the identification process. Designing correct experiments is crucial to ensure that the data collected represents the systems behavior accurately.
+Furthermore, the process of deriving a physical model of the system can be done without having the collected data. However, having experimental data allows for validation of the derived model and ensures that it accurately represents the real-world system.
 
-Jedným zo zámerov tohto manuálu je,
-aby jeho zdrojové súbory slúžili ako šablóna,
-do ktorej študenti vložia obsah vlastnej práce.
-Okrem definície rozmerov, okrajov, číslovania strán, štýlov a znakov, šablóna \verb|FEIstyle.cls| obsahuje množstvo makier a príkazov na generovanie zoznamov obrázkov, tabuliek, výpisov kódov, algoritmov alebo obsahu.
-Zoznam a opis všetkých funkcií šablóny nájdete v~priloženom dokumente \verb|tutorial.pdf|.
-
-Je žiadúce, aby študenti ovládali prácu s \LaTeX-om na pokročilej užívateľskej úrovni.
-Je vhodné, ak si pred začiatkom písania preštudujú základné príručky. Veľmi vhodná je kniha
-Jiřího Rybyčku \LaTeX\ pro začátečníky z roku 2003 \cite{Rybicka2003Latex}.
-Ide síce o~staršiu publikáciu v~českom jazyku,
-patrí však k~vyhľadávaným didaktickým textom
-a~je oceňovaná všetkými používateľmi \LaTeX-u najmä pri zvládaní prvých krokov.
-Prehľadnou a príťažlivou formou je tiež spracovaný tutoriál pre používateľov internetovej služby Overleaf.%
-\footnote{\href{https://www.overleaf.com/learn}{\texttt{www.overleaf.com/learn}}}
-Je to bezplatný výkonný online kompilátor \LaTeX-u podporovaný mnohými vedeckými vydavateľstvami.
-
-V~texte tejto rozšírenej šablóny nájdeme okrem iného aj poznámky k~jazykovej stránke textu záverečných prác, písaniu matematických vzorcov, vytváraniu a formátovaniu grafov, tabuliek, či výpisu kódov programov.
-
-V závere \ref{sec:formatLanguage}. kapitoly rozoberieme aktuálnu problematiku používania umelej inteligencie pri tvorbe akademických prác.
-
-Citáciám a bibliografickým zdrojom venujeme celú kapitolu \ref{sec:citation},
-pretože práca s~externými zdrojmi je pri akademických textoch veľmi dôležitá.
-Záverečná práca má byť samostatné dielo študenta, 
-ktorý čerpá poznatky z~iných zdrojov,
-spracováva ich a~spája do nových súvislostí,
-čím vytvára novú kvalitu.
-Veríme, že tento dokument študentom pomôže lepšie sa orientovať,
-dodá im istotu pri písaní,
-zabezpečí kvalitný výsledok, estetický vzhľad
-a~hodnotný obsah.
-Táto príručka nie je komplexným nástrojom na všetky aspekty záverečnej práce,
-no poskytuje pevný základ úspešného písania
-a efektívnej práce s~literatúrou. 
-
-Naším cieľom bolo vytvoriť materiál,
-ktorý vedie študenta pri hľadaní ďalších zdrojov v~literatúre a na internete,
-aby sa vedel orientovať v~terminológii a~získal základný prehľad.
-Prajeme úspešné písanie a~dosiahnutie všetkých stanovených cieľov.
+With this in mind, we will provide a simple yet effective methodology for deriving a non-linear model of a pendulum type system using Lagrangian mechanics, which can further be used in various similar systems; for example robotic arms, inverted pendulums, and other mechanical systems with rotational dynamics.
+We will focus on deriving a non-linear state-space (\acrshort{nss}) model, show how to linearize it around a certain \acrshort{op}, giving us the linearized state-space (\acrshort{ss}) model. Discretization of both models will be covered.
+Which comes in handy when designing discrete controllers to be implemented on microcontroller units (\acrshort{mcu}). We will design various discrete controllers, including but not limited to linear quadratic regulator (\acrshort{lqr}) and model predictive control (\acrshort{mpc}).
+Simulations will be conducted to validate the derived models and designed controllers. Finally, the designed controllers will be implemented on an \acrshort{mcu}, and their performance will be compared to the simulation results, to demonstrate the difference between theoretical and practical applications.

@@ -19,296 +19,146 @@
 
 \refsection{0}
   \datalist[entry]{none/global//global/global/global}
-    \entry{Rybicka2003Latex}{book}{}{}
+    \entry{widnall:2009}{incollection}{}{}
       \name{author}{1}{}{%
-        {{hash=0ffdecc0ca95fef177011cf56523bd85}{%
-           family={Rybička},
-           familyi={R\bibinitperiod},
-           given={Jiří},
-           giveni={J\bibinitperiod}}}%
+        {{hash=397eaaafe0e21c6ffebd5319010e8428}{%
+           family={Widnall},
+           familyi={W\bibinitperiod},
+           given={Sheila},
+           giveni={S\bibinitperiod}}}%
       }
-      \list{publisher}{1}{%
-        {Konvoj}%
+      \list{location}{1}{%
+        {Cambridge~MA}%
       }
-      \strng{namehash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{fullhash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{fullhashraw}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{bibnamehash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{authorbibnamehash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{authornamehash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{authorfullhash}{0ffdecc0ca95fef177011cf56523bd85}
-      \strng{authorfullhashraw}{0ffdecc0ca95fef177011cf56523bd85}
+      \list{organization}{1}{%
+        {Massachusetts Institute of Technology}%
+      }
+      \strng{namehash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{fullhash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{fullhashraw}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{bibnamehash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{authorbibnamehash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{authornamehash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{authorfullhash}{397eaaafe0e21c6ffebd5319010e8428}
+      \strng{authorfullhashraw}{397eaaafe0e21c6ffebd5319010e8428}
       \field{sortinit}{1}
       \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{edition}{3}
-      \field{isbn}{80-7302-049-1}
-      \field{title}{\LaTeX{} pro začatečníky}
-      \field{year}{2003}
+      \field{booktitle}{Dynamics---MIT Course No.~16.17}
+      \field{note}{{MIT OpenCourseWare}}
+      \field{title}{Lecture L20 - Energy Methods: Lagrange’s Equations}
+      \field{year}{2009}
+      \verb{urlraw}
+      \verb https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/b39e882f1524a0f6a98553ee33ea6f35_MIT16_07F09_Lec20.pdf
+      \endverb
+      \verb{url}
+      \verb https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/b39e882f1524a0f6a98553ee33ea6f35_MIT16_07F09_Lec20.pdf
+      \endverb
     \endentry
-    \entry{zakon1312002}{report}{}{}
+    \entry{altpeter:1999}{thesis}{}{}
+      \name{author}{1}{}{%
+        {{hash=715aeb87cc196d947296442a43874139}{%
+           family={Altpeter},
+           familyi={A\bibinitperiod},
+           given={Friedhelm},
+           giveni={F\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {Swiss Federal Institute of Technology in Lausanne}%
+      }
+      \strng{namehash}{715aeb87cc196d947296442a43874139}
+      \strng{fullhash}{715aeb87cc196d947296442a43874139}
+      \strng{fullhashraw}{715aeb87cc196d947296442a43874139}
+      \strng{bibnamehash}{715aeb87cc196d947296442a43874139}
+      \strng{authorbibnamehash}{715aeb87cc196d947296442a43874139}
+      \strng{authornamehash}{715aeb87cc196d947296442a43874139}
+      \strng{authorfullhash}{715aeb87cc196d947296442a43874139}
+      \strng{authorfullhashraw}{715aeb87cc196d947296442a43874139}
       \field{sortinit}{2}
       \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
-      \field{labeltitlesource}{title}
-      \field{title}{Zákon č. 131/2002 Z.~z. z~21. februára 2002 o~vysokých školách a~o~zmene a~doplnení niektorých zákonov}
-      \field{urlday}{1}
-      \field{urlmonth}{9}
-      \field{urlyear}{2024}
-      \field{year}{2002}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://www.slov-lex.sk/static/pdf/2002/131/ZZ_2002_131_20240901.pdf
-      \endverb
-      \verb{url}
-      \verb https://www.slov-lex.sk/static/pdf/2002/131/ZZ_2002_131_20240901.pdf
-      \endverb
-    \endentry
-    \entry{vyhlaska2332011}{report}{}{}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
-      \field{labeltitlesource}{title}
-      \field{title}{Vyhláška č.~233/2011 Z.~z. Ministerstva školstva, vedy, výskumu a~športu Slovenskej republiky z~1. júla 2011, ktorou sa vykonávajú niektoré ustanovenia zákona č. 131/2002 Z.~z. o~vysokých školách a~o~zmene a~doplnení niektorých zákonov v~znení neskorších predpisov}
-      \field{urlday}{1}
-      \field{urlmonth}{9}
-      \field{urlyear}{2024}
-      \field{year}{2011}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://www.slov-lex.sk/static/pdf/2011/233/ZZ_2011_233_20201015.pdf
-      \endverb
-      \verb{url}
-      \verb https://www.slov-lex.sk/static/pdf/2011/233/ZZ_2011_233_20201015.pdf
-      \endverb
-    \endentry
-    \entry{usmernenie562011}{report}{}{}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
-      \field{labeltitlesource}{title}
-      \field{title}{Metodické usmernenie Ministerstva školstva, vedy, výskumu a~športu SR č. 56/2011 o~náležitostiach záverečných prác, ich bibliografickej registrácii, kontrole originality, uchovávaní a~sprístupňovaní č. 2011-11513/31015:4-071}
-      \field{urlday}{24}
-      \field{urlmonth}{9}
-      \field{urlyear}{2024}
-      \field{year}{2011}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://www.minedu.sk/metodicke-usmernenie-c-562011-o-nalezitostiach-zaverecnych-prac-ich-bibliografickej-registracii-uchovavani-a-spristupnovani/
-      \endverb
-      \verb{url}
-      \verb https://www.minedu.sk/metodicke-usmernenie-c-562011-o-nalezitostiach-zaverecnych-prac-ich-bibliografickej-registracii-uchovavani-a-spristupnovani/
-      \endverb
-    \endentry
-    \entry{iso214}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
-      \field{labeltitlesource}{title}
-      \field{subtitle}{Abstrakty (referáty) pre publikácie a~dokumentáciu}
-      \field{title}{STN ISO 214: 1976. Dokumentácia}
-      \field{year}{1976}
-    \endentry
-    \entry{iso690}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
-      \field{labeltitlesource}{title}
-      \field{subtitle}{Návod na tvorbu bibliografických odkazov na informačné pramene a~ich citovanie}
-      \field{title}{STN ISO 690: 2022. Informácie a dokumentácia}
-      \field{year}{2022}
-    \endentry
-    \entry{stn016910}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{8}
-      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
-      \field{labeltitlesource}{title}
-      \field{title}{STN 01 6910: 2023. Pravidlá písania a~úpravy písomností}
-      \field{year}{2023}
-    \endentry
-    \entry{iso2145}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{9}
-      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
-      \field{labeltitlesource}{title}
-      \field{subtitle}{Číslovanie oddielov a~pododdielov písaných dokumentov}
-      \field{title}{STN ISO 2145: 1978. Dokumentácia}
-      \field{year}{1978}
-    \endentry
-    \entry{opatrenie12024}{report}{}{}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labeltitlesource}{title}
-      \field{day}{27}
-      \field{month}{11}
-      \field{title}{Opatrenie číslo 1/2024–O. Používanie umelej inteligencie na Slovenskej technickej univerzite v~Bratislave}
-      \field{year}{2024}
-      \field{dateera}{ce}
-      \verb{urlraw}
-      \verb https://www.stuba.sk/buxus/docs/stu/pracoviska/rektorat/odd_pravne_organizacne/28.11.2024%20opatrenie_AI-signed.pdf
-      \endverb
-      \verb{url}
-      \verb https://www.stuba.sk/buxus/docs/stu/pracoviska/rektorat/odd_pravne_organizacne/28.11.2024%20opatrenie_AI-signed.pdf
-      \endverb
-    \endentry
-    \entry{iso800001}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labeltitlesource}{title}
-      \field{subtitle}{Časť 1: Všeobecne}
-      \field{title}{STN EN ISO 80000-1: 2024. Veličiny a jednotky}
-      \field{year}{2024}
-    \endentry
-    \entry{iso800002}{report}{}{}
-      \list{location}{1}{%
-        {Bratislava}%
-      }
-      \list{publisher}{1}{%
-        {Slovenský ústav technickej normalizácie}%
-      }
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labeltitlesource}{title}
-      \field{subtitle}{Časť 1: Matematika}
-      \field{title}{STN EN ISO 80000-2: 2022. Veličiny a jednotky}
-      \field{year}{2022}
-    \endentry
-    \entry{Olsak2001Texbook}{book}{}{}
-      \name{author}{1}{}{%
-        {{hash=b911e1013ca40da86755baef9e0b8a08}{%
-           family={Olšák},
-           familyi={O\bibinitperiod},
-           given={Peter},
-           giveni={P\bibinitperiod}}}%
-      }
-      \list{publisher}{1}{%
-        {Konvoj}%
-      }
-      \strng{namehash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{fullhash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{fullhashraw}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{bibnamehash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{authorbibnamehash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{authornamehash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{authorfullhash}{b911e1013ca40da86755baef9e0b8a08}
-      \strng{authorfullhashraw}{b911e1013ca40da86755baef9e0b8a08}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{edition}{2}
-      \field{isbn}{80-7302-007-6}
-      \field{title}{\TeX book naruby}
-      \field{urlday}{31}
-      \field{urlmonth}{12}
-      \field{urlyear}{2024}
-      \field{year}{2001}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://petr.olsak.net/tbn.html
-      \endverb
-      \verb{url}
-      \verb https://petr.olsak.net/tbn.html
-      \endverb
+      \field{title}{Friction Modeling, Identification and Compensation}
+      \field{type}{phdthesis}
+      \field{year}{1999}
     \endentry
-    \entry{Lichnerova2023Nove}{article}{}{}
-      \name{author}{2}{}{%
-        {{hash=971261123f38de498d1e9f58e6cc3881}{%
-           family={Bellérová},
+    \entry{de2000control}{incollection}{}{}
+      \name{author}{4}{}{%
+        {{hash=6e742c5b8472e101e062ff0acfc52aff}{%
+           family={Queiroz},
+           familyi={Q\bibinitperiod},
+           given={Marcio\bibnamedelima S},
+           giveni={M\bibinitperiod\bibinitdelim S\bibinitperiod},
+           prefix={de},
+           prefixi={d\bibinitperiod}}}%
+        {{hash=ba3d270ea6806522a0b9b26a3aa04021}{%
+           family={Dawson},
+           familyi={D\bibinitperiod},
+           given={Darren\bibnamedelima M},
+           giveni={D\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=3b6c5898f44edc552ccf911436304fa5}{%
+           family={Nagarkatti},
+           familyi={N\bibinitperiod},
+           given={Siddharth\bibnamedelima P},
+           giveni={S\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=3c2fc293bc921070df303bb0fa359586}{%
+           family={Zhang},
+           familyi={Z\bibinitperiod},
+           given={Fumin},
+           giveni={F\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{fullhash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{fullhashraw}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{bibnamehash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{authorbibnamehash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{authornamehash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{authorfullhash}{ab05ce19e88b43f9bab02bddff5d921b}
+      \strng{authorfullhashraw}{ab05ce19e88b43f9bab02bddff5d921b}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{booktitle}{Lyapunov-Based Control of Mechanical Systems}
+      \field{title}{Control Techniques for Friction Compensation}
+      \field{year}{2000}
+    \endentry
+    \entry{Benson_1999}{misc}{}{}
+      \name{author}{1}{}{%
+        {{hash=861e15dc54a92a276bd4c8b15b27e530}{%
+           family={Benson},
            familyi={B\bibinitperiod},
-           given={Beáta},
-           giveni={B\bibinitperiod}}}%
-        {{hash=27ac84241560856a60e0fc64d3951c9a}{%
-           family={Lichnerová},
-           familyi={L\bibinitperiod},
-           given={Lucia},
-           giveni={L\bibinitperiod}}}%
+           given={Tom},
+           giveni={T\bibinitperiod}}}%
       }
-      \strng{namehash}{11b8b839196747d07fcd95360dae5716}
-      \strng{fullhash}{11b8b839196747d07fcd95360dae5716}
-      \strng{fullhashraw}{11b8b839196747d07fcd95360dae5716}
-      \strng{bibnamehash}{11b8b839196747d07fcd95360dae5716}
-      \strng{authorbibnamehash}{11b8b839196747d07fcd95360dae5716}
-      \strng{authornamehash}{11b8b839196747d07fcd95360dae5716}
-      \strng{authorfullhash}{11b8b839196747d07fcd95360dae5716}
-      \strng{authorfullhashraw}{11b8b839196747d07fcd95360dae5716}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \list{publisher}{1}{%
+        {NASA}%
+      }
+      \strng{namehash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{fullhash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{fullhashraw}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{bibnamehash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{authorbibnamehash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{authornamehash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{authorfullhash}{861e15dc54a92a276bd4c8b15b27e530}
+      \strng{authorfullhashraw}{861e15dc54a92a276bd4c8b15b27e530}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{journaltitle}{ITlib. Informačné technológie a knižnice}
-      \field{title}{Nové pravidlá citovania podľa ISO 690 z~roku 2021}
-      \field{urlday}{6}
-      \field{urlmonth}{9}
-      \field{urlyear}{2024}
-      \field{volume}{3--4}
-      \field{year}{2023}
-      \field{urldateera}{ce}
-      \field{pages}{10\bibrangedash 22}
-      \range{pages}{13}
-      \verb{doi}
-      \verb 10.52036/1335793X.2023.3-4.10-22
-      \endverb
-    \endentry
-    \entry{Hoftich2022iso690}{manual}{}{}
-      \name{author}{1}{}{%
-        {{hash=01af3637bd3cdaadb902d90f37d1b828}{%
-           family={Hoftich},
-           familyi={H\bibinitperiod},
-           given={Michal},
-           giveni={M\bibinitperiod}}}%
-      }
-      \strng{namehash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{fullhash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{fullhashraw}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{bibnamehash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{authorbibnamehash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{authornamehash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{authorfullhash}{01af3637bd3cdaadb902d90f37d1b828}
-      \strng{authorfullhashraw}{01af3637bd3cdaadb902d90f37d1b828}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{day}{20}
-      \field{month}{3}
-      \field{title}{ISO 690 biblatex style}
-      \field{urlday}{15}
-      \field{urlmonth}{12}
-      \field{urlyear}{2025}
-      \field{version}{0.4.1}
-      \field{year}{2022}
-      \field{dateera}{ce}
-      \field{urldateera}{ce}
+      \field{journaltitle}{NASA}
+      \field{month}{12}
+      \field{title}{The drag equation}
+      \field{year}{1999}
       \verb{urlraw}
-      \verb https://mirrors.ibiblio.org/CTAN/macros/latex/contrib/biblatex-contrib/biblatex-iso690/biblatex-iso690.pdf
+      \verb https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/drageq.html
       \endverb
       \verb{url}
-      \verb https://mirrors.ibiblio.org/CTAN/macros/latex/contrib/biblatex-contrib/biblatex-iso690/biblatex-iso690.pdf
+      \verb https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/drageq.html
       \endverb
     \endentry
   \enddatalist

@@ -3,29 +3,39 @@
 
 % parse arguments
 \DeclareOption{dizp}{\def\typPraceSkr{dizp}
-    \def\isThesis{1}
-    \def\typPraceEn{Dissertation}
-    \def\typPrace{Dizerta\v{c}n\a'a pr\a'aca}
-    \def\typPraceTemp{dizerta\v{c}n\'{u} pr\'{a}cu}
-    \def\typPraceTempII{dizerta\v{c}nej pr\'{a}ce}}
+\def\isThesis{1}
+\def\typPraceEn{Dissertation}
+\def\typPrace{Dizerta\v{c}n\a'a pr\a'aca}
+\def\typPraceTemp{dizerta\v{c}n\'{u} pr\'{a}cu}
+\def\typPraceTempII{dizerta\v{c}nej pr\'{a}ce}}
+
 \DeclareOption{dp}{\def\typPraceSkr{d}
-    \def\isThesis{1}
-    \def\typPraceEn{Master's thesis}
-    \def\typPrace{Diplomov\a'a pr\a'aca}
-    \def\typPraceTemp{diplomov\'{u} pr\'{a}cu}
-    \def\typPraceTempII{diplomovej pr\'{a}ce}}
+\def\isThesis{1}
+\def\typPraceEn{Master's thesis}
+\def\typPrace{Diplomov\a'a pr\a'aca}
+\def\typPraceTemp{diplomov\'{u} pr\'{a}cu}
+\def\typPraceTempII{diplomovej pr\'{a}ce}}
+
+\DeclareOption{dp1}{\def\typPraceSkr{d1}
+\def\isThesis{1}
+\def\typPraceEn{Diploma Project 1}
+\def\typPrace{Diplomov\'{y} projekt 1}
+\def\typPraceTemp{diplomov\'{y} projekt 1}
+\def\typPraceTempII{diplomoveho projektu 1}}
+
 \DeclareOption{bp}{\def\typPraceSkr{b}
-    \def\isThesis{1}
-    \def\typPraceEn{Bachelor's thesis}
-    \def\typPrace{Bakal\a'arska pr\a'aca}
-    \def\typPraceTemp{bakal\'{a}rsku pr\'{a}cu}
-    \def\typPraceTempII{bakal\'{a}rskej pr\'{a}ce}}
+\def\isThesis{1}
+\def\typPraceEn{Bachelor's thesis}
+\def\typPrace{Bakal\a'arska pr\a'aca}
+\def\typPraceTemp{bakal\'{a}rsku pr\'{a}cu}
+\def\typPraceTempII{bakal\'{a}rskej pr\'{a}ce}}
+
 \DeclareOption{sp}{\def\typPraceSkr{s}}
-    \def\isThesis{0}
-    \def\typPraceEn{Seminar paper}
-    \def\typPrace{Semin\a'arna pr\a'aca}
-    \def\typPraceTemp{semin\'{a}rnu pr\'{a}cu}
-    \def\typPraceTempII{semin\'{a}rnej práce}
+\def\isThesis{0}
+\def\typPraceEn{Seminar paper}
+\def\typPrace{Semin\a'arna pr\a'aca}
+\def\typPraceTemp{semin\'{a}rnu pr\'{a}cu}
+\def\typPraceTempII{semin\'{a}rnej práce}
 
 \newcommand*\myset{a4paper,12pt}
 \newcommand*\parentclass{article}
@@ -41,7 +51,7 @@
 
 \def\FEIenglish{0}
 \DeclareOption{en}{
-    \def\FEIenglish{1} 
+    \def\FEIenglish{1}
 }
 
 \ProcessOptions
@@ -50,9 +60,13 @@
 
 \usepackage[overload]{textcase}
 
+
+
 % hyperref has to be loaded *before* glossaries
 % see https://mirror.kumi.systems/ctan/macros/latex/contrib/glossaries/glossaries-user.html#sec:hyperref
 \usepackage[bookmarksopen,colorlinks,plainpages=false,urlcolor=blue,hypertexnames=false,unicode]{hyperref}
+
+
 
 \usepackage[acronym,nopostdot,nogroupskip,nonumberlist]{glossaries}
 
@@ -61,15 +75,15 @@
 % we should use ISO 690 & 690-2 http://www.fei.stuba.sk/sk/kniznica-fei/vzory-bibliografickych-odkazov-a-citovanie.html?page_id=1756 
 % package for biblatex https://github.com/michal-h21/biblatex-iso690
 \usepackage[backend=biber,
-            sorting=none,
-            style=iso-numeric,
-            shortnumeration=true,
-            citestyle=numeric-comp,
-            maxnames=5,
-            minnames=1,
-            giveninits=true]{biblatex}
+    sorting=none,
+    style=iso-numeric,
+    shortnumeration=true,
+    citestyle=numeric-comp,
+    maxnames=5,
+    minnames=1,
+    giveninits=true]{biblatex}
 \DefineBibliographyStrings{slovak}{
-  urlfrom = {Dostupné z}
+    urlfrom = {Dostupné z}
 }
 
 \ifnum\FEIenglish=0
@@ -118,48 +132,52 @@
 \usepackage{booktabs}
 \usepackage{pdfpages}
 \usepackage[all]{nowidow}
+
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{cleveref}
+
 %\usepackage{showframe} % debugging overflows
 
 % \cftsetpnumwidth{1.8em} % set the dots width in loX (f,t,l,a...) https://tex.stackexchange.com/q/369283/106389
 
 % https://stackoverflow.com/a/74266238
 \lstset{
-  extendedchars=true,
-  literate=
+extendedchars=true,
+literate=
     {á}{{\'a}}1
-    {ä}{{\"a}}1
-    {č}{{\v{c}}}1
-    {ď}{{\v{d}}}1
-    {é}{{\'e}}1
-    {í}{{\'i}}1
-    {ĺ}{{\'l}}1
-    {ľ}{{\v{l}}}1
-    {ň}{{\v{n}}}1
-    {ó}{{\'o}}1
-    {ô}{{\^o}}1
-    {ŕ}{{\'{r}}}1
-    {š}{{\v{s}}}1
-    {ť}{{\v{t}}}1
-    {ú}{{\'u}}1
-    {ý}{{\'y}}1
-    {ž}{{\v{z}}}1
-    {Á}{{\'A}}1
-    {Ä}{{\""A}}1
-    {Č}{{\v{C}}}1
-    {Ď}{{\v{C}}}1
-    {É}{{\'E}}1
-    {Í}{{\'I}}1
-    {Ĺ}{{\'L}}1
-    {Ľ}{{\v{L}}}1
-    {Ň}{{\v{N}}}1
-    {Ó}{{\'O}}1
-    {Ô}{{\^O}}1
-    {Ŕ}{{\'{R}}}1
-    {Š}{{\v{S}}}1
-    {Ť}{{\v{T}}}1
-    {Ú}{{\'U}}1
-    {Ý}{{\'Y}}1
-    {Ž}{{\v{Z}}}1
+{ä}{{\"a}}1
+{č}{{\v{c}}}1
+{ď}{{\v{d}}}1
+{é}{{\'e}}1
+{í}{{\'i}}1
+{ĺ}{{\'l}}1
+{ľ}{{\v{l}}}1
+{ň}{{\v{n}}}1
+{ó}{{\'o}}1
+{ô}{{\^o}}1
+{ŕ}{{\'{r}}}1
+{š}{{\v{s}}}1
+{ť}{{\v{t}}}1
+{ú}{{\'u}}1
+{ý}{{\'y}}1
+{ž}{{\v{z}}}1
+{Á}{{\'A}}1
+{Ä}{{\""A}}1
+{Č}{{\v{C}}}1
+{Ď}{{\v{C}}}1
+{É}{{\'E}}1
+{Í}{{\'I}}1
+{Ĺ}{{\'L}}1
+{Ľ}{{\v{L}}}1
+{Ň}{{\v{N}}}1
+{Ó}{{\'O}}1
+{Ô}{{\^O}}1
+{Ŕ}{{\'{R}}}1
+{Š}{{\v{S}}}1
+{Ť}{{\v{T}}}1
+{Ú}{{\'U}}1
+{Ý}{{\'Y}}1
+{Ž}{{\v{Z}}}1
 }
 
 % https://www.overleaf.com/learn/latex/Code_listing
@@ -198,7 +216,7 @@
 
 \IfEqCase*{\isThesis}{
     {0}{\setboolean{isThesis}{false}}
-    {1}{\setboolean{isThesis}{true}}
+        {1}{\setboolean{isThesis}{true}}
 }
 
 % deine global variables 
@@ -304,7 +322,7 @@
 \newcommand{\printKonzultant}{\@konzultant}
 
 %definovanie globalnych nastaveni
-\pagenumbering{arabic}  
+\pagenumbering{arabic}
 \pagestyle{plain}
 \parindent=0.63cm
 \parskip=1pt
@@ -319,40 +337,40 @@
 \titlespacing*\subsubsection{0pt}{2.5ex plus 1ex minus .2ex}{1.25ex plus .2ex}
 
 \lstset{
-  basicstyle=\scriptsize\ttfamily,
-  columns=flexible, % removes spaces
-  breaklines=true,
-  breakatwhitespace=true,
-  showstringspaces=false, % removes ␣ character from " "
-  captionpos=b % caption below text
+    basicstyle=\scriptsize\ttfamily,
+    columns=flexible, % removes spaces
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false, % removes ␣ character from " "
+    captionpos=b % caption below text
 }
 
 \IfEqCase*{\FEIenglish}{
-   {0}{
-       \addto\captionsslovak{\renewcommand{\lstlistingname}{V\a'ypis k\a'odu}}
-       \renewcommand{\ALG@name}{Algoritmus}}
-   {1}{
-       \addto\captionsenglish{\renewcommand{\lstlistingname}{Listing}}
-       \renewcommand{\ALG@name}{Algorithm}}
-   }[]
+    {0}{
+            \addto\captionsslovak{\renewcommand{\lstlistingname}{V\a'ypis k\a'odu}}
+            \renewcommand{\ALG@name}{Algoritmus}}
+        {1}{
+            \addto\captionsenglish{\renewcommand{\lstlistingname}{Listing}}
+            \renewcommand{\ALG@name}{Algorithm}}
+}[]
 
 % http://tex.stackexchange.com/questions/588/how-can-i-change-the-margins-for-only-part-of-the-text
 \def\changemargin#1#2{\list{}{\rightmargin#2\leftmargin#1}\item[]}
-\let\endchangemargin=\endlist 
+\let\endchangemargin=\endlist
 
 \newcommand{\dir}[3]{
-\begin{description}[topsep=0pt,leftmargin=0.5cm,style=nextline]
-  \item[#1] $\cdot$ #2
-\end{description}
-\ifx&#3&%
-   % #3 is empty
-\else
+    \begin{description}[topsep=0pt,leftmargin=0.5cm,style=nextline]
+        \item[#1] $\cdot$ #2
+    \end{description}
+    \ifx&#3&%
+    % #3 is empty
+    \else
     \vspace{-5mm}
     \begin{changemargin}{0.5cm}{0cm}
         #3
     \end{changemargin}
     \vspace{-4mm}
-\fi
+    \fi
 }
 
 \newcommand{\file}[2]{
@@ -364,23 +382,23 @@
 \newcommand\FEIcover{
     \pagestyle{empty}
     \newgeometry{tmargin=2cm,bmargin=1.8cm,lmargin=2.75cm,rmargin=2.75cm}
-        \IfEqCase*{\FEIenglish}{
-            {0}{
+    \IfEqCase*{\FEIenglish}{
+        {0}{
                 \def\@skolaTemp{\printSkola}
                 \def\@skolaFakulta{\printFakulta}
                 \def\@skolaEvCislo{{Eviden\v{c}n\a'e \v{c}\a'islo: \printEvidencneCislo}}
                 \def\@skolaNazovPrace{\printNazov}
                 \def\@skolaTypPrace{\typPrace}
-                }
+            }
             {1}{
                 \def\@skolaTemp{\printSkolaEn}
                 \def\@skolaFakulta{\printFakultaEn}
                 \def\@skolaEvCislo{{Registration number: \printEvidencneCislo}}
                 \def\@skolaNazovPrace{\printNazovEn}
                 \def\@skolaTypPrace{\typPraceEn}
-                }
-            }[]
-        \begin{sffamily}
+            }
+    }[]
+    \begin{sffamily}
         \begin{center}
             {\fontsize{14.5pt}{0}\selectfont\bfseries \MakeTextUppercase{\@skolaTemp}\\[11.3pt] \@skolaFakulta}
         \end{center}
@@ -400,18 +418,18 @@
                 \@rok
                 \hfill
                 \printAutor}
-        \end{flushleft} 
+        \end{flushleft}
     \end{sffamily}
     \restoregeometry
-    \newpage    
+    \newpage
 }
 
 \newcommand\FEItitlePage{
     \setcounter{page}{1}
     \pagestyle{empty}
     \newgeometry{tmargin=3.024cm,bmargin=2.775cm,lmargin=2.75cm,rmargin=2.75cm}
-        \IfEqCase*{\FEIenglish}{
-            {0}{
+    \IfEqCase*{\FEIenglish}{
+        {0}{
                 \def\@skolaTemp{\printSkola}
                 \def\@skolaFakulta{\printFakulta}
                 \def\@skolaStudPr{\printStudijnyProgram}
@@ -434,7 +452,7 @@
                     \def\@tempLecturer{Predn\a'a\v{s}aj\a'uci:}
                     \def\@tempTa{Cvi\v{c}iaci:}
                 }
-            }              
+            }
             {1}{
                 \def\@skolaTemp{\printSkolaEn}
                 \def\@skolaFakulta{\printFakultaEn}
@@ -447,7 +465,7 @@
                 \def\@tempStudProgr{Study Programme:}
                 \def\@tempNazovStud{Study Field:}
                 \def\@tempSkolPracov{Training Workplace:}
-                \def\@tempVedPrace{Supervisor:}  
+                \def\@tempVedPrace{Supervisor:}
                 \def\@tempKonzultanta{Consultant:}
                 \ifthenelse{\boolean{isThesis}}
                 {}{
@@ -459,8 +477,8 @@
                     \def\@tempTa{Teaching assistant:}
                 }
             }
-            }[]
-        \begin{sffamily}
+    }[]
+    \begin{sffamily}
         \begin{center}
             {\fontsize{14pt}{1.3}\selectfont \bfseries \MakeTextUppercase{\@skolaTemp}\\[9.4pt] \@skolaFakulta}
         \end{center}
@@ -470,7 +488,7 @@
             {
                 \fontsize{12pt}{1.3}\selectfont \@skolaEvCislo
             }{}
-        }    
+        }
         \vspace{40.9mm}
         \begin{center}
             {\fontsize{20pt}{18.1pt}\selectfont\bfseries\@skolaNazovPrace\par}\vspace{22pt}
@@ -478,22 +496,22 @@
         \end{center}
         \vspace{\fill}
         {\fontsize{12pt}{14pt}\selectfont
-        \begin{tabbing}
-            \hspace*{5cm}\= \kill
-            \@tempStudProgr \> \@skolaStudPr \\
-            \ifthenelse{\boolean{isThesis}}
-            {\@tempNazovStud \> \@skolaStudPrCisl \\
-             \@tempSkolPracov \> \@skolaSkolPrac \\
-             \@tempVedPrace \> \printVeduciZaverecnejPrace \\
-             \IfEqCase*{\@tempKonzultant}{
-                    {0}{}
-                    {1}{\@tempKonzultanta \> \printKonzultant}
+            \begin{tabbing}
+                \hspace*{5cm}\= \kill
+                \@tempStudProgr \> \@skolaStudPr \\
+                \ifthenelse{\boolean{isThesis}}
+                {\@tempNazovStud \> \@skolaStudPrCisl \\
+                    \@tempSkolPracov \> \@skolaSkolPrac \\
+                    \@tempVedPrace \> \printVeduciZaverecnejPrace \\
+                    \IfEqCase*{\@tempKonzultant}{
+                        {0}{}
+                            {1}{\@tempKonzultanta \> \printKonzultant}
                     }[]
-            }{\@tempCourse \> \parbox[t]{9cm}{\@skolaCourse\vspace{1ex}} \\ %TODO use this for abstract minipage
-                \@tempLecturer \> \@skolaLecturer \\
-                \@tempTa \> \@skolaTa \\
-            }
-        \end{tabbing}
+                }{\@tempCourse \> \parbox[t]{9cm}{\@skolaCourse\vspace{1ex}} \\ %TODO use this for abstract minipage
+                    \@tempLecturer \> \@skolaLecturer \\
+                    \@tempTa \> \@skolaTa \\
+                }
+            \end{tabbing}
         }
         \vspace{3.43cm}
         \begin{flushleft}
@@ -502,29 +520,29 @@
                 \hfill
                 \printAutor}
         \end{flushleft}
-        \end{sffamily}
+    \end{sffamily}
     \restoregeometry
     \newpage
 }
 
 \newcommand\FEIthanks[1]{
-    \pagestyle{empty}
-    \vspace*{\stretch{1}}
-    \IfEqCase*{\FEIenglish}{
-        {0}{\section*{\fontsize{16pt}{1.3}\selectfont Po\v{d}akovanie}}
+\pagestyle{empty}
+\vspace*{\stretch{1}}
+\IfEqCase*{\FEIenglish}{
+    {0}{\section*{\fontsize{16pt}{1.3}\selectfont Po\v{d}akovanie}}
         {1}{\section*{\fontsize{16pt}{1.3}\selectfont Acknowledgments}}
-        }[]
-    \vspace{1pt}
-        
-    \ifthenelse{\isempty{#1}}
-    {Chcem sa po\v{d}akova\v{t} ved\'{u}cemu z\'{a}vere\v{c}nej pr\'{a}ce, ktor\'{y}m bol \printVeduciZaverecnejPrace, za odborn\'{e} vedenie, rady a pripomienky, ktor\'{e} mi pomohli pri vypracovan\'{i} tejto  \typPraceTempII.}
-    {\input{#1}}
-    \vspace{7.1pt}
-    \newpage
+}[]
+\vspace{1pt}
+
+\ifthenelse{\isempty{#1}}
+{Chcem sa po\v{d}akova\v{t} ved\'{u}cemu z\'{a}vere\v{c}nej pr\'{a}ce, ktor\'{y}m bol \printVeduciZaverecnejPrace, za odborn\'{e} vedenie, rady a pripomienky, ktor\'{e} mi pomohli pri vypracovan\'{i} tejto  \typPraceTempII.}
+{\input{#1}}
+\vspace{7.1pt}
+\newpage
 }
 
 \newcommand\FEIabstract[1]{
-    \pagestyle{empty}   
+    \pagestyle{empty}
     \vspace*{-26.6pt}
     \section*{\fontsize{20pt}{1.3}\selectfont Abstrakt}
     \vspace{0.45cm}
@@ -538,9 +556,9 @@
     \noindent \printKeywords
     \clearpage
 }
-    
+
 \newcommand\FEIabstractEn[1]{
-    \pagestyle{empty}   
+    \pagestyle{empty}
     \vspace*{-26.6pt}
     \section*{\fontsize{20pt}{1.3}\selectfont Abstract}
     \vspace{0.45cm}
@@ -554,54 +572,54 @@
     \noindent \printKeywordsEn
     \clearpage
 }
-        
-\newcommand\FEIcontent{ 
+
+\newcommand\FEIcontent{
     \pagestyle{plain}
     \addtocontents{toc}{\protect\thispagestyle{plain}}
     \tableofcontents
     \newpage
 }
-        
+
 \newcommand\listoffiguresandtables{
-    \IfEqCase*{\FEIenglish}{
-        {0}{\renewcommand{\cftfigpresnum}{Obrázok\ }
+\IfEqCase*{\FEIenglish}{
+    {0}{\renewcommand{\cftfigpresnum}{Obrázok\ }
             \renewcommand{\cfttabpresnum}{Tabu\v{l}ka\ }}
         {1}{\renewcommand{\cftfigpresnum}{Figure\ }
             \renewcommand{\cfttabpresnum}{Table\ }}
-        }[] 
-    \newlength{\mylenf}
-    \settowidth{\mylenf}{\cftfigpresnum}
-    \setlength{\cftfignumwidth}{\dimexpr\mylenf+3em}
-    \setlength{\cfttabnumwidth}{\dimexpr\mylenf+3em}
-    \IfEqCase*{\FEIenglish}{
-        {0}{\section*{\fontsize{20pt}{1.3}\selectfont Zoznam obr\'{a}zkov a tabuliek}}
-        {1}{\section*{\fontsize{20pt}{1.3}\selectfont List of Figures and Tables}}
-        }[]    
-    \phantomsection
-    \@starttoc{lof}
-    \bigskip
-    \@starttoc{lot}
+}[]
+\newlength{\mylenf}
+\settowidth{\mylenf}{\cftfigpresnum}
+\setlength{\cftfignumwidth}{\dimexpr\mylenf+3em}
+\setlength{\cfttabnumwidth}{\dimexpr\mylenf+3em}
+\IfEqCase*{\FEIenglish}{
+{0}{\section*{\fontsize{20pt}{1.3}\selectfont Zoznam obr\'{a}zkov a tabuliek}}
+{1}{\section*{\fontsize{20pt}{1.3}\selectfont List of Figures and Tables}}
+}[]
+\phantomsection
+\@starttoc{lof}
+\bigskip
+\@starttoc{lot}
 }
-        
+
 \newcommand\FEIlistOfTables{
-    \pagestyle{plain}        
+    \pagestyle{plain}
     \listoftables
     \newpage
     \pagestyle{plain}
 }
-        
-\newcommand\FEIlistOfFigures{   
+
+\newcommand\FEIlistOfFigures{
     \pagestyle{plain}
     \listoffigures
     \newpage
     \pagestyle{plain}
 }
-        
+
 \newcommand\FEIlistOfAlgorithms{
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@zoznamAlg{Zoznam algoritmov}}
-        {1}{\def\@zoznamAlg{List of Algorithms}}
-        }[]
+            {1}{\def\@zoznamAlg{List of Algorithms}}
+    }[]
     \renewcommand{\listalgorithmname}{\fontsize{20pt}{1.3}\selectfont \@zoznamAlg}
     \pagestyle{plain}
     \listofalgorithms
@@ -609,19 +627,19 @@
     \pagestyle{plain}
 }
 
-\newcommand\FEIlistOfListings{    
+\newcommand\FEIlistOfListings{
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@zoznamList{Zoznam v\a'ypisov k\a'odov}}
-        {1}{\def\@zoznamList{List of listings}}
-        }[]
+            {1}{\def\@zoznamList{List of listings}}
+    }[]
     \renewcommand{\lstlistlistingname}{\fontsize{20pt}{1.3}\selectfont \@zoznamList}
     \pagestyle{plain}
     \lstlistoflistings
     \newpage
     \pagestyle{plain}
 }
-        
-\newcommand\FEIlistOfFiguresAndTables{ 
+
+\newcommand\FEIlistOfFiguresAndTables{
     \pagestyle{plain}
     \listoffiguresandtables
     \newpage
@@ -634,9 +652,9 @@
 \newglossarystyle{FEIlong}{
     \setglossarystyle{long}
     \renewenvironment{theglossary}{
-      \begin{longtable*}{lp{\glsdescwidth}}
-    }
-    {\end{longtable*}}%
+        \begin{longtable*}{lp{\glsdescwidth}}
+            }
+            {\end{longtable*}}%
 }
 
 \newcommand\FEIglossaries[1]{
@@ -649,7 +667,7 @@
 \newcommand\FEIlistOfGlossaries{
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@zoznamZn{Zoznam značiek a skratiek}}
-        {1}{\def\@zoznamZn{List of Symbols and Abbreviations}}
+            {1}{\def\@zoznamZn{List of Symbols and Abbreviations}}
     }[]
     %\addtocontents{lof}{\protect\thispagestyle{plain}}
     %\addtocontents{lot}{\protect\thispagestyle{plain}}
@@ -660,68 +678,68 @@
 \newcommand\FEImanualListOfGlossaries[1]{
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@zoznamZn{Zoznam značiek a skratiek}}
-        {1}{\def\@zoznamZn{List of Symbols and Abbreviations}}
+            {1}{\def\@zoznamZn{List of Symbols and Abbreviations}}
     }[]
     \section*{\@zoznamZn}
-    {
-        \linespread{1.7}\selectfont
-        \input{#1}\par
-    }
+     {
+      \linespread{1.7}\selectfont
+      \input{#1}\par
+     }
     \newpage
 }
 
-\newcommand\FEIintroduction[1]{ 
-    \pagestyle{plain}
-    \IfEqCase*{\FEIenglish}{
-        {0}{\def\@zoznamUv{\'{U}vod}}
-        {1}{\def\@zoznamUv{Introduction}}
-        }[]
-    \cleardoublepage
-    \phantomsection
-    \addcontentsline{toc}{section}{\@zoznamUv}
-    \section*{\@zoznamUv}
-    \noindent \input{#1}
+\newcommand\FEIintroduction[1]{
+\pagestyle{plain}
+\IfEqCase*{\FEIenglish}{
+{0}{\def\@zoznamUv{\'{U}vod}}
+{1}{\def\@zoznamUv{Introduction}}
+}[]
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{\@zoznamUv}
+\section*{\@zoznamUv}
+\noindent \input{#1}
 }
 
 \newcommand\FEIcore[1]{
     \let\stdsection\section
-    \renewcommand\section{\newpage\stdsection}  
+    \renewcommand\section{\newpage\stdsection}
     \newpage
     \input{#1}
 }
 
-\newcommand\FEIconclusion[1]{   
-    \newpage
-    \IfEqCase*{\FEIenglish}{
-        {0}{\def\@zoznamZa{Z\'{a}ver}}
-        {1}{\def\@zoznamZa{Conclusion}}
-        }[]
-    \cleardoublepage
-    \phantomsection 
-    \addcontentsline{toc}{section}{\@zoznamZa}
-    \section*{\@zoznamZa}
-    \noindent \noindent \input{#1}
+\newcommand\FEIconclusion[1]{
+\newpage
+\IfEqCase*{\FEIenglish}{
+{0}{\def\@zoznamZa{Z\'{a}ver}}
+{1}{\def\@zoznamZa{Conclusion}}
+}[]
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{\@zoznamZa}
+\section*{\@zoznamZa}
+\noindent \noindent \input{#1}
 }
 
-\newcommand\FEIresume[1]{   
-    \newpage
-    \cleardoublepage
-    \phantomsection 
-    \addcontentsline{toc}{section}{Rezum\'{e}}
-    \section*{Rezum\'{e}}
-    \noindent \noindent \input{#1}
+\newcommand\FEIresume[1]{
+\newpage
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{Rezum\'{e}}
+\section*{Rezum\'{e}}
+\noindent \noindent \input{#1}
 }
 
-\newcommand\FEIbibliography{    
+\newcommand\FEIbibliography{
     \newpage
     \cleardoublepage
-    \phantomsection 
+    \phantomsection
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@zoznamBib{Literatúra}}
-        {1}{\def\@zoznamBib{Bibliography}}
-        }[]
+            {1}{\def\@zoznamBib{Bibliography}}
+    }[]
     \addcontentsline{toc}{section}{\@zoznamBib}
-    \renewcommand\refname{\@zoznamBib} 
+    \renewcommand\refname{\@zoznamBib}
 
     % below you can set padding in bibliography
     \setlength{\bibhang}{0pt}
@@ -731,8 +749,8 @@
 \newcommand\FEIaiDeclaration[1]{
     \IfEqCase*{\FEIenglish}{
         {0}{\def\@aiDeclaration{Použitie nástrojov umelej inteligencie}}
-        {1}{\def\@aiDeclaration{Usage of artificial intelligence tools}}
-        }[]
+            {1}{\def\@aiDeclaration{Usage of artificial intelligence tools}}
+    }[]
     \phantomsection
     \addcontentsline{toc}{subsection}{\@aiDeclaration}
     \subsection*{\@aiDeclaration}
@@ -743,13 +761,13 @@
 
 \IfEqCase*{\FEIenglish}{
     {0}{
-        \def\@appendices{Dodatky}
-        \def\@appendix{Dodatok}
-    }
-    {1}{
-        \def\@appendices{Appendices}
-        \def\@appendix{Appendix}
-    }
+            \def\@appendices{Dodatky}
+            \def\@appendix{Dodatok}
+        }
+        {1}{
+            \def\@appendices{Appendices}
+            \def\@appendix{Appendix}
+        }
 }[]
 
 \newcommand\FEIlistOfAppendix{
@@ -768,34 +786,34 @@
     \setcounter{lstlisting}{0}
     \counterwithin{lstlisting}{section}
     \cleardoublepage
-    \phantomsection 
+    \phantomsection
     \addcontentsline{toc}{section}{\@appendices}
     \listofpriloh
 }
 
-\newcommand\FEIappendix[2]{ 
+\newcommand\FEIappendix[2]{
     \newpage
-    \cleardoublepage    
-    \phantomsection 
-    \section{#1}    
+    \cleardoublepage
+    \phantomsection
+    \section{#1}
     \noindent
-    \pridajPrilohu{#1}  
+    \pridajPrilohu{#1}
     \noindent\input{#2}
 }
-        
+
 \newlistof{priloh}{pri}{\@appendices}
 \newcommand{\pridajPrilohu}[1]{
     \refstepcounter{priloh}
     \addcontentsline{pri}{priloh}{\protect\numberline{\Alph{section}} #1}\par
 }
-        
-\newcommand\FEIpdfInfo{ 
+
+\newcommand\FEIpdfInfo{
     \hypersetup{pdfinfo={
-        Title={\printNazov},
-        Author={\printAutor},
-        Subject={\typPrace},
-        Keywords={\printKeywords}
-    }}
+            Title={\printNazov},
+            Author={\printAutor},
+            Subject={\typPrace},
+            Keywords={\printKeywords}
+        }}
 }
 
 %PZ: hack - front/main/backmatter v article 
@@ -814,9 +832,9 @@
 
 \newcommand\backmatter{%
     \if@openright
-    \cleardoublepage
+        \cleardoublepage
     \else
-    \clearpage
+        \clearpage
     \fi
     \renewcommand \thesection{\Alph{section}}
     \titleformat{\section}
