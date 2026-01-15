@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2026.1.13)  15 JAN 2026 06:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025) (preloaded format=pdflatex 2026.1.12)  15 JAN 2026 13:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1130,54 +1130,6 @@ LaTeX Font Info:    Trying to load font information for T1+lmr on input line 116
 File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )) (c:/texlive/2025/texmf-dist/tex/latex/graphics/dvipsnam.def
 File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
-) (c:/texlive/2025/texmf-dist/tex/latex/cfr-lm/cfr-lm.sty (c:/texlive/2025/texmf-dist/tex/latex/svn-prov/svn-prov.sty
-Package: svn-prov 2010/04/24 v3.1862 Package Date/Version from SVN Keywords
-)
-Package: cfr-lm 2025/06/21 v1.9 (SVN Rev: 11038) Extended support for Latin Modern 2.004
- (c:/texlive/2025/texmf-dist/tex/latex/base/fontenc.sty
-Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
-) (c:/texlive/2025/texmf-dist/tex/latex/nfssext-cfr/nfssext-cfr.sty
-Package: nfssext-cfr 2025/06/22 v1.3 (SVN Rev: 11042){} extensions for NFSS and NNFSS; based on 2003/03/14 v1.2 Experimental NFSS Extensions
-
-
-Package nfssext-cfr Warning: You have loaded me (or a font support package which loads me)
-(nfssext-cfr)                after loading microtype, but microtype should be loaded after
-(nfssext-cfr)                all font defaults have been setup on input line 213.
-
-)
-LaTeX Encoding Info:    Text command \textperthousand (encoding T1) is not declared on input line 90.
-LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/lmr/m/n --> OT1/lmr/m/n on input line 269.
-LaTeX Font Info:    Overwriting symbol font `letters' in version `normal'
-(Font)                  OML/lmm/m/it --> OML/lmm/m/it on input line 269.
-LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
-(Font)                  OMS/lmsy/m/n --> OMS/lmsy/m/n on input line 269.
-LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
-(Font)                  OMX/lmex/m/n --> OMX/lmex/m/n on input line 269.
-LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/lmr/bx/n --> OT1/lmr/bx/n on input line 269.
-LaTeX Font Info:    Overwriting symbol font `letters' in version `bold'
-(Font)                  OML/lmm/b/it --> OML/lmm/b/it on input line 269.
-LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
-(Font)                  OMS/lmsy/b/n --> OMS/lmsy/b/n on input line 269.
-LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
-(Font)                  OMX/lmex/m/n --> OMX/lmex/m/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/lmr/bx/n --> OT1/lmr/bx/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/lmss/m/n --> OT1/lmss/m/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/lmr/m/it --> OT1/lmr/m/it on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/lmtt/m/n --> OT1/lmtt/m/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
-(Font)                  OT1/lmr/bx/n --> OT1/lmr/bx/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/lmss/bx/n --> OT1/lmss/bx/n on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/lmr/bx/it --> OT1/lmr/bx/it on input line 269.
-LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/lmtt/m/n --> OT1/lmtt/m/n on input line 269.
 ) (c:/texlive/2025/texmf-dist/tex/latex/amsfonts/amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
 ) (c:/texlive/2025/texmf-dist/tex/latex/amscls/amsthm.sty
@@ -1473,29 +1425,12 @@ File: tikzlibrarycalc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \glo@main@file=\write6
 \openout6 = `thesis.glo'.
 
-Package glossaries Info: Writing glossary file thesis.glo on input line 224.
+Package glossaries Info: Writing glossary file thesis.glo on input line 223.
 \glo@acronym@file=\write7
 \openout7 = `thesis.acn'.
 
-Package glossaries Info: Writing glossary file thesis.acn on input line 224.
- (./includes/glossary.tex) (c:/texlive/2025/texmf-dist/tex/latex/nfssext-cfr/nfssext-cfr-nnfss.sty
-Package: nfssext-cfr-nnfss 2025/06/22 v1.3 (SVN Rev: 11042){} extended New New Font Selection Scheme (NNFSS) based on 2003/03/14 v1.2 Experimental NFSS Extensions
-LaTeX Info: Redefining \textscu on input line 676.
-
-
-Package nfssext-cfr Warning: Patching font initialisation macro for serif. on input line 705.
-
-
-Package nfssext-cfr Warning: Patching font initialisation macro for sans. on input line 714.
-
-
-Package nfssext-cfr Warning: Patching font initialisation macro for typewriter. on input line 723.
-
-)
-LaTeX Font Info:    Trying to load font information for T1+clm2j on input line 229.
- (c:/texlive/2025/texmf-dist/tex/latex/cfr-lm/t1clm2j.fd
-File: t1clm2j.fd 2025/06/21 Fontinst v1.933 font definitions for T1/clm2j.
-)
+Package glossaries Info: Writing glossary file thesis.acn on input line 223.
+ (./includes/glossary.tex)
 
 LaTeX Warning: Unused global option(s):
     [m].
@@ -1503,54 +1438,38 @@ LaTeX Warning: Unused global option(s):
 (./thesis.aux)
 \openout1 = `thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/lmm/m/it on input line 229.
-LaTeX Font Info:    Trying to load font information for OML+lmm on input line 229.
- (c:/texlive/2025/texmf-dist/tex/latex/lm/omllmm.fd
-File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for OMS/lmsy/m/n on input line 229.
-LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 229.
- (c:/texlive/2025/texmf-dist/tex/latex/lm/omslmsy.fd
-File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for OT1/lmr/m/n on input line 229.
-LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 229.
- (c:/texlive/2025/texmf-dist/tex/latex/lm/ot1lmr.fd
-File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 229.
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 229.
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for OMX/lmex/m/n on input line 229.
-LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 229.
- (c:/texlive/2025/texmf-dist/tex/latex/lm/omxlmex.fd
-File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 229.
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 229.
-LaTeX Font Info:    ... okay on input line 229.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 229.
-LaTeX Font Info:    ... okay on input line 229.
-Package hyperref Info: Link coloring ON on input line 229.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 228.
+LaTeX Font Info:    ... okay on input line 228.
+Package hyperref Info: Link coloring ON on input line 228.
  (./thesis.out) (./thesis.out)
 \@outlinefile=\write8
 \openout8 = `thesis.out'.
 
-LaTeX Info: Redefining \microtypecontext on input line 229.
-Package microtype Info: Applying patch `toc' on input line 229.
-Package microtype Info: Applying patch `eqnum' on input line 229.
+LaTeX Info: Redefining \microtypecontext on input line 228.
+Package microtype Info: Applying patch `toc' on input line 228.
+Package microtype Info: Applying patch `eqnum' on input line 228.
 
 
-Package microtype Warning: Unable to apply patch `footnote' on input line 229.
+Package microtype Warning: Unable to apply patch `footnote' on input line 228.
 
-Package microtype Info: Applying patch `verbatim' on input line 229.
-LaTeX Info: Redefining \microtypesetup on input line 229.
+Package microtype Info: Applying patch `verbatim' on input line 228.
+LaTeX Info: Redefining \microtypesetup on input line 228.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
@@ -1601,8 +1520,8 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'thesis.bbl' found.
  (./thesis.bbl)
-Package biblatex Info: Reference section=0 on input line 229.
-Package biblatex Info: Reference segment=0 on input line 229.
+Package biblatex Info: Reference section=0 on input line 228.
+Package biblatex Info: Reference segment=0 on input line 228.
  (c:/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count574
@@ -1671,16 +1590,8 @@ Package pdflscape Info: Auto-detected driver: pdftex on input line 81.
 )) (c:/texlive/2025/texmf-dist/tex/latex/translations/translations-basic-dictionary-english.trsl
 File: translations-basic-dictionary-english.trsl (english translation file `translations-basic-dictionary')
 )
-Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 229.
-Package translations Info: no dictionary file `translations-basic-dictionary-slovak.trsl' found. on input line 229.
-LaTeX Info: Redefining \swshape on input line 229.
-
-
-Package nfssext-cfr Warning: Overwriting kernel definition of \swshape  (new) on input line 229.
-
-
-Package nfssext-cfr Warning: Overwriting the format's definition of \DeclareEncodingSubset{} on input line 229.
-
+Package translations Info: loading dictionary `translations-basic-dictionary' for `english'. on input line 228.
+Package translations Info: no dictionary file `translations-basic-dictionary-slovak.trsl' found. on input line 228.
 *geometry* verbose mode - [ newgeometry ] result:
 * driver: pdftex
 * paper: a4paper
@@ -1713,46 +1624,67 @@ Package nfssext-cfr Warning: Overwriting the format's definition of \DeclareEnco
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Font Info:    Trying to load font information for T1+clm2js on input line 243.
-(c:/texlive/2025/texmf-dist/tex/latex/cfr-lm/t1clm2js.fd
-File: t1clm2js.fd 2025/06/21 Fontinst v1.933 font definitions for T1/clm2js.
-) [1
+LaTeX Font Info:    Trying to load font information for T1+lmss on input line 242.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/t1lmss.fd
+File: t1lmss.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `lmss' (encoding: T1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+ [1
 
 \openout5 = `thesis.ist'.
 
 
 
-{c:/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/2025/texmf-dist/fonts/enc/dvips/cfr-lm/t1-clm.enc}{c:/texlive/2025/texmf-dist/fonts/enc/dvips/cfr-lm/dotdigits-clm.enc}]
-<includes/assignment.pdf, id=192, 597.51233pt x 845.0471pt>
+{c:/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}]
+<includes/assignment.pdf, id=186, 597.51233pt x 845.0471pt>
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf>
-Package pdftex.def Info: includes/assignment.pdf  used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf  used on input line 243.
 (pdftex.def)             Requested size: 597.51086pt x 845.04504pt.
-<includes/assignment.pdf, id=194, page=1, 597.51233pt x 845.0471pt>
+<includes/assignment.pdf, id=188, page=1, 597.51233pt x 845.0471pt>
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf, page 1>
-Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 243.
 (pdftex.def)             Requested size: 597.51086pt x 845.04504pt.
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf, page 1>
-Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 243.
 (pdftex.def)             Requested size: 597.53821pt x 845.08372pt.
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf, page 1>
-Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 243.
 (pdftex.def)             Requested size: 597.53821pt x 845.08372pt.
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf, page 1>
-Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 243.
 (pdftex.def)             Requested size: 597.53821pt x 845.08372pt.
 File: includes/assignment.pdf Graphic file (type pdf)
 <use includes/assignment.pdf, page 1>
-Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 244.
+Package pdftex.def Info: includes/assignment.pdf , page1 used on input line 243.
 (pdftex.def)             Requested size: 597.53821pt x 845.08372pt.
  [2
 
 
  <./includes/assignment.pdf>] (./thesis.toc
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 3.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/ot1lmr.fd
+File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 3.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/omllmm.fd
+File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 3.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/omslmsy.fd
+File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 3.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/omxlmex.fd
+File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <12> on input line 3.
 LaTeX Font Info:    External font `lmex10' loaded for size
@@ -1786,7 +1718,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [7{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}]
-<./img/pendulum.png, id=333, 329.73187pt x 438.8897pt>
+<./img/pendulum.png, id=324, 329.73187pt x 438.8897pt>
 File: ./img/pendulum.png Graphic file (type png)
 <use ./img/pendulum.png>
 Package pdftex.def Info: ./img/pendulum.png  used on input line 42.
@@ -1813,6 +1745,8 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `lmtt' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
+LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <8.5> not available
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 74.
 
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
@@ -1824,8 +1758,8 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 (caption)                particular \caption on input line 109.
 See the caption package documentation for explanation.
 
-[10{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}]
-<./img/usart_comms.pdf, id=398, 614.295pt x 794.97pt>
+[10]
+<./img/usart_comms.pdf, id=390, 614.295pt x 794.97pt>
 File: ./img/usart_comms.pdf Graphic file (type pdf)
 <use ./img/usart_comms.pdf>
 Package pdftex.def Info: ./img/usart_comms.pdf  used on input line 155.
@@ -1837,7 +1771,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [11] [12 <./img/usart_comms.pdf>]
-<./scheme/SystemScheme.pdf, id=418, 287.82733pt x 148.6383pt>
+<./scheme/SystemScheme.pdf, id=410, 287.82733pt x 148.6383pt>
 File: ./scheme/SystemScheme.pdf Graphic file (type pdf)
 <use ./scheme/SystemScheme.pdf>
 Package pdftex.def Info: ./scheme/SystemScheme.pdf  used on input line 176.
@@ -1848,17 +1782,8 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 (caption)                particular \caption on input line 180.
 See the caption package documentation for explanation.
 
-[13 <./scheme/SystemScheme.pdf>]
-LaTeX Font Info:    Trying to load font information for T1+clm2t on input line 209.
- (c:/texlive/2025/texmf-dist/tex/latex/cfr-lm/t1clm2t.fd
-File: t1clm2t.fd 2025/06/21 Fontinst v1.933 font definitions for T1/clm2t.
-)
-Package microtype Info: Loading generic protrusion settings for font family
-(microtype)             `clm2t' (encoding: T1).
-(microtype)             For optimal results, create family-specific settings.
-(microtype)             See the microtype manual for details.
- [14{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}]
-<./img/i2c_angle.pdf, id=501, 614.295pt x 794.97pt>
+[13 <./scheme/SystemScheme.pdf>] [14{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}]
+<./img/i2c_angle.pdf, id=493, 614.295pt x 794.97pt>
 File: ./img/i2c_angle.pdf Graphic file (type pdf)
 <use ./img/i2c_angle.pdf>
 Package pdftex.def Info: ./img/i2c_angle.pdf  used on input line 239.
@@ -1870,7 +1795,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [15]
-<./img/usart_comms_all.pdf, id=509, 614.295pt x 794.97pt>
+<./img/usart_comms_all.pdf, id=501, 614.295pt x 794.97pt>
 File: ./img/usart_comms_all.pdf Graphic file (type pdf)
 <use ./img/usart_comms_all.pdf>
 Package pdftex.def Info: ./img/usart_comms_all.pdf  used on input line 253.
@@ -1882,10 +1807,9 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [16 <./img/i2c_angle.pdf>] [17 <./img/usart_comms_all.pdf>]
-LaTeX Font Info:    Trying to load font information for TS1+clm2j on input line 268.
- (c:/texlive/2025/texmf-dist/tex/latex/cfr-lm/ts1clm2j.fd
-File: ts1clm2j.fd 2025/06/21 Fontinst v1.933 font definitions for TS1/clm2j.
-LaTeX Font Info:    Setting clm2j sub-encoding to TS1/1 on input line 93.
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 268.
+ (c:/texlive/2025/texmf-dist/tex/latex/lm/ts1lmr.fd
+File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [18{c:/texlive/2025/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}] [19]
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
@@ -1893,7 +1817,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [20]
-<./img/static_char/measurement.pdf, id=558, 427.65671pt x 123.98094pt>
+<./img/static_char/measurement.pdf, id=550, 427.65671pt x 123.98094pt>
 File: ./img/static_char/measurement.pdf Graphic file (type pdf)
 <use ./img/static_char/measurement.pdf>
 Package pdftex.def Info: ./img/static_char/measurement.pdf  used on input line 347.
@@ -1905,7 +1829,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [21 <./img/static_char/measurement.pdf>]
-<./img/static_char/gain_response.pdf, id=604, 427.65671pt x 124.14781pt>
+<./img/static_char/gain_response.pdf, id=595, 427.65671pt x 124.14781pt>
 File: ./img/static_char/gain_response.pdf Graphic file (type pdf)
 <use ./img/static_char/gain_response.pdf>
 Package pdftex.def Info: ./img/static_char/gain_response.pdf  used on input line 362.
@@ -1917,7 +1841,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [22 <./img/static_char/gain_response.pdf>]
-<./img/static_char/measurement_zoom.pdf, id=658, 427.68683pt x 123.96024pt>
+<./img/static_char/measurement_zoom.pdf, id=650, 427.68683pt x 123.96024pt>
 File: ./img/static_char/measurement_zoom.pdf Graphic file (type pdf)
 <use ./img/static_char/measurement_zoom.pdf>
 Package pdftex.def Info: ./img/static_char/measurement_zoom.pdf  used on input line 389.
@@ -1928,7 +1852,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 (caption)                particular \caption on input line 393.
 See the caption package documentation for explanation.
 
-<./img/static_char/ss_char_gain.pdf, id=661, 427.65671pt x 124.12712pt>
+<./img/static_char/ss_char_gain.pdf, id=653, 427.65671pt x 124.12712pt>
 File: ./img/static_char/ss_char_gain.pdf Graphic file (type pdf)
 <use ./img/static_char/ss_char_gain.pdf>
 Package pdftex.def Info: ./img/static_char/ss_char_gain.pdf  used on input line 405.
@@ -1939,7 +1863,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [23 <./img/static_char/measurement_zoom.pdf> <./img/static_char/ss_char_gain.pdf>]
-<./img/static_char/ss_char_polyfit.pdf, id=752, 427.67178pt x 124.14781pt>
+<./img/static_char/ss_char_polyfit.pdf, id=744, 427.67178pt x 124.14781pt>
 File: ./img/static_char/ss_char_polyfit.pdf Graphic file (type pdf)
 <use ./img/static_char/ss_char_polyfit.pdf>
 Package pdftex.def Info: ./img/static_char/ss_char_polyfit.pdf  used on input line 429.
@@ -1955,7 +1879,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 124--127
 
  []
 
-<img/frictions_modeled.pdf, id=874, 602.25pt x 602.25pt>
+<img/frictions_modeled.pdf, id=865, 602.25pt x 602.25pt>
 File: img/frictions_modeled.pdf Graphic file (type pdf)
 <use img/frictions_modeled.pdf>
 Package pdftex.def Info: img/frictions_modeled.pdf  used on input line 141.
@@ -1971,7 +1895,7 @@ Package caption Warning: The option `hypcap=true' will be ignored for this
 See the caption package documentation for explanation.
 
 [30 <./img/frictions_modeled.pdf>]) [31] (./includes/chapters/models.tex [32]
-<./img/norm_dist.pdf, id=918, 602.25pt x 602.25pt>
+<./img/norm_dist.pdf, id=909, 602.25pt x 602.25pt>
 File: ./img/norm_dist.pdf Graphic file (type pdf)
 <use ./img/norm_dist.pdf>
 Package pdftex.def Info: ./img/norm_dist.pdf  used on input line 50.
@@ -1985,11 +1909,10 @@ See the caption package documentation for explanation.
 [33] [34 <./img/norm_dist.pdf>]) [35] (./includes/chapters/observability_controllability.tex [36] [37]) [38] (./includes/chapters/controller.tex [39] [40])) [41] (./includes/conclusion.tex [42
 
 ]) [43] [44]
-Overfull \hbox (0.84164pt too wide) in paragraph at lines 302--302
-[]\T1/clm2j/m/n/12 (-20) WIDNALL, S. Lecture L20 - Energy Methods: Lagrange's Equations. []In[]: \T1/clm2j/m/it/12 (-20) Dynamics---
- []
-
-[45
+Package microtype Info: Character `029' is missing
+(microtype)             in font `T1/lmr/m/sc/12'.
+(microtype)             Ignoring protrusion settings for this character.
+ [45
 
 ] (./thesis.aux)
  ***********
@@ -1997,24 +1920,24 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-29>
  ***********
 Package rerunfilecheck Info: File `thesis.out' has not changed.
-(rerunfilecheck)             Checksum: 54311F85DF44D61757B781FD864B2FC6;6126.
+(rerunfilecheck)             Checksum: 7DA2503F92FAAB6EA57813C6D17260C3;6023.
 Package logreq Info: Writing requests to 'thesis.run.xml'.
 \openout1 = `thesis.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 57764 strings out of 467538
- 1178644 string characters out of 5423725
- 2135189 words of memory out of 5000000
- 85136 multiletter control sequences out of 15000+600000
- 752430 words of font info for 380 fonts, out of 8000000 for 9000
+ 56736 strings out of 467538
+ 1159027 string characters out of 5423725
+ 2120350 words of memory out of 5000000
+ 84309 multiletter control sequences out of 15000+600000
+ 736940 words of font info for 221 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 123i,17n,131p,2533b,3172s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 123i,17n,131p,2533b,3170s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmbx8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmcsc10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmex10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi6.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmmi8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmr12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmr6.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmri12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmss12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmssbx10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy6.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmsy8.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtk10.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtt12.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/lm/lmtt9.pfb><c:/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (45 pages, 1325295 bytes).
+Output written on thesis.pdf (45 pages, 1317993 bytes).
 PDF statistics:
- 1273 PDF objects out of 1440 (max. 8388607)
- 948 compressed objects within 10 object streams
- 215 named destinations out of 1000 (max. 500000)
- 102888 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 1249 PDF objects out of 1440 (max. 8388607)
+ 929 compressed objects within 10 object streams
+ 214 named destinations out of 1000 (max. 500000)
+ 63456 words of extra memory for PDF output out of 74296 (max. 10000000)
 

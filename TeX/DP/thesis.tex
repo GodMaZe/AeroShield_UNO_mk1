@@ -13,7 +13,6 @@
 
 \usepackage{lmodern}
 
-\usepackage[tt={oldstyle=false,proportional=true,monowidth}]{cfr-lm}
 % https://mirror.szerverem.hu/ctan/fonts/cfr-lm/doc/cfr-lm.pdf
 
 % ------------------------------
@@ -44,7 +43,7 @@
 
 \makeatletter
 
-	\def\@seccntformat#1{\protect\makebox[0pt][r]{\csname the#1\endcsname\hspace{4mm}}}
+	% \def\@seccntformat#1{\protect\makebox[0pt][r]{\csname the#1\endcsname\hspace{4mm}}}
 
 	\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
 	\hbox{}
@@ -101,7 +100,7 @@ showspaces=false,
 showstringspaces=false,
 showtabs=false,
 tabsize=2,
-% xleftmargin=10pt,
+xleftmargin=10pt,
 framesep=10pt,
 language=Python,
 escapechar=|,
@@ -150,11 +149,11 @@ escapechar=|,
 
 \usepackage{caption}
 
-\DeclareCaptionFormat{odsadene}{\protect\makebox[0pt][r]{#1#2\hspace{4mm}}#3\par}
-\DeclareCaptionLabelSeparator{lendvojbodka}{:}
-\DeclareCaptionFont{lightgray}{\fontfamily{lmtt}\fontsize{8.5pt}{8.75pt}\selectfont\color{lightgray}}
+% \DeclareCaptionFormat{odsadene}{\protect\makebox[0pt][l]{#1#2\hspace{4mm}}#3\par}
+% \DeclareCaptionLabelSeparator{lendvojbodka}{:}
+% \DeclareCaptionFont{lightgray}{\fontfamily{lmtt}\fontsize{8.5pt}{8.75pt}\selectfont\color{lightgray}}
 
-\captionsetup[lstlisting]{format=odsadene, labelsep=lendvojbodka, justification=raggedright, singlelinecheck=false, labelfont={sf, lightgray},}
+% \captionsetup[lstlisting]{format=odsadene, labelsep=lendvojbodka, justification=raggedright, singlelinecheck=false, labelfont={sf, lightgray},}
 
 
 \usepackage{siunitx}
