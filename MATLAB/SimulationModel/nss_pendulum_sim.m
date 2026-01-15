@@ -2,6 +2,7 @@ addpath("../misc")
 addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
+addpath("../misc/models/frictions");
 
 %% Do the simulation
 Ts = 0.05;

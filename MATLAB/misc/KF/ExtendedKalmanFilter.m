@@ -135,17 +135,17 @@ classdef ExtendedKalmanFilter
             % measurement
             S = C * obj.P * C' + obj.R;
             % correcting the Kalman Gain matrix
-            obj.K = obj.P * C' / S;
+            obj.K = (S' \ C * obj.P')';
             % error in the difference between the predicted output and
             % actual
             e1 = y - ypred;
             % state correction based on the output error
             obj.xhat = obj.xhat + obj.K * e1;
             % state covariance matrix correction
-            % obj.P = obj.P - obj.K * C * obj.P;
+            obj.P = obj.P - obj.K * C * obj.P;
             % Using the Joseph form for numerical stability, symmetry, and positive semidefiniteness preservation.
-            obj.P = (obj.I - obj.K * C) * obj.P * (obj.I - obj.K * C)' + obj.K * obj.R * obj.K';
-            obj.P = 0.5 * (obj.P + obj.P'); % Enforce exact symmetry
+            % obj.P = (obj.I - obj.K * C) * obj.P * (obj.I - obj.K * C)' + obj.K * obj.R * obj.K';
+            % obj.P = 0.5 * (obj.P + obj.P'); % Enforce exact symmetry
             yhat = obj.predict_output(t, u);
         end
 

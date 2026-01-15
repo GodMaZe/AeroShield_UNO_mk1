@@ -32,21 +32,23 @@ function x2 = dx2(t, x, u, vel_tol)
 
     % iscoloumb = false;
     
-    function tau_c = friction_coloumb(t, x, u, vel_tol)
-        
-        tau_c = pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2)*NL(x(2));
+    function tau_f = frictions(t, x, u, vel_tol)
+        tau_v = viscous_friction(x(2), pendulum.xi);
+        tau_c = coulomb_friction(x(2), pendulum.mu*pendulum.g*(pendulum.m1 + pendulum.m2), pendulum.hc, pendulum.omega_dry);
         if abs(x(2)) <= vel_tol && abs(x(1)) <= vel_tol && abs(tau_g) > abs(tau_c)
             % fprintf("tau_c = %f | tau_g = %f\n", tau_c, tau_g);
-            tau_c = -tau_g;
+            tau_c = tau_g;
             % iscoloumb = true;
-
         end
+        tau_s = sticky_friction(x(2), tau_c, pendulum.tau_brk, pendulum.omega_S);
+        tau_a = drag_friction(x(2), pendulum.ka, pendulum.kr);
+        tau_f = tau_v + tau_c + tau_s + tau_a;
     end
 
     % The passive effect of the frictional forces is incorrectly modeled
     tau_g = pendulum.G_1*sin(x(1));
-    Fs = pendulum.xi*x(2) + friction_coloumb(t, x, u, vel_tol);
-    x2 = (1/pendulum.I_T) * (-Fs - tau_g);
+    Fs = frictions(t, x, u, vel_tol);
+    x2 = (1/pendulum.I_T) * (Fs - tau_g);
     % if iscoloumb
     %     fprintf("x2 = %f\n", x2);
     % end

@@ -190,7 +190,8 @@ try
     REF_INIT = 35;
     REF = REF_INIT;
 
-    REF_STEPS = [-REF_INIT+23, -5, 0, 10, -REF_INIT];
+    REF_STEPS = [-REF_INIT+90, -5, 0, 10, -REF_INIT];
+    % REF_STEPS(:) = -REF_INIT;
 
     U_STEP_SIZE = 5;
     
@@ -222,9 +223,10 @@ try
     
     % --- Augmented system for integral action ---
     if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
-        A = Fx(0, [0; 0], 0);
-        C = Hx(0, [0; 0], 0);
-        B = Bu(0, [0; 0], 0);
+        xinit = zeros(n, 1);
+        A = Fx(0, xinit, 0);
+        C = Hx(0, xinit, 0);
+        B = discrete_jacobian_u(f, 0, xinit, 0, Ts);
     end
     B_tilde=zeros(n+m, r);
     
@@ -237,9 +239,9 @@ try
     % Q_=[0.01 0 0;
     %     0 10 0;
     %     0 0 7];
-    Q_=diag([10 5]);
-    R_=[0.001];
-    Qz=[15];
+    Q_=diag([100 15]);
+    R_=[0.01];
+    Qz=[100];
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
             zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -321,10 +323,9 @@ try
             if exist("EKF", "var")
                 A = Fx(plant_time, x_hat, u);
                 C = Hx(plant_time, x_hat, u);
-                B = Bu(plant_time, x_hat, u);
+                B = discrete_jacobian_u(f, plant_time, x_hat, u, Ts);
 
-                A_tilde = [A, zeros(n, m);
-                           -C, eye(m, m)];
+                A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
                 B_tilde(1:n, :) = B; 
 
@@ -341,7 +342,8 @@ try
             % e = REF - y_hat; % OPT Params
             z = z + e;
 
-            u = u + max(-U_PB, min(100-U_PB, ux));
+            u = u + saturate(ux, -U_PB, 100-U_PB);
+            % u = saturate(ux, 0, 100);
         end
 
         y_hat = rad2deg(y_hat);
@@ -418,7 +420,7 @@ stairs(LOG_TP, LOG_YHAT);
 title("Real-Time System Response");
 xlabel("t [s]");
 ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-legend("y","ref", "u", 'Location', 'southeast');
+legend("y","ref", "yhat", 'Location', 'southeast');
 grid minor;
 hold off;
 
