@@ -22,84 +22,117 @@ Where \( Q_i \) represents the generalized forces acting on the system. Which in
 \subsection{Physical Modeling}
 %% TODO: write the process of deriving the physical model using Lagrangian mechanics
 Derive the physical model of the pendulum system using Lagrangian mechanics, starting from defining the kinetic and potential energies of the system, and applying the Euler-Lagrange equation to obtain the equations of motion.
-
-TODO: CONTINUE FROM HERE...
+For now we will present the final derived equation in two forms - a clean form with coefficients, and a expanded form with all the terms shown explicitly. In the second thesis part we will show the whole derivation process.
+The final clean differential equation of motion for the pendulum system is given by:
+\begin{equation}
+    \ddot{\varphi}(t) = k_1 \tau_m(t) - k_2 \tau_s(t) - k_3 \sin(\varphi(t))
+    \label{eq:final_equation_of_motion_clean}
+\end{equation}
+Where the coefficients are defined as:
+\begin{align}
+    k_1 &= \frac{k_{p2m}}{I_T} \\
+    k_{p2m} &= \frac{1}{4163} \\
+    k_2 &= \frac{1}{I_T} \\
+    k_3 &= \frac{G_1}{I_T} \\
+    G_1 &=  g \left(m_1 \frac{L}{2} + m_2 (L + R)\right) \\
+    I_T &= \frac{1}{3} m_1 L^2 + \frac{2}{5} m_2 R^2 + m_2 (L + R)^2 \\
+\end{align}
+Where:
+\begin{itemize}
+    \item \( \varphi \) is the pendulum angle (rad)
+    \item \( \dot{\varphi} \) is the angular velocity of the pendulum (rad/s)
+    \item \( \tau_m \) is the motor torque (Nm)
+    \item \( \tau_s \) is the total frictional torque (Nm)
+    \item \( m_1 \) is the mass of the pendulum rod (kg)
+    \item \( m_2 \) is the mass of the pendulum motor (kg)
+    \item \( L \) is the length of the pendulum rod (m)
+    \item \( R \) is the radius of the pendulum propeller cover (m)
+    \item \( g \) is the acceleration due to gravity (m/s\textsuperscript{2})
+    \item \( I_T \) is the total moment of inertia of the pendulum system (kg·m\textsuperscript{2})
+    \item \( k_{p2m} \) is the motor torque constant (Nm per PWM\%)
+\end{itemize}
+The expanded form of the final differential equation of motion for the pendulum system is given by:
+\begin{multline}
+    \ddot{\varphi}(t) = \frac{1}{I_T} \left( k_{p2m} \tau_m(t) -\beta \dot{\varphi}(t) - \tau_c \tanh(k_c \dot{\varphi}(t)) - k_s \exp \left(-\left[ \frac{\dot{\varphi}(t)}{\dot{\varphi}_{brk}} \right]^2\right)  \frac{\dot{\varphi}(t)}{\dot{\varphi}_{brk}} \right) -\\
+    \frac{1}{I_T} \left(k_a \dot{\varphi}^2(t) \tanh(k_r \dot{\varphi}(t)) + G_1 \sin(\varphi(t)) \right) \\
+    \label{eq:final_equation_of_motion_expanded}
+\end{multline}
+Where all the variables are as previously defined, and the frictional forces have been expanded to show their individual contributions to the total frictional torque \( \tau_s(t) \).
 
 \subsection{Frictions}
 All the frictional forces acting on the pendulum can be modeled as torques opposing the motion of the pendulum, thus we will be adding them along side the other generalized forces \( Q_i \) in \eqref{eq:lagrange_equation}.
-Within the friction models, we will always consider the direction of the angular velocity \( \dot{\theta} \) to determine the direction of the frictional torque using the smooth continues function hyperbolic tangent (\(\tanh\)), because of the near zero continuity it provides.
+Within the friction models, we will always consider the direction of the angular velocity \( \dot{\varphi} \) to determine the direction of the frictional torque using the smooth continues function hyperbolic tangent (\(\tanh\)), because of the near zero continuity it provides.
 The models will always negate the frictional torque to oppose the motion of the pendulum, thus meaning we will always have a negative sign as the first operator in the modeled friction.
 
 \subsubsection{Viscous Friction}
 Viscous friction is a force that opposes the motion of the pendulum and is proportional to its angular velocity and is linear. Allowing for the use of this friction when a linearized model of the system is considered. It can be modeled as:
 \begin{equation}
-    \tau_{viscous} = -\beta \dot{\theta}
+    \tau_{viscous} = -\beta \dot{\varphi}
     \label{eq:viscous_friction}
 \end{equation}
-where \( \tau_{viscous} \) is the viscous friction torque, \( \beta \) is the viscous friction coefficient, and \( \dot{\theta} \) is the angular velocity of the pendulum.
+where \( \tau_{viscous} \) is the viscous friction torque, \( \beta \) is the viscous friction coefficient, and \( \dot{\varphi} \) is the angular velocity of the pendulum.
 
 \subsubsection{Coulomb Friction}
 Otherwise known as dry friction.
 Coulomb friction is a constant force that opposes the motion of the pendulum, regardless of its velocity. It can be modeled as:
 \begin{equation}
-    \tau_{coulomb} = -\tau_c \tanh(k_c \dot{\theta})
+    \tau_{coulomb} = -\tau_c \tanh(k_c \dot{\varphi})
     \label{eq:coulomb_friction}
 \end{equation}
-where \( \tau_{coulomb} \) is the Coulomb friction torque, \( \tau_c \) is the Coulomb friction coefficient, and \( \tanh(k_c \dot{\theta}) \) is the hyperbolic tangent function of the angular velocity to smooth the transition near zero velocity, $k_c$ is the smoothing coefficient.
+where \( \tau_{coulomb} \) is the Coulomb friction torque, \( \tau_c \) is the Coulomb friction coefficient, and \( \tanh(k_c \dot{\varphi}) \) is the hyperbolic tangent function of the angular velocity to smooth the transition near zero velocity, $k_c$ is the smoothing coefficient.
 We adopt an approach with the hyperbolic tangent function to avoid discontinuities in the model at zero velocity and possible noise induced chattering effects when observing the velocity state of the system.
 Equation \eqref{eq:coulomb_friction} can be rewritten into the following form, where we force an interaction between the Coloumb friction and Sticky friction models
 \begin{equation}
-    \tau_{coulomb} = -\tau_c \tanh(h_c \frac{\dot{\theta}}{\dot{\theta}_{dry}})
+    \tau_{coulomb} = -\tau_c \tanh(h_c \frac{\dot{\varphi}}{\dot{\varphi}_{dry}})
     \label{eq:coulomb_friction_modified}
 \end{equation}
-where \( h_c \) is the modified smoothing coefficient for Coulomb friction, and \( \dot{\theta}_{dry} \) is the dry angular velocity threshold, which can be further defined as
+where \( h_c \) is the modified smoothing coefficient for Coulomb friction, and \( \dot{\varphi}_{dry} \) is the dry angular velocity threshold, which can be further defined as
 \begin{equation}
-    \dot{\theta}_{dry} = \frac{\dot{\theta}_{brk}}{10}
+    \dot{\varphi}_{dry} = \frac{\dot{\varphi}_{brk}}{10}
     \label{eq:dry_velocity}
 \end{equation}
-where \( \dot{\theta}_{brk} \) is the breakaway angular velocity threshold used to define the Stribeck angular velocity in \eqref{eq:stribeck_velocity}, thus creating a relation between the two friction models.
+where \( \dot{\varphi}_{brk} \) is the breakaway angular velocity threshold used to define the Stribeck angular velocity in \eqref{eq:stribeck_velocity}, thus creating a relation between the two friction models.
 
 \subsubsection{Sticky Friction}
 Otherwise known as adhesion friction. Sticky friction is a force that opposes the initiation of motion when the pendulum is at rest. It can be modeled as:
 \begin{align}
-    \tau_{sticky} &= -\sqrt{2 e} (\tau_{brk} - \tau_{coulomb}) \exp \left(-\left[ \frac{\dot{\theta}}{\dot{\theta}_{S}} \right]^2\right)  \frac{\dot{\theta}}{\dot{\theta}_{S}} \\
-    \tau_{sticky} &= - k_s \exp \left(-\left[ \frac{\dot{\theta}}{\dot{\theta}_{S}} \right]^2\right)  \frac{\dot{\theta}}{\dot{\theta}_{S}}
+    \tau_{sticky} &= -\sqrt{2 e} (\tau_{brk} - \tau_{coulomb}) \exp \left(-\left[ \frac{\dot{\varphi}}{\dot{\varphi}_{S}} \right]^2\right)  \frac{\dot{\varphi}}{\dot{\varphi}_{S}} \\
+    \tau_{sticky} &= - k_s \exp \left(-\left[ \frac{\dot{\varphi}}{\dot{\varphi}_{S}} \right]^2\right)  \frac{\dot{\varphi}}{\dot{\varphi}_{S}}
     \label{eq:sticky_friction}
 \end{align}
-where \( \tau_{sticky} \) is the sticky friction torque, \( e \) is the Euler number approximation, \( \tau_{brk} \) is the breakaway friction torque, \( \tau_{coulomb} \) is the Coulomb friction torque, \( \dot{\theta}_{S} \) is the Stribeck angular velocity threshold, and \( k_s = \sqrt{2 e} (\tau_{brk} - \tau_{coulomb}) \) is the sticky friction coefficient.\cite{altpeter:1999,de2000control}
+where \( \tau_{sticky} \) is the sticky friction torque, \( e \) is the Euler number approximation, \( \tau_{brk} \) is the breakaway friction torque, \( \tau_{coulomb} \) is the Coulomb friction torque, \( \dot{\varphi}_{S} \) is the Stribeck angular velocity threshold, and \( k_s = \sqrt{2 e} (\tau_{brk} - \tau_{coulomb}) \) is the sticky friction coefficient.\cite{altpeter:1999,de2000control}
 The Stribeck effect describes the phenomenon where the frictional force decreases as the velocity of the pendulum increases from rest, reaching a minimum at a certain velocity before transitioning to Coulomb friction at higher velocities.
-Stribeck angular velocity threshold \( \dot{\theta}_{S} \) defines the velocity at which this transition occurs and can be defined as follows
+Stribeck angular velocity threshold \( \dot{\varphi}_{S} \) defines the velocity at which this transition occurs and can be defined as follows
 \begin{equation}
-    \dot{\theta}_{S} = \dot{\theta}_{brk}\sqrt{2}
+    \dot{\varphi}_{S} = \dot{\varphi}_{brk}\sqrt{2}
     \label{eq:stribeck_velocity}
 \end{equation}
-where \( \dot{\theta}_{brk} \) is the breakaway angular velocity threshold, which defines the velocity at which the breakaway friction transitions to Coulomb friction and can be determined experimentally, or estimated based on the system's characteristics.
+where \( \dot{\varphi}_{brk} \) is the breakaway angular velocity threshold, which defines the velocity at which the breakaway friction transitions to Coulomb friction and can be determined experimentally, or estimated based on the system's characteristics.
 
 \subsubsection{Air Resistance}
 Air resistance is a force that opposes the motion of the pendulum due to the drag caused by air, also called the drag force. It can be modeled as:
 \begin{equation}
-    \tau_{air} = -\frac{1}{2} C_d \rho A r^2 |\dot{\theta}| \dot{\theta}
+    \tau_{air} = -\frac{1}{2} C_d \rho A r^2 |\dot{\varphi}| \dot{\varphi}
     \label{eq:air_resistance}
 \end{equation}
-where \( \tau_{air} \) is the air resistance torque, \( C_d \) is the drag coefficient, \( \rho \) is the air density, \( A \) is the cross-sectional area of the pendulum, \( r \) is the distance from the pivot point to the center of mass, and \( \dot{\theta} \) is the angular velocity of the pendulum.\cite{Benson_1999}
-In this model, the air resistance torque is proportional to the square of the angular velocity, thus we include the absolute value of the angular velocity \( |\dot{\theta}| \) to ensure that the torque always opposes the motion of the pendulum, without needing to rely on the hyperbolic tangent function.
+where \( \tau_{air} \) is the air resistance torque, \( C_d \) is the drag coefficient, \( \rho \) is the air density, \( A \) is the cross-sectional area of the pendulum, \( r \) is the distance from the pivot point to the center of mass, and \( \dot{\varphi} \) is the angular velocity of the pendulum.\cite{Benson_1999}
+In this model, the air resistance torque is proportional to the square of the angular velocity, thus we include the absolute value of the angular velocity \( |\dot{\varphi}| \) to ensure that the torque always opposes the motion of the pendulum, without needing to rely on the hyperbolic tangent function.
 We will further simplify \eqref{eq:air_resistance} to a form proportional to the square of the angular velocity for easier integration into our model. Thus, we can rewrite it as:
 \begin{equation}
-    \tau_{air} = -k_a \dot{\theta}^2 \tanh(k_r \dot{\theta})
+    \tau_{air} = -k_a \dot{\varphi}^2 \tanh(k_r \dot{\varphi})
     \label{eq:air_resistance_simplified}
 \end{equation}
-where \( k_a \) is the air resistance coefficient, \( k_r \) is the smoothing coefficient and \( \dot{\theta} \) is the angular velocity of the pendulum.
+where \( k_a \) is the air resistance coefficient, \( k_r \) is the smoothing coefficient and \( \dot{\varphi} \) is the angular velocity of the pendulum.
 \newline
 
 Finally, the total friction torque \( \tau_{friction} \) acting on the pendulum can be expressed as the sum of all the individual friction torques:
 \begin{align}
     \tau_{friction} &= \tau_{viscous} + \tau_{coulomb} + \tau_{sticky} + \tau_{air} \label{eq:total_friction_general} \\
-    \tau_{friction} &= -\beta \dot{\theta} - \tau_c \tanh(k_c \dot{\theta}) - k_s \exp \left(-\left[ \frac{\dot{\theta}}{\dot{\theta}_{brk}} \right]^2\right)  \frac{\dot{\theta}}{\dot{\theta}_{brk}} - k_a \dot{\theta}^2 \tanh(k_r \dot{\theta})
+    \tau_{friction} &= -\beta \dot{\varphi} - \tau_c \tanh(k_c \dot{\varphi}) - k_s \exp \left(-\left[ \frac{\dot{\varphi}}{\dot{\varphi}_{brk}} \right]^2\right)  \frac{\dot{\varphi}}{\dot{\varphi}_{brk}} - k_a \dot{\varphi}^2 \tanh(k_r \dot{\varphi})
     \label{eq:total_friction}
 \end{align}
 equation \eqref{eq:total_friction} will be used in our modeling of the pendulum system by including it in the generalized forces \( Q_i \) in the Lagrange equation \eqref{eq:lagrange_equation}. The modeled friction will help us better represent the real-world behavior of the pendulum system, accounting for energy losses due to frictional forces acting on the system.
-A simple preview of the friction model behavior can be seen in \figref{fig:friction_model_preview}, where we plot the total friction torque \( \tau_{friction} \) as a function of angular velocity \( \dot{\theta} \) using example coefficients for each friction type.
-
+A simple preview of the friction model behavior can be seen in \figref{fig:friction_model_preview}, where we plot the total friction torque \( \tau_{friction} \) as a function of angular velocity \( \dot{\varphi} \) using example coefficients for each friction type.
 \begin{center}
     \vbox{
         \makebox[0.5\textwidth][c]{%
@@ -108,7 +141,7 @@ A simple preview of the friction model behavior can be seen in \figref{fig:frict
         }
 
         \figcaption{
-            Plotted preview of the total friction torque \( \tau_{friction} \) as a function of angular velocity \( \dot{\theta} \) using example coefficients for each friction type.
+            Plotted preview of the total friction torque \( \tau_{friction} \) as a function of angular velocity \( \dot{\varphi} \) using example coefficients for each friction type.
         }
         \label{fig:friction_model_preview}
     }%vbox
@@ -130,11 +163,12 @@ The coefficients used in the preview plot are as follows:
         $k_c$ & $1000$ & $\left[\frac{1}{rad/s}\right]$ \\
         $\tau_c$ & $3.7$ & $[Nm]$ \\
         $k_s$ & $3.14$ & $[Nm]$ \\
-        $\dot{\theta}_{brk}$ & $0.1$ & $[rad/s]$ \\
+        $\dot{\varphi}_{brk}$ & $0.1$ & $[rad/s]$ \\
         $\tau_{brk}$ & $5.05$ & $[Nm]$ \\
         \bottomrule
     \end{tabular*}
 \end{center}
 
-\subsection{Modeling Physical Angular Constraints}
-Represent the physical angular constraints of the pendulum within the derived model? Or simply note that they exist but will not be modeled directly. But modeled separately in simulation as a stiff spring-damper system at the limits? Or by simply inversing the velocity with a damping factor when the limits are hit?
+%% TODO: Add this section later and finish it
+% \subsection{Modeling Physical Angular Constraints}
+% Represent the physical angular constraints of the pendulum within the derived model? Or simply note that they exist but will not be modeled directly. But modeled separately in simulation as a stiff spring-damper system at the limits? Or by simply inversing the velocity with a damping factor when the limits are hit?

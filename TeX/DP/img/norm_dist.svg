@@ -3,9 +3,9 @@
    version="1.1"
    width="800"
    height="800"
-   id="svg55"
-   sodipodi:docname="frictions_modeled.svg"
-   inkscape:export-filename="frictions_modeled.pdf"
+   id="svg61"
+   sodipodi:docname="norm_dist.svg"
+   inkscape:export-filename="norm_dist.pdf"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
@@ -14,7 +14,7 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <sodipodi:namedview
-     id="namedview55"
+     id="namedview61"
      pagecolor="#ffffff"
      bordercolor="#000000"
      borderopacity="0.25"
@@ -24,20 +24,20 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.45875"
      inkscape:cx="400"
-     inkscape:cy="454.84147"
-     inkscape:window-width="3440"
+     inkscape:cy="400"
+     inkscape:window-width="2560"
      inkscape:window-height="1369"
-     inkscape:window-x="2552"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg55" />
+     inkscape:current-layer="svg61" />
   <defs
      id="defs1" />
   <g
      transform="scale(2,2)"
-     id="g55">
+     id="g61">
     <g
-       id="background-c413f9b1">
+       id="background-23f3d31c">
       <rect
          fill="white"
          stroke="none"
@@ -49,17 +49,17 @@
          id="rect1" />
     </g>
     <g
-       id="graphpaper-c413f9b1">
+       id="graphpaper-23f3d31c">
       <g
-         id="grid-c413f9b1">
+         id="grid-23f3d31c">
         <g
-           id="g32">
+           id="g36">
           <path
              fill="none"
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 18.5 0 L 18.5 400"
+             d=" M 2.5 0 L 2.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -69,7 +69,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 43.5 0 L 43.5 400"
+             d=" M 26.5 0 L 26.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -79,7 +79,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 94.5 0 L 94.5 400"
+             d=" M 51.5 0 L 51.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -89,7 +89,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 120.5 0 L 120.5 400"
+             d=" M 75.5 0 L 75.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -99,7 +99,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 145.5 0 L 145.5 400"
+             d=" M 100.5 0 L 100.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -109,7 +109,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 171.5 0 L 171.5 400"
+             d=" M 125.5 0 L 125.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -119,7 +119,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 196.5 0 L 196.5 400"
+             d=" M 149.5 0 L 149.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -129,7 +129,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 222.5 0 L 222.5 400"
+             d=" M 174.5 0 L 174.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -139,7 +139,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 247.5 0 L 247.5 400"
+             d=" M 223.5 0 L 223.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -149,7 +149,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 272.5 0 L 272.5 400"
+             d=" M 248.5 0 L 248.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -159,7 +159,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 298.5 0 L 298.5 400"
+             d=" M 273.5 0 L 273.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -169,7 +169,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 323.5 0 L 323.5 400"
+             d=" M 297.5 0 L 297.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -179,7 +179,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 349.5 0 L 349.5 400"
+             d=" M 322.5 0 L 322.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -189,7 +189,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 374.5 0 L 374.5 400"
+             d=" M 347.5 0 L 347.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -199,7 +199,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 381.5 L 400 381.5"
+             d=" M 371.5 0 L 371.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -209,7 +209,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 355.5 L 400 355.5"
+             d=" M 396.5 0 L 396.5 400"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -219,7 +219,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 330.5 L 400 330.5"
+             d=" M 0 393.5 L 400 393.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -229,7 +229,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 304.5 L 400 304.5"
+             d=" M 0 368.5 L 400 368.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -239,7 +239,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 279.5 L 400 279.5"
+             d=" M 0 344.5 L 400 344.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -249,7 +249,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 253.5 L 400 253.5"
+             d=" M 0 319.5 L 400 319.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -259,7 +259,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 228.5 L 400 228.5"
+             d=" M 0 295.5 L 400 295.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -269,7 +269,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 177.5 L 400 177.5"
+             d=" M 0 245.5 L 400 245.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -279,7 +279,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 151.5 L 400 151.5"
+             d=" M 0 221.5 L 400 221.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -289,7 +289,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 126.5 L 400 126.5"
+             d=" M 0 196.5 L 400 196.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -299,7 +299,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 100.5 L 400 100.5"
+             d=" M 0 171.5 L 400 171.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -309,7 +309,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 75.5 L 400 75.5"
+             d=" M 0 147.5 L 400 147.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -319,7 +319,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 49.5 L 400 49.5"
+             d=" M 0 122.5 L 400 122.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -329,7 +329,7 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 24.5 L 400 24.5"
+             d=" M 0 97.5 L 400 97.5"
              stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
@@ -337,30 +337,30 @@
           <path
              fill="none"
              stroke="rgb(0,0,0)"
-             class="dcg-svg-major-gridline"
+             class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 196.5 0 L 196.5 400"
-             stroke-opacity="0.4285714285714285"
+             d=" M 0 73.5 L 400 73.5"
+             stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
              id="path29" />
           <path
              fill="none"
              stroke="rgb(0,0,0)"
-             class="dcg-svg-major-gridline"
+             class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 323.5 0 L 323.5 400"
-             stroke-opacity="0.4285714285714285"
+             d=" M 0 48.5 L 400 48.5"
+             stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
              id="path30" />
           <path
              fill="none"
              stroke="rgb(0,0,0)"
-             class="dcg-svg-major-gridline"
+             class="dcg-svg-minor-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 330.5 L 400 330.5"
-             stroke-opacity="0.4285714285714285"
+             d=" M 0 23.5 L 400 23.5"
+             stroke-opacity="0.3"
              stroke-miterlimit="10"
              stroke-dasharray=""
              id="path31" />
@@ -369,102 +369,72 @@
              stroke="rgb(0,0,0)"
              class="dcg-svg-major-gridline"
              paint-order="fill stroke markers"
-             d=" M 0 75.5 L 400 75.5"
+             d=" M 75.5 0 L 75.5 400"
              stroke-opacity="0.4285714285714285"
              stroke-miterlimit="10"
              stroke-dasharray=""
              id="path32" />
+          <path
+             fill="none"
+             stroke="rgb(0,0,0)"
+             class="dcg-svg-major-gridline"
+             paint-order="fill stroke markers"
+             d=" M 322.5 0 L 322.5 400"
+             stroke-opacity="0.4285714285714285"
+             stroke-miterlimit="10"
+             stroke-dasharray=""
+             id="path33" />
+          <path
+             fill="none"
+             stroke="rgb(0,0,0)"
+             class="dcg-svg-major-gridline"
+             paint-order="fill stroke markers"
+             d=" M 0 393.5 L 400 393.5"
+             stroke-opacity="0.4285714285714285"
+             stroke-miterlimit="10"
+             stroke-dasharray=""
+             id="path34" />
+          <path
+             fill="none"
+             stroke="rgb(0,0,0)"
+             class="dcg-svg-major-gridline"
+             paint-order="fill stroke markers"
+             d=" M 0 147.5 L 400 147.5"
+             stroke-opacity="0.4285714285714285"
+             stroke-miterlimit="10"
+             stroke-dasharray=""
+             id="path35" />
+          <path
+             fill="none"
+             stroke="rgb(0,0,0)"
+             class="dcg-svg-major-gridline"
+             paint-order="fill stroke markers"
+             d=" M 0 23.5 L 400 23.5"
+             stroke-opacity="0.4285714285714285"
+             stroke-miterlimit="10"
+             stroke-dasharray=""
+             id="path36" />
         </g>
       </g>
       <g
-         id="axis-c413f9b1">
+         id="axis-23f3d31c">
         <g
-           id="yaxis-c413f9b1">
+           id="yaxis-23f3d31c">
           <title
-             id="title32">T [Nm]</title>
+             id="title36">y</title>
           <g
-             id="g36">
+             id="g40">
             <path
                fill="none"
                stroke="rgb(0,0,0)"
                class="dcg-svg-axis-line"
                paint-order="fill stroke markers"
-               d=" M 69 4 L 69 396"
+               d=" M 199 4 L 199 396"
                stroke-opacity="0.9"
                stroke-miterlimit="10"
                stroke-width="2"
                stroke-dasharray=""
-               id="path33" />
-            <g
-               class="dcg-svg-axis-line"
-               id="g34">
-              <path
-                 fill="rgb(0,0,0)"
-                 stroke="rgb(0,0,0)"
-                 class="dcg-svg-axis-line"
-                 paint-order="stroke fill markers"
-                 d=" M 69 398 L 64.85889527835967 382.5451867793749 L 73.14110472164032 382.5451867793749 L 69 398 L 64.85889527835967 382.5451867793749"
-                 stroke-opacity="0.9"
-                 stroke-linejoin="round"
-                 stroke-miterlimit="10"
-                 stroke-width="2"
-                 stroke-dasharray=""
-                 fill-opacity="0.9"
-                 id="path34" />
-            </g>
-            <g
-               class="dcg-svg-axis-line"
-               id="g35">
-              <path
-                 fill="rgb(0,0,0)"
-                 stroke="rgb(0,0,0)"
-                 class="dcg-svg-axis-line"
-                 paint-order="stroke fill markers"
-                 d=" M 69 2 L 73.14110472164033 17.45481322062509 L 64.85889527835967 17.45481322062509 L 69 2 L 73.14110472164033 17.45481322062509"
-                 stroke-opacity="0.9"
-                 stroke-linejoin="round"
-                 stroke-miterlimit="10"
-                 stroke-width="2"
-                 stroke-dasharray=""
-                 fill-opacity="0.9"
-                 id="path35" />
-            </g>
-          </g>
-        </g>
-        <g
-           id="xaxis-c413f9b1">
-          <title
-             id="title36">w [rad/s]</title>
-          <g
-             id="g39">
-            <path
-               fill="none"
-               stroke="rgb(0,0,0)"
-               class="dcg-svg-axis-line"
-               paint-order="fill stroke markers"
-               d=" M 4 203 L 396 203"
-               stroke-opacity="0.9"
-               stroke-miterlimit="10"
-               stroke-width="2"
-               stroke-dasharray=""
-               id="path36" />
-            <g
-               class="dcg-svg-axis-line"
-               id="g37">
-              <path
-                 fill="rgb(0,0,0)"
-                 stroke="rgb(0,0,0)"
-                 class="dcg-svg-axis-line"
-                 paint-order="stroke fill markers"
-                 d=" M 2 203 L 17.45481322062509 198.85889527835968 L 17.45481322062509 207.14110472164032 L 2 203 L 17.45481322062509 198.85889527835968"
-                 stroke-opacity="0.9"
-                 stroke-linejoin="round"
-                 stroke-miterlimit="10"
-                 stroke-width="2"
-                 stroke-dasharray=""
-                 fill-opacity="0.9"
-                 id="path37" />
-            </g>
+               id="path37" />
             <g
                class="dcg-svg-axis-line"
                id="g38">
@@ -473,7 +443,7 @@
                  stroke="rgb(0,0,0)"
                  class="dcg-svg-axis-line"
                  paint-order="stroke fill markers"
-                 d=" M 398 203 L 382.5451867793749 207.14110472164035 L 382.5451867793749 198.85889527835965 L 398 203 L 382.5451867793749 207.14110472164035"
+                 d=" M 199 398 L 194.85889527835968 382.5451867793749 L 203.14110472164032 382.5451867793749 L 199 398 L 194.85889527835968 382.5451867793749"
                  stroke-opacity="0.9"
                  stroke-linejoin="round"
                  stroke-miterlimit="10"
@@ -482,72 +452,80 @@
                  fill-opacity="0.9"
                  id="path38" />
             </g>
+            <g
+               class="dcg-svg-axis-line"
+               id="g39">
+              <path
+                 fill="rgb(0,0,0)"
+                 stroke="rgb(0,0,0)"
+                 class="dcg-svg-axis-line"
+                 paint-order="stroke fill markers"
+                 d=" M 199 2 L 203.14110472164032 17.45481322062509 L 194.85889527835968 17.45481322062509 L 199 2 L 203.14110472164032 17.45481322062509"
+                 stroke-opacity="0.9"
+                 stroke-linejoin="round"
+                 stroke-miterlimit="10"
+                 stroke-width="2"
+                 stroke-dasharray=""
+                 fill-opacity="0.9"
+                 id="path39" />
+            </g>
           </g>
         </g>
         <g
-           id="g49">
+           id="xaxis-23f3d31c">
+          <title
+             id="title40">x</title>
           <g
-             class="dcg-svg-axis-value"
-             id="g40">
-            <text
+             id="g43">
+            <path
                fill="none"
-               stroke="#ffffff"
-               font-family="Arial"
-               font-size="17px"
-               font-style="normal"
-               font-weight="normal"
-               text-decoration="normal"
-               x="59.35265533483195"
-               y="221.04878660215334"
-               text-anchor="middle"
-               stroke-miterlimit="2"
-               stroke-width="3"
+               stroke="rgb(0,0,0)"
+               class="dcg-svg-axis-line"
+               paint-order="fill stroke markers"
+               d=" M 4 270 L 396 270"
+               stroke-opacity="0.9"
+               stroke-miterlimit="10"
+               stroke-width="2"
                stroke-dasharray=""
-               id="text39">0</text>
-            <text
-               fill="#000000"
-               stroke="none"
-               font-family="Arial"
-               font-size="17px"
-               font-style="normal"
-               font-weight="normal"
-               text-decoration="normal"
-               x="59.35265533483195"
-               y="221.04878660215334"
-               text-anchor="middle"
-               id="text40">0</text>
+               id="path40" />
+            <g
+               class="dcg-svg-axis-line"
+               id="g41">
+              <path
+                 fill="rgb(0,0,0)"
+                 stroke="rgb(0,0,0)"
+                 class="dcg-svg-axis-line"
+                 paint-order="stroke fill markers"
+                 d=" M 2 270 L 17.45481322062509 265.8588952783597 L 17.45481322062509 274.1411047216403 L 2 270 L 17.45481322062509 265.8588952783597"
+                 stroke-opacity="0.9"
+                 stroke-linejoin="round"
+                 stroke-miterlimit="10"
+                 stroke-width="2"
+                 stroke-dasharray=""
+                 fill-opacity="0.9"
+                 id="path41" />
+            </g>
+            <g
+               class="dcg-svg-axis-line"
+               id="g42">
+              <path
+                 fill="rgb(0,0,0)"
+                 stroke="rgb(0,0,0)"
+                 class="dcg-svg-axis-line"
+                 paint-order="stroke fill markers"
+                 d=" M 398 270 L 382.5451867793749 274.1411047216403 L 382.5451867793749 265.8588952783597 L 398 270 L 382.5451867793749 274.1411047216403"
+                 stroke-opacity="0.9"
+                 stroke-linejoin="round"
+                 stroke-miterlimit="10"
+                 stroke-width="2"
+                 stroke-dasharray=""
+                 fill-opacity="0.9"
+                 id="path42" />
+            </g>
           </g>
-          <g
-             class="dcg-svg-axis-value"
-             id="g42">
-            <text
-               fill="none"
-               stroke="#ffffff"
-               font-family="Arial"
-               font-size="17px"
-               font-style="normal"
-               font-weight="normal"
-               text-decoration="normal"
-               x="196.52288238561368"
-               y="221.04878660215334"
-               text-anchor="middle"
-               stroke-miterlimit="2"
-               stroke-width="3"
-               stroke-dasharray=""
-               id="text41">5</text>
-            <text
-               fill="#000000"
-               stroke="none"
-               font-family="Arial"
-               font-size="17px"
-               font-style="normal"
-               font-weight="normal"
-               text-decoration="normal"
-               x="196.52288238561368"
-               y="221.04878660215334"
-               text-anchor="middle"
-               id="text42">5</text>
-          </g>
+        </g>
+        <g
+           id="g55">
           <g
              class="dcg-svg-axis-value"
              id="g44">
@@ -559,13 +537,13 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="323.9658145145204"
-               y="221.04878660215334"
+               x="189.5243784175739"
+               y="288.47946447923175"
                text-anchor="middle"
                stroke-miterlimit="2"
                stroke-width="3"
                stroke-dasharray=""
-               id="text43">10</text>
+               id="text43">0</text>
             <text
                fill="#000000"
                stroke="none"
@@ -574,10 +552,10 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="323.9658145145204"
-               y="221.04878660215334"
+               x="189.5243784175739"
+               y="288.47946447923175"
                text-anchor="middle"
-               id="text44">10</text>
+               id="text44">0</text>
           </g>
           <g
              class="dcg-svg-axis-value"
@@ -590,13 +568,13 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="56.52208892858195"
-               y="334.9917187310607"
+               x="73.13953670150278"
+               y="288.47946447923175"
                text-anchor="middle"
                stroke-miterlimit="2"
                stroke-width="3"
                stroke-dasharray=""
-               id="text45">-5</text>
+               id="text45">-1</text>
             <text
                fill="#000000"
                stroke="none"
@@ -605,10 +583,10 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="56.52208892858195"
-               y="334.9917187310607"
+               x="73.13953670150278"
+               y="288.47946447923175"
                text-anchor="middle"
-               id="text46">-5</text>
+               id="text46">-1</text>
           </g>
           <g
              class="dcg-svg-axis-value"
@@ -621,13 +599,13 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="59.35265533483195"
-               y="80.10585447324604"
+               x="322.533243571145"
+               y="288.47946447923175"
                text-anchor="middle"
                stroke-miterlimit="2"
                stroke-width="3"
                stroke-dasharray=""
-               id="text47">5</text>
+               id="text47">1</text>
             <text
                fill="#000000"
                stroke="none"
@@ -636,53 +614,146 @@
                font-style="normal"
                font-weight="normal"
                text-decoration="normal"
-               x="59.35265533483195"
-               y="80.10585447324604"
+               x="322.533243571145"
+               y="288.47946447923175"
                text-anchor="middle"
-               id="text48">5</text>
+               id="text48">1</text>
+          </g>
+          <g
+             class="dcg-svg-axis-value dcg-svg-offcenter-axis-value"
+             id="g50">
+            <text
+               fill="none"
+               stroke="#ffffff"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="186.6938120113239"
+               y="393.124"
+               text-anchor="middle"
+               stroke-miterlimit="2"
+               stroke-width="3"
+               stroke-dasharray=""
+               id="text49">-1</text>
+            <text
+               fill="#000000"
+               stroke="none"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="186.6938120113239"
+               y="393.124"
+               text-anchor="middle"
+               id="text50">-1</text>
+          </g>
+          <g
+             class="dcg-svg-axis-value"
+             id="g52">
+            <text
+               fill="none"
+               stroke="#ffffff"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="189.5243784175739"
+               y="151.69789424753475"
+               text-anchor="middle"
+               stroke-miterlimit="2"
+               stroke-width="3"
+               stroke-dasharray=""
+               id="text51">1</text>
+            <text
+               fill="#000000"
+               stroke="none"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="189.5243784175739"
+               y="151.69789424753475"
+               text-anchor="middle"
+               id="text52">1</text>
+          </g>
+          <g
+             class="dcg-svg-axis-value"
+             id="g54">
+            <text
+               fill="none"
+               stroke="#ffffff"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="189.5243784175739"
+               y="28.41632401583778"
+               text-anchor="middle"
+               stroke-miterlimit="2"
+               stroke-width="3"
+               stroke-dasharray=""
+               id="text53">2</text>
+            <text
+               fill="#000000"
+               stroke="none"
+               font-family="Arial"
+               font-size="17px"
+               font-style="normal"
+               font-weight="normal"
+               text-decoration="normal"
+               x="189.5243784175739"
+               y="28.41632401583778"
+               text-anchor="middle"
+               id="text54">2</text>
           </g>
         </g>
         <g
            class="dcg-svg-axis-label"
-           id="g50">
+           id="g56">
           <text
              fill="none"
              stroke="#ffffff"
-             font-family="Arial"
-             font-size="20px"
-             font-style="normal"
+             font-family="Times"
+             font-size="24px"
+             font-style="italic"
              font-weight="normal"
              text-decoration="normal"
-             x="309.423828125"
-             y="241.92478660215335"
+             x="374.34765625"
+             y="309.3554644792317"
              text-anchor="start"
              stroke-miterlimit="2"
              stroke-width="3"
              stroke-dasharray=""
-             id="text49">w [rad/s]</text>
+             id="text55">x</text>
           <text
              fill="#000000"
              stroke="none"
-             font-family="Arial"
-             font-size="20px"
-             font-style="normal"
+             font-family="Times"
+             font-size="24px"
+             font-style="italic"
              font-weight="normal"
              text-decoration="normal"
-             x="309.423828125"
-             y="241.92478660215335"
+             x="374.34765625"
+             y="309.3554644792317"
              text-anchor="start"
-             id="text50">w [rad/s]</text>
+             id="text56">x</text>
         </g>
         <g
            class="dcg-svg-axis-label"
-           transform="translate(40.46422760045695,74.990234375) rotate(-90,0,0)"
-           id="g52">
+           transform="translate(163.4836069331989,32)"
+           id="g58">
           <text
              fill="none"
              stroke="#ffffff"
-             font-family="Arial"
-             font-size="20px"
-             font-style="normal"
+             font-family="Times"
+             font-size="24px"
+             font-style="italic"
              font-weight="normal"
              text-decoration="normal"
              x="0"
@@ -691,55 +762,55 @@
              stroke-miterlimit="2"
              stroke-width="3"
              stroke-dasharray=""
-             id="text51">T [Nm]</text>
+             id="text57">y</text>
           <text
              fill="#000000"
              stroke="none"
-             font-family="Arial"
-             font-size="20px"
-             font-style="normal"
+             font-family="Times"
+             font-size="24px"
+             font-style="italic"
              font-weight="normal"
              text-decoration="normal"
              x="0"
              y="0"
              text-anchor="start"
-             id="text52">T [Nm]</text>
+             id="text58">y</text>
         </g>
       </g>
     </g>
     <g
-       id="expressions-c413f9b1">
+       id="expressions-23f3d31c">
       <g
-         id="sketch-c413f9b1">
+         id="sketch-23f3d31c">
         <title
-           id="title52">Expression 1</title>
+           id="title58">Expression 1</title>
         <path
            fill="#c74440"
            stroke="none"
            paint-order="stroke fill markers"
            d=""
            fill-opacity="0.4"
-           id="path52" />
+           id="path58" />
         <g
-           id="g53">
+           id="g59">
           <path
              fill="none"
              stroke="#c74440"
              class="dcg-svg-curve"
              paint-order="fill stroke markers"
-             d=" M 0 300.50304664155857 L 0 300.50304664155857 L 21.386718749999993 299.3072516466729 L 48.4375 298.07179326797893 L 59.765625 297.71469178423155 L 60.7421875 297.93237044084464 L 61.42578125 298.3174945672342 L 62.109375 299.04140755489027 L 62.792968750000014 300.25545629324586 L 63.4765625 302.07364623209133 L 64.2578125 304.86193890787456 L 65.8203125 310.6480032110493 L 66.2109375 311.40578275567964 L 66.52084474526421 311.6072880477475 L 66.796875 311.43352699628514 L 67.08984375 310.84356699994476 L 67.48046875 309.32773061497676 L 67.87109375 306.6390362638581 L 68.16406250000001 302.75680754583806 L 68.35937500000001 297.6229463547356 L 68.5546875 287.5066123400594 L 68.75 267.5572429969696 L 69.04296875000001 211.49983131177547 L 69.43359375 135.15673636145596 L 69.7265625 111.2554738145559 L 70.01953125 102.65838390651426 L 70.3125 98.99414430256456 L 70.703125 96.40304409251088 L 71.09375000000001 94.94187205355459 L 71.48437500000001 94.29602611832668 L 71.77734375 94.28351254257565 L 72.0703125 94.6245165765586 L 72.4609375 95.53075720668794 L 73.046875 97.54868081818297 L 74.90234375 104.42702845102822 L 75.5859375 106.04499426307935 L 76.26953125 107.08625879563894 L 77.05078125 107.74373270546947 L 77.83203125 108.04347937018916 L 79.00390625000001 108.17175618148612 L 81.73828125000001 108.10704632683239 L 112.890625 106.73516859645682 L 136.23046875 105.4650280274431 L 155.859375 104.14031908080716 L 173.33984375 102.7031361227521 L 189.453125 101.11937235802144 L 204.4921875 99.3821933037381 L 218.75 97.47538365098215 L 232.421875 95.38437722761377 L 245.5078125 93.12039307955776 L 258.10546875 90.67892836739573 L 270.41015625 88.02854664127004 L 282.32421875 85.1960706748564 L 293.9453125 82.16613005588755 L 305.37109375 78.91610963924184 L 316.50390625 75.47810648545926 L 327.44140625 71.82755485182687 L 338.18359375 67.96756135093673 L 348.828125 63.8632738949365 L 359.27734375 59.553402536820386 L 369.62890625 54.99941308461018 L 379.8828125 50.19966074338822 L 390.0390625 45.153001693659604 L 400 39.91162346958561"
+             d=" M 0 270.3553828038249 L 0 270.3553828038249 L 59.47265625 270.2257497318706 L 71.38671875 269.9393605517397 L 79.29687500000001 269.5035429708236 L 85.44921875 268.9143197123127 L 90.62500000000001 268.1602931863749 L 95.11718749999999 267.24234056191546 L 99.12109374999999 266.1575661278085 L 102.73437499999999 264.91255327726884 L 106.15234375 263.457544860431 L 109.37499999999999 261.798328690459 L 112.5 259.88531222529264 L 115.52734375000001 257.7115214375954 L 118.45703125 255.27555891182897 L 121.38671874999999 252.48278867452964 L 124.4140625 249.1924599016641 L 127.44140624999999 245.46372568174442 L 130.56640625 241.13046759542488 L 133.69140625 236.28695655187036 L 136.81640625 230.92325112025884 L 140.0390625 224.84764178631139 L 143.359375 218.02458235904354 L 146.875 210.21264203595467 L 150.68359375 201.13784020423094 L 154.98046875 190.27154786086362 L 160.7421875 175.01816161505815 L 170.3125 149.64715865506437 L 174.31640625 139.7440985731193 L 177.5390625 132.365987901558 L 180.46875 126.25014052372163 L 183.10546875 121.31620356449875 L 185.546875 117.29247720686084 L 187.890625 113.9699654859572 L 190.0390625 111.42269457740807 L 191.9921875 109.54259987905135 L 193.75 108.218574271058 L 195.41015625 107.29666332983516 L 196.97265625 106.72565283210028 L 198.4375 106.45441437002424 L 199.90234375 106.44006447359573 L 201.3671875 106.68267062241446 L 202.83203125 107.18109250394292 L 204.39453125 107.99205045309569 L 206.0546875 109.16482074931787 L 207.8125 110.74826016460358 L 209.765625 112.90709493266579 L 211.9140625 115.74691357992836 L 214.2578125 119.36871690215003 L 216.69921875 123.67894383845348 L 219.3359375 128.88997562820836 L 222.265625 135.27082586810107 L 225.5859375 143.12402676998227 L 229.4921875 152.99784263076867 L 235.15625 168.01782778849332 L 244.43359375 192.62120508390177 L 248.92578125 203.83319458378483 L 252.734375 212.7323497531719 L 256.25 220.35933155498012 L 259.5703125 226.9945495947017 L 262.79296875 232.88130944127013 L 266.015625 238.21383815713497 L 269.140625 242.85912240635113 L 272.36328125 247.12189088235286 L 275.48828125 250.765890188864 L 278.61328125 253.95585964146133 L 281.640625 256.64357718817814 L 284.66796875 258.9673651348882 L 287.79296875 261.01966265281595 L 291.015625 262.8061470760854 L 294.3359375 264.3379150675776 L 297.8515625 265.66384217338094 L 301.5625 266.78303401000716 L 305.6640625 267.7429498046896 L 310.25390625 268.5414464116511 L 315.52734375 269.1849594685682 L 321.77734375 269.67714136999905 L 329.78515625 270.0320672209763 L 341.11328125 270.25078166097063 L 361.81640625 270.3450091593701 L 400 270.3553988566313"
              stroke-linecap="round"
              stroke-linejoin="round"
              stroke-miterlimit="10"
              stroke-width="3.5"
              stroke-dasharray=""
-             id="path53" />
+             id="path59" />
         </g>
       </g>
     </g>
     <g
-       id="labels-c413f9b1" />
+       id="labels-23f3d31c" />
     <g
-       id="g54" />
+       id="g60" />
   </g>
 </svg>

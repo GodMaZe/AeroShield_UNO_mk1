@@ -1,2 +1,67 @@
 In this chapter we will describe the process of designing a controller for the system using the derived non-linear model.
 We will discuss the selection of the control strategy, the design of the controller, and the tuning of its parameters.
+
+\subsection{State Observers} \label{sec:controller_observers}
+To estimate the states of the system, we will implement a state observer.
+Given the non-linear nature of the system, we will consider using an \acrshort{ekf} as our state observer.
+While also evaluating the performance of a standard \acrshort{kf} for comparison.
+
+\subsubsection{Kalman Filter}
+The \acrshort{kf} is an optimal state estimator for linear systems with noise characterized by Gaussian distribution.
+It uses a series of measurements observed over time, containing the measurement noise and produces estimates of observable states, while incorporating the process noise into the estimation.
+\acrshort{kf} operates in a two-step process - prediction and update, as described in \cite{iqbal:2019}.
+The steps of the \acrshort{kf} algorithm are as follows:
+\begin{itemize}
+    \item \textbf{Prediction Step:} In this step, the filter predicts the next state of the system and the state error covariance matrix based on the current state estimate and the identified linearized system model.
+        \begin{enumerate}
+            \item State Prediction: The filter uses the system model to predict the next state using the current state estimate and control input, simply by applying the \acrshort{ss} transition equations. %TODO: Add reference to equations
+            \item Error Covariance Prediction: The filter predicts the error covariance matrix, which represents the uncertainty in the state estimate, the lower this value the more certain the estimate is.
+        \end{enumerate}
+    \item \textbf{Update Step:} In this step, the filter updates the Kalman gain, state estimate, output estimate and error covariance matrix using the new measurement data, taking into account the uncertainty in both the prediction and the measurement.
+        \begin{enumerate}
+            \item Kalman Gain Calculation: The filter calculates the Kalman gain, which determines how much weight to give the new measurement in comparison to the prediction.
+            \item State Update: The filter updates the state estimate by combining the predicted state and the error between the predicted output and the actual measurement, weighted by the Kalman gain.
+            \item Output Update: The filter updates the output estimate based on the updated state estimate.
+            \item Error Covariance Update: The filter updates the error covariance matrix to reflect the reduced uncertainty after incorporating the new measurement.
+        \end{enumerate}
+\end{itemize}
+
+Let us provide the mathematical formulation of the \acrshort{kf} algorithm.
+
+The \acrshort{kf} algorithm consists of the following steps:
+\begin{itemize}
+    \item \textbf{Prediction Step:}
+        \begin{align}
+            \hat{\mathbf{x}}_{k|k-1} &= A \hat{\mathbf{x}}_{k-1|k-1} + B u_{k-1} \label{eq:kf_state_prediction} \\
+            P_{k|k-1} &= A P_{k-1|k-1} \transpose{A} + Q \label{eq:kf_error_covariance_prediction}
+        \end{align}
+    \item \textbf{Update Step:}
+        \begin{align}
+            S_k &= C P_{k|k-1} \transpose{C} + R \label{eq:kf_innovation_covariance} \\
+            K_k &= P_{k|k-1} \transpose{C} S_k^{-1} \label{eq:kf_kalman_gain} \\
+            e_k &= y_k - \transpose{C} \hat{\mathbf{x}}_{k|k-1} \label{eq:kf_innovation} \\
+            \hat{\mathbf{x}}_{k|k} &= \hat{\mathbf{x}}_{k|k-1} + K_k e_k  \label{eq:kf_state_update}\\
+            P_{k|k} &= (I - K_k C) P_{k|k-1} \label{eq:kf_error_covariance_update}
+        \end{align}
+\end{itemize}
+Where:
+\begin{itemize}
+    \item \( \hat{\mathbf{x}}_{k|k-1} \) is the predicted state estimate at time step \( k \) given observations up to time step \( k-1 \).
+    \item \( P_{k|k-1} \) is the predicted error covariance matrix at time step \( k \).
+    \item \( Q \) is the process noise covariance matrix.
+    \item \( S_k \) is the innovation covariance matrix.
+    \item \( K_k \) is the Kalman gain at time step \( k \).
+    \item \( e_k \) is the innovation or measurement residual at time step \( k \).
+    \item \( R \) is the measurement noise covariance matrix.
+    \item \( I \) is the identity matrix.
+    \item \( \hat{\mathbf{x}}_{k|k} \) is the updated state estimate at time step \( k \) after incorporating the measurement.
+    \item \( P_{k|k} \) is the updated error covariance matrix at time step \( k \).
+    \item \( y_k \) is the measurement at time step \( k \).
+\end{itemize}
+Furthermore, we can rewrite the equation \eqref{eq:kf_kalman_gain} for Kalman gain \( K_k \) to a form that can be more computationally stable, because it avoids the direct inversion of the innovation covariance matrix \( S_k \):
+\begin{equation}
+    K_k = \transpose{(\transpose{(S_k^{-1})} C \transpose{P_{k|k-1}})}
+    \label{eq:kf_kalman_gain_stable}
+\end{equation}
+This form leverages the properties of matrix transposition and inversion to improve numerical stability during computation, especially when dealing with ill-conditioned matrices. This approach is particularly useful in practical implementations of the Kalman filter where numerical precision is a concern and when working with low valued covariance matrices.
+Because to provided form in \eqref{eq:kf_kalman_gain_stable} can be solved using linear system solvers that are generally more stable than direct matrix inversion.

@@ -161,6 +161,199 @@
       \verb https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/drageq.html
       \endverb
     \endentry
+    \entry{kailath1980linear}{incollection}{}{}
+      \name{author}{1}{}{%
+        {{hash=3297c2548ebd80329c7f81a3738ba001}{%
+           family={Kailath},
+           familyi={K\bibinitperiod},
+           given={T.},
+           giveni={T\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Prentice-Hall}%
+      }
+      \strng{namehash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{fullhash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{fullhashraw}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{bibnamehash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{authorbibnamehash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{authornamehash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{authorfullhash}{3297c2548ebd80329c7f81a3738ba001}
+      \strng{authorfullhashraw}{3297c2548ebd80329c7f81a3738ba001}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9780135369616}
+      \field{series}{Information and System Sciences Series}
+      \field{title}{Linear Systems}
+      \field{year}{1980}
+      \verb{urlraw}
+      \verb https://books.google.sk/books?id=ggYqAQAAMAAJ
+      \endverb
+      \verb{url}
+      \verb https://books.google.sk/books?id=ggYqAQAAMAAJ
+      \endverb
+    \endentry
+    \entry{whalen:2015}{incollection}{}{}
+      \name{author}{4}{}{%
+        {{hash=62632d8082879d26ffa1577533442f51}{%
+           family={Whalen},
+           familyi={W\bibinitperiod},
+           given={Andrew\bibnamedelima J},
+           giveni={A\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=b8f52d3692b48f5a451a29f19258e5b4}{%
+           family={Brennan},
+           familyi={B\bibinitperiod},
+           given={Sean\bibnamedelima N},
+           giveni={S\bibinitperiod\bibinitdelim N\bibinitperiod}}}%
+        {{hash=c5b1cbb520fbbc4cb56e4ce6fbbee955}{%
+           family={Sauer},
+           familyi={S\bibinitperiod},
+           given={Timothy\bibnamedelima D},
+           giveni={T\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=f4be1c2bbad8d10fe9016e11c0e3aab1}{%
+           family={Schiff},
+           familyi={S\bibinitperiod},
+           given={Steven\bibnamedelima J},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Physical Society (APS)}%
+      }
+      \strng{namehash}{0a5057845acd6059e0898940056a51d9}
+      \strng{fullhash}{0a5057845acd6059e0898940056a51d9}
+      \strng{fullhashraw}{0a5057845acd6059e0898940056a51d9}
+      \strng{bibnamehash}{0a5057845acd6059e0898940056a51d9}
+      \strng{authorbibnamehash}{0a5057845acd6059e0898940056a51d9}
+      \strng{authornamehash}{0a5057845acd6059e0898940056a51d9}
+      \strng{authorfullhash}{0a5057845acd6059e0898940056a51d9}
+      \strng{authorfullhashraw}{0a5057845acd6059e0898940056a51d9}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Phys. Rev. X.}
+      \field{number}{1}
+      \field{title}{Observability and controllability of nonlinear networks: The role of symmetry}
+      \field{volume}{5}
+      \field{year}{2015}
+      \keyw{Biological Physics; Complex Systems; Nonlinear Dynamics}
+    \endentry
+    \entry{iqbal:2019}{thesis}{}{}
+      \name{author}{1}{}{%
+        {{hash=665c819d8d73003e96db2fd5a5c9df2e}{%
+           family={Iqbal},
+           familyi={I\bibinitperiod},
+           given={Azeem},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{institution}{2}{%
+        {University Of Management}%
+        {Technology}%
+      }
+      \strng{namehash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{fullhash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{fullhashraw}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{bibnamehash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{authorbibnamehash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{authornamehash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{authorfullhash}{665c819d8d73003e96db2fd5a5c9df2e}
+      \strng{authorfullhashraw}{665c819d8d73003e96db2fd5a5c9df2e}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Applications of an Extended Kalman Filter in nonlinear mechanics}
+      \field{type}{mathesis}
+      \field{year}{2019}
+    \endentry
+    \entry{KOU197389}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=aa5d293aaf94d20cba5c8af9e84829e3}{%
+           family={Kou},
+           familyi={K\bibinitperiod},
+           given={Shauying\bibnamedelima R.},
+           giveni={S\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=8d8b0bc0df2c3ed024b699322926a927}{%
+           family={Elliott},
+           familyi={E\bibinitperiod},
+           given={David\bibnamedelima L.},
+           giveni={D\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=2810c58a411956ac7d07f65d56216cd0}{%
+           family={Tarn},
+           familyi={T\bibinitperiod},
+           given={Tzyh\bibnamedelima Jong},
+           giveni={T\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \strng{namehash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{fullhash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{fullhashraw}{5436f9b14fff21271e69224eccbb35da}
+      \strng{bibnamehash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{authorbibnamehash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{authornamehash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{authorfullhash}{5436f9b14fff21271e69224eccbb35da}
+      \strng{authorfullhashraw}{5436f9b14fff21271e69224eccbb35da}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{The purpose of this paper is to investigate the problem of observability of nonlinear systems. Two sufficient conditions of global observability of nonlinear systems are presented: (1) the ratio condition which is the generalization of Fujisawa and Kuh's (1971) ratio condition of circuit theory, (2) the strongly positive semidefinite condition. The relationships between these two conditions as well as the condition of positive definiteness of Fitts (1970) are given.}
+      \field{issn}{0019-9958}
+      \field{journaltitle}{Information and Control}
+      \field{number}{1}
+      \field{title}{Observability of nonlinear systems}
+      \field{volume}{22}
+      \field{year}{1973}
+      \field{pages}{89\bibrangedash 99}
+      \range{pages}{11}
+      \verb{doi}
+      \verb https://doi.org/10.1016/S0019-9958(73)90508-1
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/S0019995873905081
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/S0019995873905081
+      \endverb
+    \endentry
+    \entry{hermann1977nonlinear}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=8c20ef1faa8d361a368d7ee13a4c2f39}{%
+           family={Hermann},
+           familyi={H\bibinitperiod},
+           given={R.},
+           giveni={R\bibinitperiod}}}%
+        {{hash=073068ed8640366eb33bab2d1ed19788}{%
+           family={Krener},
+           familyi={K\bibinitperiod},
+           given={A.},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{fullhash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{fullhashraw}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{bibnamehash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{authorbibnamehash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{authornamehash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{authorfullhash}{73d1d6994ee5a1efc9ec644010c6481f}
+      \strng{authorfullhashraw}{73d1d6994ee5a1efc9ec644010c6481f}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{IEEE Transactions on Automatic Control}
+      \field{number}{5}
+      \field{title}{Nonlinear controllability and observability}
+      \field{volume}{22}
+      \field{year}{1977}
+      \field{pages}{728\bibrangedash 740}
+      \range{pages}{13}
+      \verb{doi}
+      \verb 10.1109/TAC.1977.1101601
+      \endverb
+      \keyw{Controllability;Observability;Control systems;State-space methods;Linear systems;Vectors;Nonlinear systems;Kalman filters;Control system synthesis;Biological control systems}
+    \endentry
   \enddatalist
 \endrefsection
 \endinput

@@ -1,1 +1,27 @@
-Here we will summarize the key findings of the project, reflect on the challenges encountered during the modeling and controller design process, and suggest potential directions for future work to enhance the system's performance and robustness.
+We have sucecssfully finished 83.33\% from the very first task listed in the tasks. We have completed the detailed system description, analyzed the system's inputs and outputs, proposed and conducted experiments to measure the static characteristic, we successfully extracted the system's static characteristic from the measured data.
+We touched upon the possibility of practical aspects of implementing the control algorithms on a \acrshort{mcu}, however we did not go into detail about the implementation itself, because we have yet to design the control system, but we have laid the groundwork for it by measuring the order of communication delays, between the \acrshort{mcu} and MATLAB in \secref{sec:communication_timing_measurement}.
+This section showcases the functionality of the implemented communication protocol and the logic behind the order of operations, ensuring that the control inputs are sent and the output data is received in a timely manner.
+
+We prepared the ground for system identification by presenting the model representations to be used in the identification process, including the control design process.
+Upon completing the physical modeling of the system using the Lagrange equations, we obtained a nonlinear model of the system, which can be linearized around an \acrshort{op} to derive a linearized \acrshort{ss} model, thus assessing the possibilities for mathematical modeling of the system as 100\% complete.
+Furthermore, we took a step further and presented different types of friction models that can be used to enhance the accuracy of the derived models.
+
+we have outlined the goals and objectives of this thesis in the introduction, which we are steadily progressing towards. We have mentioned control strategies such as \acrshort{lqr} and \acrshort{mpc}, both of which we have successfully implemented in MATLAB for out system and tested on the real system.
+
+
+
+\section{Future Work} \label{sec:future_work}
+We will present the results of the control design and implementation in the upcoming chapters, or unfinished chapters. We have laid some of the groundwork needed for the controller design, by discussing state observers such as the \acrshort{kf} and \acrshort{ekf}, which will be used to estimate the states of the system for feedback in the control loop.
+Having reviewed and described the \acrshort{kf} algorithm in \secref{sec:controller_observers}, we are now prepared to implement it in the control system. Furthermore, we will also implement the \acrshort{ekf} using the identified nonlinear model to compare its performance against the standard \acrshort{kf}.
+
+In the next chapters we will add the missing pieces of the puzzle, such as the step response, impulse response, free swing response (nonlinear model parameters identification) to be used in the system identification process, and finally we will design and implement the controllers using the derived models, proposed controller strategies in the introduction and state estimators.
+Experiments concerning the data required for the dynamic characteristic, impulse characteristic and free swing response have been concluded.  We just need to process the data and extract the required information from it.
+
+At the same time, we will attempt to identify the noise characteristics of the system, which will be used to tune the process and measurement noise covariance matrices \( Q \) and \( R \) of the \acrshort{kf} and \acrshort{ekf}.
+Physical model of the system has been derived, while this report only presents the final equations, the complete derivation process is documented in paper form, which can be provided upon request, we will be adding the derivation process into the thesis instead of the final equations only.
+
+An attempt to add reactive physical constraints model to the simulation will be made (without saturating the angular position of the system), such as angular limits of the pendulum, but model it by either a stiff spring-damper system at the limits, or by simply inversing the velocity with a damping factor when the limits are hit.
+All the necessary MATLAB scripts for all the controllers mentioned in the introduction are ready and tested with an already identified linearized model of the system, will be adding the implementation details and simulation results into the thesis as well. We have already tested the \acrshort{lqr} + \acrshort{kf} on the real system, and it performed satisfactorily, implemented direcrly on an \acrshort{mcu}.
+
+Only one controller design remains to be implemented and tested, the Nonlinear model predictive control (\acrshort{nmpc}), which we will be working on in the upcoming weeks, after successfully integrating the newly identified physical model into the \acrshort{mpc} + \acrshort{ekf} and \acrshort{lqr} + \acrshort{ekf} frameworks.
+After successful integration in the mentioned control framework, we can move onto implementing a new control system, we have no prior experience with \acrshort{nmpc}, thus this will be a learning experience for us as well.

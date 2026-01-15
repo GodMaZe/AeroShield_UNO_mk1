@@ -2401,6 +2401,20 @@
     <bcf:citekey order="2" intorder="1">altpeter:1999</bcf:citekey>
     <bcf:citekey order="2" intorder="2">de2000control</bcf:citekey>
     <bcf:citekey order="3" intorder="1">Benson_1999</bcf:citekey>
+    <bcf:citekey order="4" intorder="1">kailath1980linear</bcf:citekey>
+    <bcf:citekey order="4" intorder="2">whalen:2015</bcf:citekey>
+    <bcf:citekey order="4" intorder="3">iqbal:2019</bcf:citekey>
+    <bcf:citekey order="5" intorder="1">iqbal:2019</bcf:citekey>
+    <bcf:citekey order="6" intorder="1">KOU197389</bcf:citekey>
+    <bcf:citekey order="7" intorder="1">hermann1977nonlinear</bcf:citekey>
+    <bcf:citekey order="7" intorder="2">whalen:2015</bcf:citekey>
+    <bcf:citekey order="8" intorder="1">hermann1977nonlinear</bcf:citekey>
+    <bcf:citekey order="8" intorder="2">whalen:2015</bcf:citekey>
+    <bcf:citekey order="9" intorder="1">hermann1977nonlinear</bcf:citekey>
+    <bcf:citekey order="9" intorder="2">kailath1980linear</bcf:citekey>
+    <bcf:citekey order="9" intorder="3">whalen:2015</bcf:citekey>
+    <bcf:citekey order="9" intorder="4">iqbal:2019</bcf:citekey>
+    <bcf:citekey order="10" intorder="1">iqbal:2019</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

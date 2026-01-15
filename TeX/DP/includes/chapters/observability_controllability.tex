@@ -1,0 +1,128 @@
+To ensure that we can estimate the states of the system accurately, we will perform an observability analysis for the derived model of the pendulum system.
+
+\subsection{Observability of linear systems}
+For linear systems, we can use the observability matrix to mathematically determine if the system is observable.
+The observability matrix \( \mathcal{O} \) is defined as:
+\begin{equation}
+    \mathcal{O} \equiv \begin{bmatrix}
+        C \\
+        CA \\
+        CA^2 \\
+        \vdots \\
+        CA^{n-1}
+    \end{bmatrix}
+    \label{eq:observability_matrix}
+\end{equation}
+Where \( A \) is the state matrix, \( C \) is the output matrix and \( n \) is the number of states - also called the order of the system, dimensionality.\cite{kailath1980linear, whalen:2015, iqbal:2019}
+
+A linear system is considered observable if the observability matrix is of rank equal to the number of states \( n \).
+A mathematical representation of this condition is given by:
+\begin{equation}
+    \text{rank}(\mathcal{O}) = n
+    \label{eq:observability_condition}
+\end{equation}
+Otherwise, if the rank of the observability matrix is less than \( n \), further analysis is required to determine which states are observable. Thesis \cite{iqbal:2019} proposes method called \emph{Kalman Decomposition} to decompose the system into observable and unobservable subspaces.
+We will further prove the observability of our linearized pendulum system in Chapter \secref{sec:controller_observers} when we design the state observer, using the equations \eqref{eq:observability_matrix} and \eqref{eq:observability_condition}.
+%% TODO: Add example of observability analysis of linearized pendulum system.
+
+
+
+\subsection{Observability of nonlinear systems}
+For nonlinear systems, the observability analysis is more complex.
+An approach exists to the problem using the generalized ratio condition of circuit theory and the condition of positive definitness; described in the following paper \cite{KOU197389}, relying on Taylor series expansion applied to the measurement function around the initial state and time.
+We chose a similar approach of applying Lie derivatives to analyze the observability of nonlinear systems as proposed in articles \cite{hermann1977nonlinear, whalen:2015}.
+Let us consider a nonlinear system - with no input, represented by Nonlinear state-space (\acrshort{nss}) form, state transition given as
+\begin{equation}
+    \mathbf{\dot{x}} = \mathbf{f}(t, \mathbf{x})
+    \label{eq:nss_state_transition}
+\end{equation}
+and measurement function
+\begin{equation}
+    \mathbf{y} = \mathbf{h}(t, \mathbf{x})
+    \label{eq:nss_measurement}
+\end{equation}
+where \( \mathbf{x} \in \mathbb{R}^n \) is the state vector, \( \mathbf{y} \in \mathbb{R}^m \) is the output vector, \( \mathbf{f}: \mathbb{R} \times \mathbb{R}^n \rightarrow \mathbb{R}^n \) is a smooth vector field representing the system dynamics, and \( \mathbf{h}: \mathbb{R} \times \mathbb{R}^n \rightarrow \mathbb{R}^m \) is a smooth function representing the output.
+To analyze the observability of this nonlinear system, we will use Lie derivatives of the measurement function to construct the observability matrix \( \mathcal{O} \) as explicitly stated in \cite{hermann1977nonlinear, whalen:2015}.
+The Lie derivative of a function \( \mathbf{y} \) along a vector field \( \mathbf{f} \) is defined as:
+\begin{equation}
+    \begin{aligned}
+        \Lie_{\mathbf{f}}^0(\mathbf{y}(\mathbf{x})) &= \mathbf{y}(\mathbf{x}) \\
+        \Lie_{\mathbf{f}}^1(\mathbf{y}(\mathbf{x})) &= \frac{\partial \mathbf{y}(\mathbf{x})}{\partial \mathbf{x}} \cdot \mathbf{f}(\mathbf{x}) = \nabla_{\mathbf{x}}\Lie_{\mathbf{f}}^0(\mathbf{y}(\mathbf{x})) \cdot \mathbf{f}(\mathbf{x}) \\
+        \Lie_{\mathbf{f}}^2(\mathbf{y}(\mathbf{x})) &= \parx \left( \Lie_{\mathbf{f}}^1(\mathbf{y}(\mathbf{x})) \right) \cdot \mathbf{f}(\mathbf{x}) = \nabla_{\mathbf{x}}\Lie_{\mathbf{f}}^1(\mathbf{y}(\mathbf{x})) \cdot \mathbf{f}(\mathbf{x}) \\
+        &\vdots \\
+        \Lie_{\mathbf{f}}^n(\mathbf{y}(\mathbf{x})) &= \parx \left( \Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x})) \right) \cdot \mathbf{f}(\mathbf{x}) = \nabla_{\mathbf{x}}\Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x})) \cdot \mathbf{f}(\mathbf{x})
+    \end{aligned}
+    \label{eq:lie_derivative}
+\end{equation}
+Using the Lie derivatives defined in \eqref{eq:lie_derivative}, we can construct the observability mapping \( \phi \) for the nonlinear system as follows:
+\begin{equation}
+    \phi = \begin{bmatrix}
+        \Lie_{\mathbf{f}}^0(\mathbf{y}(\mathbf{x})) \\
+        \Lie_{\mathbf{f}}^1(\mathbf{y}(\mathbf{x})) \\
+        \Lie_{\mathbf{f}}^2(\mathbf{y}(\mathbf{x})) \\
+        \vdots \\
+        \Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x}))
+    \end{bmatrix}
+    \label{eq:nonlinear_observability_mapping_matrix}
+\end{equation}
+The observability matrix \( \mathcal{O} \) for the nonlinear system is then given by the Jacobian of the observability mapping \( \phi \) with respect to the state vector \( \mathbf{x} \):
+\begin{equation}
+    \begin{aligned}
+    \mathcal{O} \equiv \frac{\partial \phi}{\partial \mathbf{x}} = \nabla_{\mathbf{x}} \phi &= \begin{bmatrix}
+        \nabla_{\mathbf{x}} \Lie_{\mathbf{f}}^0(\mathbf{y}(\mathbf{x})) \\
+        \nabla_{\mathbf{x}} \Lie_{\mathbf{f}}^1(\mathbf{y}(\mathbf{x})) \\
+        \nabla_{\mathbf{x}} \Lie_{\mathbf{f}}^2(\mathbf{y}(\mathbf{x})) \\
+        \vdots \\
+        \nabla_{\mathbf{x}} \Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x}))
+    \end{bmatrix} \\
+        &= \begin{bmatrix}
+            \parxi{1} \left( \Lie_{\mathbf{f}}^{0}(\mathbf{y}(\mathbf{x})) \right) && \dots && \parxi{n} \left( \Lie_{\mathbf{f}}^{0}(\mathbf{y}(\mathbf{x})) \right) \\
+            \vdots && \ddots && \vdots \\
+            \parxi{1} \left( \Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x})) \right) && \dots && \parxi{n} \left( \Lie_{\mathbf{f}}^{n-1}(\mathbf{y}(\mathbf{x})) \right)
+        \end{bmatrix}
+    \end{aligned}
+    \label{eq:nonlinear_observability_matrix}
+\end{equation}
+When the observability matrix \( \mathcal{O} \) defined in \eqref{eq:nonlinear_observability_matrix} is of rank equal to the number of states \( n \), thus satisfying the condition mentioned in \eqref{eq:observability_condition}, the nonlinear system is considered locally observable around the point of linearization.
+%% TODO: Add example of observability analysis of nonlinear pendulum system.
+
+\subsection{Controllability of linear systems}
+Controllability is a property of a system that determines whether it is possible to drive the system's state from initial state to any desired final state within system's constraints using appropriate control inputs and in finite time. In our case of the pendulum system a single control input is available acting on the system in a specific direction,
+thus the system inherently containing uncontrollable states.
+
+Imagine the pendelum being in an inital state of angular position as \( \theta = \ang{210} \) and angular velocity \( \dot{\theta} = 0 \) rad/s, it is physically impossible to provide any control input to drive the pendulum from this initial state - let us call such a state a deadlock state.
+For linear systems, we can use the controllability matrix to mathematically determine if the system is controllable.
+The controllability matrix \( \mathcal{C} \) is defined as:
+\begin{equation}
+    \mathcal{C} \equiv \begin{bmatrix}
+        B & AB & A^2B & \dots & A^{n-1}B
+    \end{bmatrix}
+    \label{eq:controllability_matrix}
+\end{equation}
+Where \( A \) is the state matrix, \( B \) is the input matrix and \( n \) is the number of states.\cite{hermann1977nonlinear, kailath1980linear, whalen:2015, iqbal:2019}
+A linear system is considered controllable if the controllability matrix is of rank equal to the number of states \( n \).
+A mathematical representation of this condition is given by:
+\begin{equation}
+    \text{rank}(\mathcal{C}) = n
+    \label{eq:controllability_condition}
+\end{equation}
+Otherwise, if the rank of the controllability matrix is less than \( n \), system is deemed uncontrollable.
+We will further prove the controllability of our linearized pendulum system in Chapter \secref{sec:controller_observers} when we design the state observer, using the equations \eqref{eq:controllability_matrix} and \eqref{eq:controllability_condition}.
+%% TODO: Add example of controllability analysis of linearized pendulum system.
+
+%% TODO: Add subsection Controllability of nonlinear systems? (Need to look into it more)
+% \subsection{Controllability of nonlinear systems}
+
+\subsection{System's Observability Analysis} \label{sec:controller_observers_observability}
+Before implementing the state observer, we need to ensure that the system is observable.
+Observability is a property that determines whether the internal states of a system can be determined from its outputs.
+We will perform an observability analysis for both the linearized and non-linear models of the system as described in \secref{sec:observability_controllability}.
+
+% \subsubsection{Observability of the linearized system} \label{sec:controller_observers_observability_linear}
+% Using the \acrshort{ss} model of the pendulum system defined in \secref{sec:system_representations}, we can construct the observability matrix \( \mathcal{O} \) using the equation \eqref{eq:observability_matrix}.
+% Calculating the rank of the observability matrix \( \mathcal{O} \), we find that it is equal to the number of states \( n = 2 \), thus satisfying the condition mentioned in \eqref{eq:observability_condition}.
+% This confirms that the linearized pendulum system is observable.
+% \subsubsection{Observability of the nonlinear system} \label{sec:controller_observers_observability_nonlinear}
+% Using the \acrshort{nss} model of the pendulum system defined in \secref{sec:system_modeling}, we can construct the observability matrix \( \mathcal{O} \) using the equation \eqref{eq:nonlinear_observability_matrix}.
+% Calculating the rank of the observability matrix \( \mathcal{O} \), we find that it is equal to the number of states \( n = 2 \), thus satisfying the condition mentioned in \eqref{eq:observability_condition}.
+% This confirms that the non-linear pendulum system is locally observable around the point of linearization.

@@ -6,7 +6,7 @@ With the understanding gained from this analysis, we will discuss the possibilit
 Based on the conclusion of this discussion, we will either proceed to develop the physical model or identify a linearized \acrshort{ss} representation of the system at a certain \acrshort{op} for further controller design.
 
 
-\subsection{System Description}
+\subsection{System Description} \label{sec:system_description}
 The system under consideration is an actuated (propelled) pendulum consisting of a mass attached to the end of a rigid rod, which is free to swing in a vertical plane under the influence of gravity as can be seen on \figref{fig:pendulum}.
 The pendulum is actuated by a propeller directly attached to the motor shaft of a separately excited direct current (\acrshort{dc}) motor, which represents the attached mass on the end of the rod.
 
@@ -60,14 +60,14 @@ The process of gravity assisting the propeller in holding the pendulum in place 
 This implies the system is controllable within the angular range of \ang{0} to \ang{180}.
 
 
-\subsection{Communication}
-Throughout the thesis, we will be utilizing serial communication \acrshort{uart} between the \acrshort{mcu} and MATLAB for data acquisition and control signal transmission.
+\subsection{Communication} \label{sec:system_communication}
+Throughout the thesis, we will be utilizing serial communication \acrshort{usart} between the \acrshort{mcu} and MATLAB for data acquisition and control signal transmission.
 The \acrshort{mcu} will be responsible for reading the angular position from the rotary encoder, generating the \acrshort{pwm} signal to control the motor, and sending the measured data to MATLAB for further processing and analysis.
 MATLAB will handle the the more demanding tasks, such as data logging, real-time visualization, and controller computations, leveraging powerful computational capabilities on the host computer. This is especially useful during the experimental phase, where rapid prototyping and testing of different control strategies are required.
 This approach limits us to timing constraints imposed by the serial communication speed and MATLAB's processing time. Therefore, we will mainly choose sampling times in the range of $20$ms to $100$ms - where \emph{ms} stands for milliseconds, see the \tabref{tab:configurations_of_data_structure} for details.
 
 The synchronization between the \acrshort{mcu} and MATLAB will be handled by MATLAB, which will send commands to the \acrshort{mcu} in the form of control input, to which the \acrshort{mcu} will respond by sending back all the defined data, including the measured angular position and any other relevant signals.
-To ensure optimal performance, we will be using a baud rate of $250000$ for the serial communication. The data is stored within a union object containing the structure of the required data and its byte representation on the \acrshort{mcu} side.
+To ensure optimal performance, we will be using a baud rate of $250\,000$ for the serial communication. The data is stored within a union object containing the structure of the required data and its byte representation on the \acrshort{mcu} side.
 Allowing us to send and receive the data in binary format, minimizing the amount of data transmitted over the serial link and reducing latency. The data structure used for sending the data from the \acrshort{mcu} to MATLAB is defined in \coderef{code:data_structure} and more details can be found in \tabref{tab:configurations_of_data_structure}.
 
 \begin{lstlisting}[caption={Data structure used for serial communication between the \acrshort{mcu} and MATLAB.}, label={code:data_structure}, language=C++]
@@ -97,7 +97,7 @@ union AeroDataUnion
         Configurations & Value/Range & Unit \\
         \midrule
         Baud rate & $250\,000$ & [bps] \\
-        Sampling time & $20$ to $100$ & [ms] \\
+        Sampling time & $20$ to $100$ & [\acrshort{ms}] \\
         Out bytes &  24 & [bytes] \\
         In bytes & 4 & [bytes] \\
         \bottomrule
@@ -112,12 +112,12 @@ union AeroDataUnion
         \toprule
         Configurations & Value/Range & Unit & Byte size & Type \\
         \midrule
-        time & $0$ to $4\,294\,967\,295$ & [$\mu$s] & 4 & unsigned long \\
+        time & $0$ to $4\,294\,967\,295$ & [\acrshort{us}] & 4 & unsigned long \\
         output & $-50$ to $210$ & [\si{\degree}] & 4 & float \\
         control & $0$ to $100$ & [\%] & 4 & float \\
         potentiometer & $0$ to $100$ & [\%] & 4 & float \\
-        control\_time & $0$ to $4\,294\,967\,295$ & [$\mu$s] & 4 & unsigned long \\
-        dt & $0$ to $4\,294\,967\,295$ & [$\mu$s] & 4 & unsigned long \\
+        control\_time & $0$ to $4\,294\,967\,295$ & [\acrshort{us}] & 4 & unsigned long \\
+        dt & $0$ to $4\,294\,967\,295$ & [\acrshort{us}] & 4 & unsigned long \\
         \bottomrule
         data packet size &  &  & 24 & bytes \\
         \bottomrule
@@ -155,15 +155,14 @@ This entire process is illustrated in \figref{fig:communication_process}.
         }
 
         \figcaption{
-            Communication process between the \acrshort{mcu} and MATLAB.
+            Communication process between the \acrshort{mcu} and MATLAB, showcasing the proposed order of operations.
         }
         \label{fig:communication_process}
     }%vbox
 
 \end{center}
 Where the red colored signal represents the control input from MATLAB and the blue colored signal is for the data sent to MATLAB.
-
-The average time taken for the communication cycle was found to be approximately $3.156$ms.
+The average time taken for the communication cycle was found to be approximately $3.156$\acrshort{ms}.
 
 We have to assume the \acrshort{mcu} might skip a read operation, if the data arrives right after the \acrshort{mcu} attemptes to read it from the RX buffer, thus skipping the entire read-process for that one cycle. Resulting in the brief pause in the communication, before sending the data back to MATLAB.
 Or another likewise scenario is when the \acrshort{mcu} read the data, but the time it took to process the measurement, was long enough to result in the blank spot in the communication. This example was measured while using a baud rate of $115\,200$, meaning with baud rate set to $250\,000$ the time taken for the retrieval and transmittion of data is even lower.
@@ -182,8 +181,12 @@ The schematic diagram of the system is shown in \figref{fig:system_scheme}, wher
         \label{fig:system_scheme}
     }%vbox
 \end{center}
+We can see the scheme \figref{fig:system_scheme} illustrates the communication without explicitly specifying the order of operations, which was measured and verified in the previous section \secref{sec:communication_timing_measurement}. This schematic diagram servers as a high-level overview of the system's communication architecture.
+Where all the used communication channels are portrayed, while the order is not explicit, it can be inferred from the fact that the scheme contains input from the user, which represents the start of the measurement in MATLAB.
 
-\subsection{Control Input}
+The transmitted optimal control input in diagram abbreviated as \( u^* \) to the \acrshort{mcu}, is the requested control input for the current time step \( u^*(k) \), either computed by the control law or set to a constant value for open-loop measurements.
+
+\subsection{Control Input} \label{sec:control_input}
 While our system is controlled from MATLAB, the control input is used as the synchronization signal for the entire system. The control input received from MATLAB is further processed on the \acrshort{mcu} side to generate the appropriate \acrshort{pwm} signal for controlling the motor, which in turn controls the pendulum's motion.
 The control input signal is defined as a percentage value ranging from $0\%$ to $100\%$, representing the duty cycle of the \acrshort{pwm} signal. Yet, this percentage value is further mapped onto a single byte value ranging from $0$ to $255$, which is the actual value used to set the duty cycle of the \acrshort{pwm} signal on the \acrshort{mcu}.
 This mapping is done using a simple linear transformation, where $0\%$ corresponds to a byte value of $0$, and $100\%$ corresponds to a byte value of $255$. The mapping function can be expressed mathematically in the following form
@@ -218,7 +221,7 @@ Reading the control input from MATLAB in the \acrshort{mcu} is done using the se
 When new data is available, more precisly when the number of bytes available in the RX buffer is equal to the size of a single floating point value (4 bytes), the \acrshort{mcu} reads the data from the buffer and stores it in the data structure defined in \coderef{code:data_structure}.
 This ensures that the control input is always up-to-date and ready to be used for generating the \acrshort{pwm} signal. The same control input which was read from MATLAB is also sent back to MATLAB as part of the data structure, because it specifically belongs into the very step of the control loop - ensuring no discrepancies arise.
 
-\subsection{Measurable Output}
+\subsection{Measurable Output} \label{sec:measurable_output}
 The measurable output of the system is the angular position of the pendulum, which is measured using a rotary magnetic encoder AS5600. The encoder provides high-resolution angular position feedback via the Inter-Integrated Circuit (\acrshort{i2c}) communication protocol.
 Because of the predefined resolution of the encoder, the time it takes to read the angular position is non-negligible, thus we have to account for this delay in our system analysis and controller design.
 
@@ -250,7 +253,7 @@ The green colored signal represents the \acrshort{sda} - which carries the angul
         }
 
         \figcaption{
-            The whole communication cycle timing measurement including the encoder read timing.
+            One full communication cycle timing measurement including the encoder read timing, to verify the order of operations.
         }
         \label{fig:comms_all}
     }%vbox
@@ -258,8 +261,195 @@ The green colored signal represents the \acrshort{sda} - which carries the angul
 
 In the \figref{fig:comms_all} we see the real-time measured order of operations, the red colored signal represents the control input from MATLAB, the green colored signal represents \acrshort{sda} and the blue colored signal is for the data sent to MATLAB respectively. The figure clearly shows the order of operations defined earlier is maintained in real-time.
 
-\subsection{Disturbances} % include frictions
+\subsection{Disturbances} \label{sec:disturbances}
+The system is subject to various disturbances that can affect its performance and behavior.
+Categorizing the disturbances into internal and external disturbances, we can identify the following:
+\begin{itemize}
+    \item Internal Disturbances:
+    \begin{itemize}
+        \item Frictional forces within the motor and pendulum mechanism, which introduce non-linearities and affect the system's response.
+        \item Electrical noise in the motor driver circuitry, which can lead to fluctuations in the motor's performance.
+        \item Electrical noise in the sensor readings from the rotary encoder, which introduce inaccuracies in the measured angular position.
+    \end{itemize}
+    \item External Disturbances:
+    \begin{itemize}
+        \item Variations in supply voltage to the motor, which can affect the motor's torque output.
+        \item Environmental factors such as temperature changes, which can influence the motor's characteristics and frictional forces.
+        \item External forces acting on the pendulum, such as air currents or vibrations from the surrounding environment.
+    \end{itemize}
+\end{itemize}
 
-\subsection{Static Characteristic}
+The difference between internal and external disturbances lies in their origin. \emph{Internal disturbances} originate from within the system itself, such as friction. \emph{External disturbances}, on the other hand, originate outside of the system, such as variations in supply voltage or manual interference.
+When designing controllers for the system, it is crucial to consider these disturbances to ensure robust performance and stability under time varying conditions.
+We can model, predict and compensate for internal disturbances more effectively, because they are inherent to the system's dynamics - allowing for more accurate control strategies. That is if we can separate them from the external disturbances.
 
-\subsection{Dynamic Characteristic}
+While external disturbances are often unpredictable and harder to model, requiring more robust control techniques to mitigate their effects. We can attempt to rid the system of the external disturbances, by conducting the experiments in a controlled environment, where we can minimize the impact of external factors.
+Another approach is to design the controller to be robust against a certain range of external disturbances, e.g. let us assume the maximum external force acting on the pendulum is known, we can design the controller to handle this worst-case scenario.
+The implementation of such a robust control method, can be based on feedback control, where the controller monitors the system's input and output signals, and only enables the robust control mode when it detects significant deviations from the desired behavior - based on the experimental data, indicating the presence of external disturbances.
+
+We will primarily focus on addressing internal disturbances in our controller design, while also considering an added weight to the pendulum as an external disturbance, to evaluate the controller's robustness against such perturbations.
+Next, we will analyze the correctness of proposed statistical assumptions about the disturbances affecting the system, whether we can detect the deviations of the real-system from the modeled system, caused by this specific external disturbance.
+
+When employing an observer-based controller, we attemp to provide the observer with a model that accounts for the internal disturbances, allowing it to estimate the system's state more accurately. This improved state estimation can help the controller to compensate for the effects of internal disturbances, leading to better overall performance.
+In our case, we will implement a Kalman filter (\acrshort{kf}) and Extented Kalman filter (\acrshort{ekf}) as the observers - more about the observers in \secref{sec:observability_controllability}, which are well-suited for handling systems with internal disturbances and measurement noise.
+They optimally estimate the system's state based on the available measurements and a provided model of the system, taking into account the statistical properties of the measurement and process noise. We will discuss the differences between the two observers in more detail in the \secref{sec:controller}.
+At the end of the analysis, we will evaluate the performance of the designed controllers in the presence of both internal and external disturbances, assessing their robustness and effectivness in maintaining the desired system behavior.
+Additionally, we will analyze the accuracy of the state estimation provided by the observers, comparing the estimated states to the actual system states obtained from experimental data.
+
+\subsection{Static Characteristic} \label{sec:static_characteristic}
+Otherwise known as the steady-state characteristic, represents the relationship between the control input and the measurable output when the system is in a steady state.
+We will abbreviate all the parameters related to steady state with the subscript \((\cdot)_{\text{SS}}\), not to be confused with the \acrshort{ss} representation.
+
+\subsubsection{Experiment Design} \label{sec:static_characteristic_experiment_design}
+To measure the static characteristic of the system, we require knowledge about the system's inputs and outputs, which we have already defined in the previous \secref{sec:system_description}, \secref{sec:control_input} and \secref{sec:measurable_output}.
+In order to gather the necessary data for constructing the static characteristic, we will conduct an open-loop experiment where we systematically increase the control input from the minimum value of $0\%$ to the maximum value of $100\%$ in fixed increments.
+At each increment, we will allow the system to reach a steady state before moving to the next control input value. This ensures that the measured output accuratly reflects the system's response to the provided control input.
+
+It is crucial to determine the appropriate control input increment size and the duration to wait for the system to reach steady state at each step (in case the measurement is automated).
+A smaller increment in the control input will provide a more detailed static characteristic, but it will also increase the total experiment duration. Conversely, a large increment will reduce the experiment time but is very likely to miss important details about the system's behavior, especially in non-linear regions, e.g. Coloumb friction effects at low control inputs.
+We will choose an increment size of $1\%$, which provides a good balance between detail and experiment duration. Because we chose a smaller increment size, we can wait for a shorter duration at each step, as the system will not be subjected to large changes in control input, throughout the mostly linear regions of the static characteristic.
+We will wait for $10$ seconds at each step, which is sufficient for the system to reach steady state. Basing this duration on preliminary experiments conducted prior to the actual measurement. The experiment design is summarized in \tabref{tab:static_characteristic_experiment_design}.
+\begin{center}
+    \vspace{-10pt}
+    \tabcaption{Static characteristic experiment design}
+    \label{tab:static_characteristic_experiment_design}
+    \begin{tabular*}{\textwidth}{@{ \extracolsep{\fill}} lll}
+        \toprule
+        Parameter & Value/Range & Unit \\
+        \midrule
+        Control input range & $0\%$ to $100\%$ & [\%] \\
+        Control input increment & $1\%$ & [\%] \\
+        Steady state wait time & $10$ & [s] \\
+        Total number of steps & $101$ & [steps] \\
+        \bottomrule
+    \end{tabular*}
+\end{center}
+
+\subsubsection{Data Acquisition} \label{sec:static_characteristic_data_acquisition}
+To acquire the data for the static characteristic, we have implemented a MATLAB script that automates the entire process.
+The script is designed with ease-of-use in mind, allowing for quick setup and execution of the experiment. As all the parameters for the experiment are predefined in the script, but can be easily modified to suit different requirements.
+All the scripts contain specific parts dedicated to defining the experiment parameters, creating default repository folders for storing the logs, error handling in case the program unexpectedly terminates, initializing the communication with the \acrshort{mcu}, executing the control input sequence, and logging the measured output data.
+The script starts by clearing any previous data, figures, and console outputs to ensure a clean environment for the new experiment.
+It then creates the necessary folders for storing the logs - if not already present, and initializes all the parameters required for the experiment.
+After setting up the environment, the script steps into the error handling section, which ensures correct termination of the whole process, thus disconnecting the \acrshort{mcu} and saving any acquired data.
+Once within the error handling section, the script proceeds to initialize the \acrshort{usart} communication with the \acrshort{mcu}, while setting the correct baud rate and port.
+After successfully establishing the communication, the script enters the main experiment loop, where all the timing is handled within this loop in MATLAB. The script literally loops infinitely, until it is time to send the next control input value.
+The correctness of the timing is ensured by using MATLAB's \texttt{datetime("now")} function to get the current time, and comparing it to the time when the last control input was sent.
+When it is time to send the next control input, the script sends the value to the \acrshort{mcu}, waits for the response containing the measured output data, and logs the data into a preallocated array for further processing, and in case the experiment is interrupted, not all the data is lost.
+This process continues until either the stop condition is met (e.g., reaching the allocated time for the experiment), or the experiment is complete (all control input values have been sent and corresponding output data acquired).
+Afterwards, the script exists the error handling section, ensuring the proper disconnection from the \acrshort{mcu} and saving of the acquired data for further analysis.
+Finally, the script generates plots of the static characteristic, providing the visual confirmation of the measured data. A complete measurement can be seen on \figref{fig:static_characteristic_measurement}.
+
+\begin{center}
+    \vbox{%
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1\textwidth]{static_char/measurement.pdf}
+        }
+
+        \figcaption{
+            Measured output response in time, for the duration of the static characteristic measurement.
+        }
+        \label{fig:static_characteristic_measurement}
+    }%vbox
+\end{center}
+We can see in \figref{fig:static_characteristic_measurement} the system exhibiting nonlinear characteristics, with a deadzone at time near $0$s (seconds) and saturation near $500$s. We can observe the nonlinearities more clearly in \figref{fig:static_characteristic_zoomed}, where we zoom into the dead zone and saturation regions of the static characteristic.
+From the measured data, we can extract the steady-state output values corresponding to each control input value, which will further be used to construct the static characteristic of the system.
+
+\begin{center}
+    \vbox{%
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1\textwidth]{static_char/gain_response.pdf}
+        }
+
+        \figcaption{
+            Input-output characteristic of the system.
+        }
+        \label{fig:static_characteristic_gain_response}
+    }%vbox
+\end{center}
+In the \figref{fig:static_characteristic_gain_response} we can see the measured interval gain of the system, because it is before processing the data and extracting the steady-state values. Yet, it outlines the overall shape of the static characteristic, which we will further analyze in the next section.
+From this plot alone, we can already tell what control input values need to be, to reach certain output angles - useful for feedforward control strategies. Simply said, if we want to hold the pendulum at a certain angle, we can look up the required control input from this plot.
+If we were to design a feedforward branch for our controller, we could use the static characteristic (see \figref{fig:static_characteristic}) to determine the necessary control input for a desired output angle, e.g. 1-D lookup table with interpolation between the measured points.
+Allowing the controller to provide the necessary control input directly, without relying solely on feedback from the measured output. This may lead to unstable behavior, if the system is quick to react to changes in positive control input, but slow to react to negative control input requests from the controller.
+Due to the system's inherent asymmetry, where it can only actively accelerate in one direction (positive), while relying on gravity and friction to decelerate or move in the opposite direction (negative).
+If we design a very slow feedforward branch, it could still be beneficial for reducing steady-state errors and improving overall system performance, if we do not attempt to use it for aggressive maneuvers, where the system's dynamic characteristic plays a more significant role.
+
+\subsubsection{Data Processing} \label{sec:static_characteristic_data_processing}
+After successfully acquiring the data for the static characteristic, we proceed to process the data to extract the steady-state input/output values. This involves analyzing the logged data to identify the times when the system has reached steady state for each control input value.
+We can either manually inspect the data to determine the steady-state values or implement an automated algorithm to detect when the system has stabilized. In our case, we will implement a simple algorithm that calculates the average output value over a predefined time window at the end of each control input step.
+This approach is effective in filtering out any transient effects and noise, providing a reliable estimate of the steady-state output, because each steady-state output represents statistical average of the output over a certain time window at steady state.
+Once we have extracted the steady-state input/output pairs, we can plot the static characteristic of the system, which illustrates the relationship between the control input and the measurable output.
+This plot provides us with valuable insights into the finding linear regions and gains of the system, which can further be used to choose an \acrshort{op} when linearizing the system for controller design.
+Additionally, we can use the found \acrshort{op} to design an experiment for measuring the dynamic characteristic of the system, which will be discussed in section about Dynamic characteristic. %\secref{eq:dynamic_char}. %% TODO: add section for dynamic characteristic measurement.
+
+\begin{center}
+    \vbox{%
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1\textwidth]{static_char/measurement_zoom.pdf}
+        }
+
+        \figcaption{
+            Measured system response of the system, zoomed into the dead zone.
+        }
+        \label{fig:static_characteristic_zoomed}
+    }%vbox
+\end{center}
+
+In the zoomed plot of \figref{fig:static_characteristic_zoomed}, we can clearly see the process of selecting the steady-state output values for each control input step. All the markers in red represent the set of points used to construct the static characteristic of the system.
+
+Finally, we plot the static characteristic of the system in \figref{fig:static_characteristic}, which shows the relationship between the control input and the steady-state output.
+\begin{center}
+    \vbox{%
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1\textwidth]{static_char/ss_char_gain.pdf}
+        }
+
+        \figcaption{
+            Static characteristic of the system, extracted from the logged data.
+        }
+        \label{fig:static_characteristic}
+    }%vbox
+\end{center}
+
+\subsubsection{Polynomial Model}
+To gain a better approximation of the static characteristic and a smooth continues function for further analysis, or to replace a lookup table implementation, we can fit a polynomial model to the measured data.
+We will use MATLAB's built-in polynomial fitting functions to find the best-fitting polynomial of a chosen degree. Simply said, we will use the \texttt{polyfit} function to fit a polynomial to the linear part of the measured steady-state input/output pairs.
+Ranging from $2\%$ to $48\%$ of control input, where the system exhibits a mostly linear behavior. The choice of polynomial degree is crucial, as a higher degree polynomial may fit the data more closely but can also lead to overfitting, while a lower degree polynomial may not capture the characteristics of the system accurately enough.
+In this case we will choose a $3$rd order polynomial \eqref{eq:polynomial_model_3rd_degree}; which is an overkill for the mostly linear region. We want to show the reader how an overfitted polynomial looks like, thus we choose a higher degree polynomial to illustrate this point.
+The fitted polynomial model can be expressed mathematically in the following form
+\begin{equation}
+    y(u) = k_3 u^3 + k_2 u^2 + k_1 u + k_0.
+    \label{eq:polynomial_model_3rd_degree}
+\end{equation}
+After fitting the polynomial to the measured data, we can plot the fitted polynomial alongside the measured static characteristic to visually assess the quality of the fit. This is illustrated in \figref{fig:static_characteristic_polynomial_fit}.
+\begin{center}
+    \vbox{%
+        \makebox[\textwidth][c]{%
+            \includegraphics[width=1\textwidth]{static_char/ss_char_polyfit.pdf}
+        }
+
+        \figcaption{
+            Static characteristic of the system with fitted polynomial model.
+        }
+        \label{fig:static_characteristic_polynomial_fit}
+    }%vbox
+\end{center}
+The fitted polynomial model provides a smooth approximation of the static characteristic, which can be useful for further analysis and controller design, but is of higher degree than necessary for the mostly linear region of interest.
+Even though the polynomial fits the data well, with a small mean squared error (\acrshort{mse}), it may not be the most efficient representation for controller design purposes. Because of its higher degree, it may introduce unnecessary complexity into the controller design process.
+In such cases, a simpler linear model or a lower degree polynomial may be more appropriate, as they can capture the essential nuances of the system's behavior without adding unwanted complexity.
+The 3rd order polynomial with substituted coefficients for our system is as follows
+\begin{equation}
+    y(u) = 0.0004 u^3 + (-0.0289) u^2 + 2.1281 u - 3.3064.
+    \label{eq:polynomial_model_3rd_degree_substituted}
+\end{equation}
+Where \( y(u) \) is the steady-state output angle in degrees, and \( u \) is the control input percentage value. If look at the coefficients of the polynomial, we can see that the cubic and quadratic terms have relatively small coefficients compared to the other terms, indicating that their contribution to the overall output is minimal in the linear region of interest.
+Thus, we can fit a new polynomial of lower degree, e.g. 1st or 2nd order polynomial, to the same data and compare the results to see if they provide a sufficiently accurate representation of the static characteristic for our controller design purposes.
+Compare the terms of the newly fitted polynomial and see if the higher degree terms have significantly smaller coefficients, we may attempt to discard them for a simpler model and repeat the process until we reach a satisfactory balance between model accuracy and complexity.
+
+
+% \subsection{Dynamic Characteristic}
+% Also known as the transient characteristic or a step response, represents the system's response to a sudden change in the control input in steady state.
+
+% \subsection{Impulse Characteristic}
+% Represents the system's response to a suddent and brief change in the control input, modeled as the Dirac delta function. While this is hardly achievable in real-world systems, we will approximate it by applying a constant control input for a single step, before returning to the previous control input value.
+% In our case, we will apply a control input of $100\%$ for a single step of our measurement at the very beginning, before returning to $0\%$ control input.
