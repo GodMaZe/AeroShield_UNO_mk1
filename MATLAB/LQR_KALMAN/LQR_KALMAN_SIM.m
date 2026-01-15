@@ -1,7 +1,12 @@
+clear; close all;
+clc;
+
+%%
 addpath("../misc")
 addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
+addpath("../misc/models/frictions");
 
 %% Do the simulation
 Ts = 0.1;
@@ -9,7 +14,7 @@ Tstop = 60;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
-u = 0.00;
+u = 0;
 pendulum = Pendulum();
 [f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 [A, B, C, D] = pendulum.ss_discrete(Ts);
@@ -20,8 +25,8 @@ x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
-R = (0.015); % Measurement noise (from datasheet)
-Q = diag(([0.001 (0.001*Ts)]));
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts)]);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -51,9 +56,10 @@ A_tilde = [A, zeros(n, m);
 
 B_tilde(1:n) = B;
 
-Q_=diag([10 5]);
-R_=[0.001];
-Qz=[15];
+Q_=diag([1 5]);
+R_=[0.1];
+Qz=[1000];
+
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -69,19 +75,32 @@ U_PB = 20; % %PWM
 
 REF = 25; % deg
 
+x_hat = x0;
+y_hat = x0(1);
+z = 0;
+
 for step=2:nsteps
 
     if step >= nsteps/2
         REF = 35;
     end
 
+    [ekf, y_hat] = ekf.step(t(step - 1), u, x(1, step - 1));
+    y_hat = y_hat;
+    x_hat = ekf.get_xhat();
+
+    ekf_yhat(step) = y_hat;
+    ekf_x(:, step) = ekf.xhat;
+
     if step > 0
         if exist("EKF", "var")
-            A = Fx(plant_time, x_hat, u);
-            C = Hx(plant_time, x_hat, u);
+            A = Fx(t(step-1), x_hat, u);
+            C = Hx(t(step-1), x_hat, u);
+            B = discrete_jacobian_u(f, t(step-1), x_hat, u, Ts);
 
-            A_tilde = [A, zeros(n, m);
-                       -C, eye(m, m)];
+            A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
+
+            B_tilde(1:n, :) = B; 
 
             % --- Solve Discrete-time Algebraic Riccati Equation ---
             [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
@@ -92,24 +111,20 @@ for step=2:nsteps
         end
 
         ux = Kx*x_hat + Kz*z;
-        e = deg2rad(REF) - y_hat;
+        e = deg2rad(REF) - y_hat; % EKF
+        % e = REF - y_hat; % OPT Params
         z = z + e;
 
-        u = U_PB + max(-U_PB, min(100-U_PB, ux));
+        u = U_PB + saturate(ux, -U_PB, 100-U_PB);
+        % u = saturate(u, 0, 100);
     else
         u = U_PB;
     end
     
-    w = chol(Q) * randn(2, 1) * 0;
-    x(:, step) = f(t(step-1), x(:, step-1), u) + w;
-    [ekf, y_hat] = ekf.step(t(step - 1), u, x(1, step - 1));
-    y_hat = y_hat;
-    x_hat = ekf.get_xhat();
+    w = chol(Q) * randn(2, 1) * 1;
+    x(:, step) = f(t(step-1), x(:, step-1), u*0.9) + w;
 
     U(step) = u;
-
-    ekf_yhat(step) = y_hat;
-    ekf_x(:, step) = ekf.xhat;
 
     % if step < 5
     %     disp(ekf.xhat)
@@ -174,3 +189,11 @@ grid minor;
 grid on;
 
 fprintf("Velocity mean: %f\n", mean(x(2, :)));
+
+%% Plot the control input
+figure(3); clf;
+stairs(t, U);
+xlabel('Time (s)');
+ylabel('Control Input (u)');
+title('Control Input Over Time');
+grid on;

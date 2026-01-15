@@ -31,7 +31,7 @@ ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",
 
 fprintf("Init EKF:\n\n");
 disp(ekf.xhat);
-fprintf("========\n");
+fprintf("========\n");ss
 
 % ekf = KalmanFilter(A,B,C,'Q',Q,'R',R,'x0',x0,'P0',P);
 

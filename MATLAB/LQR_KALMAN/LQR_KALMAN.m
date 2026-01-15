@@ -6,6 +6,7 @@ addpath("../misc");
 addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
+addpath("../misc/models/frictions");
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
@@ -239,9 +240,10 @@ try
     % Q_=[0.01 0 0;
     %     0 10 0;
     %     0 0 7];
-    Q_=diag([100 15]);
-    R_=[0.01];
-    Qz=[100];
+    Q_=diag([1 10]);
+    R_=[0.001];
+    Qz=[10];
+
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
             zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
@@ -254,8 +256,11 @@ try
     
     
     % --- Kalman filter initialization ---    
-    R = (0.015); % Measurement noise (from datasheet)
-    Q = diag(([0.001 (0.001*Ts)]));
+    % R = (0.015); % Measurement noise (from datasheet)
+    % Q = diag(([0.001 (0.001*Ts)]));
+
+    R = s(0.015)^2; % Measurement noise (from datasheet)
+    Q = diag([(0.01)^2 (0.01/Ts)^2]);
     
     % R = 3;
     % Q = diag([0.1 0.1 1]);
