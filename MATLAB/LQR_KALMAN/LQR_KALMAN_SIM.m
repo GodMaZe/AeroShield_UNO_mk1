@@ -7,26 +7,40 @@ addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
 addpath("../misc/models/frictions");
+addpath("../misc/plotting");
 
 %% Do the simulation
 Ts = 0.1;
-Tstop = 60;
+Tstop = 10;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
 u = 0;
 pendulum = Pendulum();
-[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
-[A, B, C, D] = pendulum.ss_discrete(Ts);
+% [A, B, C, D] = pendulum.ss_discrete(Ts);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, true);
 
-x0 = [-pi/3; 0];
+if exist("pendulum", "var")
+    n = pendulum.n;
+    m = pendulum.m;
+    r = pendulum.r;
+else
+    n = size(A, 1);
+    r = size(B, 2);
+    m = size(C, 1);   
+end
+
+
+
+
+x0 = zeros(n, 1);
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts)]);
+Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts) 0.01]);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -44,9 +58,26 @@ ekf_yhat(1) = x0(1);
 ekf_x(:, 1) = x0;
 
 %% LQR Setup
-n = pendulum.n;
-m = pendulum.m;
-r = pendulum.r;
+
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
+
+if exist("pendulum", "var")
+    n = pendulum.n;
+    m = pendulum.m;
+    r = pendulum.r;
+else
+    n = size(A, 1);
+    r = size(B, 2);
+    m = size(C, 1);   
+end
+
+% --- Augmented system for integral action ---
+if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
+    xinit = zeros(n, 1);
+    A = Fx(0, xinit, 0);
+    C = Hx(0, xinit, 0);
+    B = discrete_jacobian_u(f, 0, xinit, 0, Ts);
+end
 
 % --- Augmented system for integral action ---
 B_tilde=zeros(n+m, r);
@@ -57,13 +88,13 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 Q_=diag([1 5]);
-R_=[0.1];
-Qz=[1000];
+R_=[0.01];
+Qz=[15];
 
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
 
-[P_LQ, ~, K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R);
+[P_LQ, ~, K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
 K_LQ = -K_LQ;
 Kx = K_LQ(1:n);
 Kz = K_LQ((n+1):end);
@@ -73,7 +104,7 @@ U = zeros(nsteps, 1);
 
 U_PB = 20; % %PWM
 
-REF = 25; % deg
+REF = 20; % deg
 
 x_hat = x0;
 y_hat = x0(1);
@@ -82,15 +113,8 @@ z = 0;
 for step=2:nsteps
 
     if step >= nsteps/2
-        REF = 35;
+        REF = 30;
     end
-
-    [ekf, y_hat] = ekf.step(t(step - 1), u, x(1, step - 1));
-    y_hat = y_hat;
-    x_hat = ekf.get_xhat();
-
-    ekf_yhat(step) = y_hat;
-    ekf_x(:, step) = ekf.xhat;
 
     if step > 0
         if exist("EKF", "var")
@@ -110,8 +134,8 @@ for step=2:nsteps
             Kz=K_LQ(n + 1:end);        % integral feedback part
         end
 
-        ux = Kx*x_hat + Kz*z;
-        e = deg2rad(REF) - y_hat; % EKF
+        ux = Kx*(x_hat) + Kz*z;
+        e = deg2rad(REF) - x(1, step - 1); % EKF
         % e = REF - y_hat; % OPT Params
         z = z + e;
 
@@ -121,8 +145,16 @@ for step=2:nsteps
         u = U_PB;
     end
     
+    
     w = chol(Q) * randn(2, 1) * 1;
     x(:, step) = f(t(step-1), x(:, step-1), u*0.9) + w;
+
+    [ekf, y_hat] = ekf.step(t(step-1), u, x(1, step));
+    y_hat = y_hat;
+    x_hat = ekf.get_xhat();
+
+    ekf_yhat(step) = y_hat;
+    ekf_x(:, step) = ekf.xhat;
 
     U(step) = u;
 
@@ -132,61 +164,61 @@ for step=2:nsteps
 end
 
 %% Plot
-SKIP_STEPS = 1;
-select_mask = SKIP_STEPS:nsteps;
-e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
-e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
-RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
-RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
-
-
-figure(1); clf;
-tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-ax1 = nexttile([2 1]);
-hold on;
-stairs(ax1, t, rad2deg(x(1, :)));
-stairs(ax1, t, rad2deg(ekf_x(1, :)));
-hold off;
-ylabel(ax1, "$x_1\ \left[deg\right]$", "Interpreter", "latex");
-title(ax1, 'Pendulum angular position');
-subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
-legend(ax1, "y","y_{ekf}");
-grid minor;
-grid on;
-
-ax2 = nexttile;
-errorbar(ax2, t(select_mask), zeros(size(e_phi)), e_phi, '.');
-title(ax2, "Simulated and observed state x_1: difference squared");
-xlabel(ax2, "t [s]");
-ylabel(ax2, "$\Delta x_1^{2}\ \left[deg\right]^2$", "Interpreter", "latex");
-grid minor;
-grid on;
-
-
-
-figure(2); clf;
-tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-ax1 = nexttile([2 1]);
-hold on;
-stairs(ax1, t, (x(2, :)));
-plot(ax1, [0, t(end)], [0, 0], '--r');
-stairs(ax1, t, (ekf_x(2, :)));
-stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
-hold off;
-ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
-title(ax1, 'Pendulum angular velocity');
-subtitle(ax1, "RMSE: " + num2str(RMSE_X2) + " rad s^{-1}")
-legend(ax1, "dy","0-line","dy_{ekf}");
-grid minor;
-grid on;
-
-ax2 = nexttile;
-errorbar(ax2, t(select_mask), zeros(size(e_dphi)), e_dphi, '.');
-title(ax2, "Simulated and observed state x_2: difference squared");
-xlabel(ax2, "t [s]");
-ylabel(ax2, "$\Delta x_2^{2}\ \left[\frac{rad}{s}\right]^2$", "Interpreter", "latex");
-grid minor;
-grid on;
+% SKIP_STEPS = 1;
+% select_mask = SKIP_STEPS:nsteps;
+% e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
+% e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
+% RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
+% RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
+% 
+% 
+% figure(1); clf;
+% tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
+% ax1 = nexttile([2 1]);
+% hold on;
+% stairs(ax1, t, rad2deg(x(1, :)));
+% stairs(ax1, t, rad2deg(ekf_x(1, :)));
+% hold off;
+% ylabel(ax1, "$x_1\ \left[deg\right]$", "Interpreter", "latex");
+% title(ax1, 'Pendulum angular position');
+% subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
+% legend(ax1, "y","y_{ekf}");
+% grid minor;
+% grid on;
+% 
+% ax2 = nexttile;
+% errorbar(ax2, t(select_mask), zeros(size(e_phi)), e_phi, '.');
+% title(ax2, "Simulated and observed state x_1: difference squared");
+% xlabel(ax2, "t [s]");
+% ylabel(ax2, "$\Delta x_1^{2}\ \left[deg\right]^2$", "Interpreter", "latex");
+% grid minor;
+% grid on;
+% 
+% 
+% 
+% figure(2); clf;
+% tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
+% ax1 = nexttile([2 1]);
+% hold on;
+% stairs(ax1, t, (x(2, :)));
+% plot(ax1, [0, t(end)], [0, 0], '--r');
+% stairs(ax1, t, (ekf_x(2, :)));
+% % stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
+% hold off;
+% ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
+% title(ax1, 'Pendulum angular velocity');
+% subtitle(ax1, "RMSE: " + num2str(RMSE_X2) + " rad s^{-1}")
+% legend(ax1, "dy","0-line","dy_{ekf}");
+% grid minor;
+% grid on;
+% 
+% ax2 = nexttile;
+% errorbar(ax2, t(select_mask), zeros(size(e_dphi)), e_dphi, '.');
+% title(ax2, "Simulated and observed state x_2: difference squared");
+% xlabel(ax2, "t [s]");
+% ylabel(ax2, "$\Delta x_2^{2}\ \left[\frac{rad}{s}\right]^2$", "Interpreter", "latex");
+% grid minor;
+% grid on;
 
 fprintf("Velocity mean: %f\n", mean(x(2, :)));
 
@@ -197,3 +229,15 @@ xlabel('Time (s)');
 ylabel('Control Input (u)');
 title('Control Input Over Time');
 grid on;
+
+%% Testing new plotting class
+x1data = Data2Plot(t, rad2deg(x(1, :)), rad2deg(ekf_x(1, :)), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
+x1data.plotoutnerror(1, 0, "angular_position_w_estimate_error");
+
+x2data = Data2Plot(t, rad2deg(x(2, :)), rad2deg(ekf_x(2, :)), "stairs", "s", "\frac{deg}{s}", "Pendulum angular velocity", "Plot of pendulum velocity", false, "s", "all", [], true, [0 0 17 13.6]);
+x2data.plotoutnerror(2, 0, "angular_velocity_w_estimate_error");
+
+if n == 3
+    x3data = Data2Plot(t, rad2deg(x(3, :)), rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
+    x3data.plotoutnerror(3, 0, "angualr_position_deviation_w_estimate_error");
+end

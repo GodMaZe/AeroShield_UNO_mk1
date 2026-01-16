@@ -240,9 +240,9 @@ try
     % Q_=[0.01 0 0;
     %     0 10 0;
     %     0 0 7];
-    Q_=diag([1 10]);
-    R_=[0.001];
-    Qz=[10];
+    Q_=diag([1 5]);
+    R_=[0.01];
+    Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
             zeros(size(Qz, 1), size(Q_, 2)), Qz];
@@ -259,7 +259,7 @@ try
     % R = (0.015); % Measurement noise (from datasheet)
     % Q = diag(([0.001 (0.001*Ts)]));
 
-    R = s(0.015)^2; % Measurement noise (from datasheet)
+    R = (0.015)^2; % Measurement noise (from datasheet)
     Q = diag([(0.01)^2 (0.01/Ts)^2]);
     
     % R = 3;

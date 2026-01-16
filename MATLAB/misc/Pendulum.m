@@ -19,15 +19,15 @@ classdef Pendulum
         % Ku = 1/3000;
 
         %% All the frictional coefficients
-        xi = 0.0000013; % damping coefficient
-        mu = 0.000000329; % coloumb friction coefficient
+        xi = 0.0003; % damping coefficient
+        mu = 0.0000043; % coloumb friction coefficient
 
-        ka = 0.14; % is the air resistance coefficient
+        ka = 0.0014; % is the air resistance coefficient
         kr = 0.001; % hyperbolic tangent smoothing in the drag equation
 
-        hc = 100; % tanh smoothing in the coulomb friction
+        hc = 10000; % tanh smoothing in the coulomb friction
         
-        omega_brk = 0.1; % the breakaway angular velocity threshold
+        omega_brk = 0.0001; % the breakaway angular velocity threshold
         
         omega_S = 0; % Stribeck angular velocity threshold
         omega_dry = 0; % dry angular velocity threshold
@@ -49,7 +49,7 @@ classdef Pendulum
 
             obj.omega_S = obj.omega_brk*sqrt(2);
             obj.omega_dry = obj.omega_brk/10;
-            obj.tau_brk = obj.Ku/10;
+            obj.tau_brk = obj.Ku/100;
 
             obj.I_T = 1/3*obj.m1*obj.L^2 + 2/5*obj.m2*obj.R^2 + obj.m2*(obj.L + obj.R)^2;
             obj.M_1 = obj.m1*obj.L/2 + obj.m2*(obj.L+obj.R);
@@ -70,14 +70,16 @@ classdef Pendulum
             [A, B, C, D] = create_ss_pendulum(obj, Ts);
         end
 
-        function [f, b, h, Fx, Bu, Hx] = nonlinear(obj, Ts, use_saturation, w_disturbance)
+        function [obj, f, b, h, Fx, Bu, Hx] = nonlinear(obj, Ts, w_disturbance)
             arguments (Input)
                 obj;
                 Ts = 0.01; % Sample time for discrete state-space model
-                use_saturation = false; % Use saturation for coloumb friction or hyperbolic tangent.
                 w_disturbance = false; % Default disturbance value (in case we are trying to identify the deviation from real system)
             end
-            [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, use_saturation, w_disturbance);
+            if(w_disturbance)
+                obj.n = obj.n + 1;
+            end
+            [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, w_disturbance);
         end
 
         function [s] = tostring(obj)

@@ -12,17 +12,23 @@ nsteps = numel(t);
 
 u = 0.00;
 pendulum = Pendulum();
-[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
+w_disturbance = true;
+
+[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-x0 = [0; 0];
+x0 = zeros(2 + w_disturbance, 1);
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2/Ts)]);
+if size(x0, 1) == 3
+    Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts) 0.01]);
+else
+    Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts)]);
+end
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -56,8 +62,6 @@ for step=2:nsteps
     % x(:, step + 1) = rk4_step(f, t(step), x(:, step), u, Ts);
     % x(:, step) = euler_step(f, x(:, step - 1), u, Ts);
 
-    
-
     if step == 2
         u = 100;
     else
@@ -66,7 +70,7 @@ for step=2:nsteps
 
     U(step) = u;
     
-    w = chol(Q) * randn(2, 1) * 0;
+    w = chol(Q) * randn(size(Q,1), 1) * 1;
     x(:, step) = f(t(step-1), x(:, step-1), u) + w;
 
     [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
@@ -84,11 +88,12 @@ SKIP_STEPS = 1;
 select_mask = SKIP_STEPS:nsteps;
 e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
 e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
+
 RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
 RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
 
 
-figure(1); clf;
+figure("Name", "Angular Position estimate"); clf;
 tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
 ax1 = nexttile([2 1]);
 hold on;
@@ -112,7 +117,7 @@ grid on;
 
 
 
-figure(2); clf;
+figure("Name", "Angular velocity estimate"); clf;
 tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
 ax1 = nexttile([2 1]);
 hold on;
@@ -137,3 +142,33 @@ grid minor;
 grid on;
 
 fprintf("Velocity mean: %f\n", mean(x(2, :)));
+
+if w_disturbance
+
+    e_dist = (x(3, select_mask) - ekf_x(3, select_mask)).^2;
+    RMSE_X3 = rad2deg(sqrt(mean(e_dist)));
+
+
+    figure("Name", "Disturbance estimate"); clf;
+    tiledlayout(3, 1, "TileSpacing", "compact", "Padding", "tight");
+    ax1 = nexttile([2 1]);
+    hold on;
+    stairs(ax1, t, rad2deg(x(3, :)));
+    plot(ax1, [0, t(end)], [0, 0], '--r');
+    stairs(ax1, t, rad2deg(ekf_x(3, :)));
+    hold off;
+    ylabel(ax1, "$x_3\ \left[ deg \right]$", "Interpreter", "latex");
+    title(ax1, 'Pendulum disturbance');
+    subtitle(ax1, "RMSE: " + num2str(RMSE_X3) + " rad")
+    legend(ax1, "dist","0-line","dist_{ekf}");
+    grid minor;
+    grid on;
+
+    ax2 = nexttile;
+    errorbar(ax2, t(select_mask), zeros(size(e_dist)), e_dist, '.');
+    title(ax2, "Simulated and observed state x_3: difference squared");
+    xlabel(ax2, "t [s]");
+    ylabel(ax2, "$\Delta x_3^{2}\ \left[ rad \right]^2$", "Interpreter", "latex");
+    grid minor;
+    grid on;
+end
