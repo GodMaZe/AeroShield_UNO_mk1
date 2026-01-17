@@ -209,7 +209,7 @@ try
     % [A, B, C, ~] = ssdata(sysd);
     pendulum = Pendulum();
     [A, B, C, D] = pendulum.ss_discrete(Ts);
-    [f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
+    [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
     
     if exist("pendulum", "var")
         n = pendulum.n;
@@ -240,7 +240,7 @@ try
     % Q_=[0.01 0 0;
     %     0 10 0;
     %     0 0 7];
-    Q_=diag([1 5]);
+    Q_=diag([10 5]);
     R_=[0.01];
     Qz=[15];
 
@@ -259,6 +259,9 @@ try
     % R = (0.015); % Measurement noise (from datasheet)
     % Q = diag(([0.001 (0.001*Ts)]));
 
+    % R = (0.015)^2; % Measurement noise (from datasheet)
+    % Q = diag([(0.01)^2 (0.01/Ts)^2]);
+
     R = (0.015)^2; % Measurement noise (from datasheet)
     Q = diag([(0.01)^2 (0.01/Ts)^2]);
     
@@ -266,8 +269,9 @@ try
     % Q = diag([0.1 0.1 1]);
     
     % Kalman initial
-    P=zeros(size(Q));
+    P=eye(size(Q));
     x_hat=zeros(size(Q,1),1);
+    y_hat = h(0, x_hat, 0);
 
     % KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
     EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
@@ -306,22 +310,6 @@ try
             REF = REF_INIT + REF_STEPS(1);
         end
 
-        % The problem is with the input matrix B. It is too large of an
-        % input for the simple pendulum, the control input should be scaled
-        % down as it represents directly the torque applied to the arm, not
-        % the %PWM value.
-        [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
-        y_hat = y_hat;
-        x_hat = EKF.get_xhat();
-
-        % [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
-        % y_hat = y_hat;
-        % x_hat = KF.get_xhat();
-
-        % [KF, y_hat] = KF.step(u, aerodata.output);
-        % y_hat = y_hat;
-        % x_hat = KF.get_xhat();
-
         u = U_PB;
 
         if elapsed >= 0
@@ -344,15 +332,11 @@ try
 
             ux = Kx*x_hat + Kz*z;
             e = deg2rad(REF) - y_hat; % EKF
-            % e = REF - y_hat; % OPT Params
             z = z + e;
 
-            u = u + saturate(ux, -U_PB, 100-U_PB);
+            u = u + saturate(ux, -U_PB, 100 - U_PB);
             % u = saturate(ux, 0, 100);
         end
-
-        y_hat = rad2deg(y_hat);
-        x_hat = rad2deg(x_hat);
 
 
         write(scon, u, "single");
@@ -372,6 +356,22 @@ try
         plant_dt = aerodata.dt;
         plant_control_time = aerodata.controltime - plant_time_init;
 
+        % The problem is with the input matrix B. It is too large of an
+        % input for the simple pendulum, the control input should be scaled
+        % down as it represents directly the torque applied to the arm, not
+        % the %PWM value.
+        [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
+        y_hat = y_hat;
+        x_hat = EKF.get_xhat();
+
+        % [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
+        % y_hat = y_hat;
+        % x_hat = KF.get_xhat();
+
+        % [KF, y_hat] = KF.step(u, aerodata.output);
+        % y_hat = y_hat;
+        % x_hat = KF.get_xhat();
+
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
         writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
@@ -386,8 +386,8 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
-        LOG_YHAT = [LOG_YHAT, y_hat];
-        LOG_XHAT = [LOG_XHAT; x_hat'];
+        LOG_YHAT = [LOG_YHAT, rad2deg(y_hat)];
+        LOG_XHAT = [LOG_XHAT; rad2deg(x_hat)'];
         LOG_UX = [LOG_UX, ux];
 
         time_last = time_curr;

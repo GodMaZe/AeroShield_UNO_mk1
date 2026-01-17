@@ -15,10 +15,9 @@ Tstop = 10;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
-u = 0;
 pendulum = Pendulum();
 % [A, B, C, D] = pendulum.ss_discrete(Ts);
-[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, true);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 
 if exist("pendulum", "var")
     n = pendulum.n;
@@ -30,17 +29,14 @@ else
     m = size(C, 1);   
 end
 
-
-
-
 x0 = zeros(n, 1);
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
-R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts) 0.01]);
+R = (0.015)^2; % Measurement noise (from datasheet)
+Q = diag([(0.01)^2 (0.01/Ts)^2]);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -58,19 +54,6 @@ ekf_yhat(1) = x0(1);
 ekf_x(:, 1) = x0;
 
 %% LQR Setup
-
-[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
-
-if exist("pendulum", "var")
-    n = pendulum.n;
-    m = pendulum.m;
-    r = pendulum.r;
-else
-    n = size(A, 1);
-    r = size(B, 2);
-    m = size(C, 1);   
-end
-
 % --- Augmented system for integral action ---
 if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
     xinit = zeros(n, 1);
@@ -87,9 +70,9 @@ A_tilde = [A, zeros(n, m);
 
 B_tilde(1:n) = B;
 
-Q_=diag([1 5]);
+Q_=diag([15 5]);
 R_=[0.01];
-Qz=[15];
+Qz=[10];
 
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];
@@ -109,6 +92,9 @@ REF = 20; % deg
 x_hat = x0;
 y_hat = x0(1);
 z = 0;
+u = U_PB;
+
+LOG_REF(1) = REF;
 
 for step=2:nsteps
 
@@ -116,15 +102,17 @@ for step=2:nsteps
         REF = 30;
     end
 
+    LOG_REF = [LOG_REF, REF];
+
     if step > 0
-        if exist("EKF", "var")
+        if exist("ekf", "var")
             A = Fx(t(step-1), x_hat, u);
             C = Hx(t(step-1), x_hat, u);
             B = discrete_jacobian_u(f, t(step-1), x_hat, u, Ts);
 
             A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
-            B_tilde(1:n, :) = B; 
+            B_tilde(1:n, :) = B;
 
             % --- Solve Discrete-time Algebraic Riccati Equation ---
             [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
@@ -133,10 +121,8 @@ for step=2:nsteps
             Kx=K_LQ(1:n);           % state feedback part
             Kz=K_LQ(n + 1:end);        % integral feedback part
         end
-
         ux = Kx*(x_hat) + Kz*z;
-        e = deg2rad(REF) - x(1, step - 1); % EKF
-        % e = REF - y_hat; % OPT Params
+        e = deg2rad(REF) - y_hat; % OPT Params
         z = z + e;
 
         u = U_PB + saturate(ux, -U_PB, 100-U_PB);
@@ -146,7 +132,7 @@ for step=2:nsteps
     end
     
     
-    w = chol(Q) * randn(2, 1) * 1;
+    w = chol(Q) * randn(n, 1) * 1;
     x(:, step) = f(t(step-1), x(:, step-1), u*0.9) + w;
 
     [ekf, y_hat] = ekf.step(t(step-1), u, x(1, step));
@@ -232,7 +218,11 @@ grid on;
 
 %% Testing new plotting class
 x1data = Data2Plot(t, rad2deg(x(1, :)), rad2deg(ekf_x(1, :)), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
-x1data.plotoutnerror(1, 0, "angular_position_w_estimate_error");
+[fig, ax1, ~] = x1data.plotoutnerror(1, 0, "angular_position_w_estimate_error");
+
+hold(ax1, "on");
+plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1);
+hold(ax1, "off");
 
 x2data = Data2Plot(t, rad2deg(x(2, :)), rad2deg(ekf_x(2, :)), "stairs", "s", "\frac{deg}{s}", "Pendulum angular velocity", "Plot of pendulum velocity", false, "s", "all", [], true, [0 0 17 13.6]);
 x2data.plotoutnerror(2, 0, "angular_velocity_w_estimate_error");

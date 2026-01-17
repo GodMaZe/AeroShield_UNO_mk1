@@ -3,6 +3,7 @@ addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
 addpath("../misc/models/frictions");
+addpath("../misc/plotting")
 
 %% Do the simulation
 Ts = 0.05;
@@ -12,9 +13,9 @@ nsteps = numel(t);
 
 u = 0.00;
 pendulum = Pendulum();
-w_disturbance = true;
+w_disturbance = false;
 
-[f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
 x0 = zeros(2 + w_disturbance, 1);
@@ -23,11 +24,11 @@ x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
-R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+R = (0.015)^2; % Measurement noise (from datasheet)
 if size(x0, 1) == 3
-    Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts) 0.01]);
+    Q = diag([(0.01)^2 (0.01/Ts)^2 0.1]);
 else
-    Q = diag([deg2rad(0.01)^2 deg2rad(0.01^2*Ts)]);
+    Q = diag([(0.01)^2 (0.01/Ts)^2]);
 end
 
 % x0 = [0; 0];
@@ -70,7 +71,7 @@ for step=2:nsteps
 
     U(step) = u;
     
-    w = chol(Q) * randn(size(Q,1), 1) * 1;
+    w = chol(Q) * randn(size(Q,1), 1) * 0;
     x(:, step) = f(t(step-1), x(:, step-1), u) + w;
 
     [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
@@ -84,91 +85,17 @@ for step=2:nsteps
 end
 
 %% Plot
-SKIP_STEPS = 1;
-select_mask = SKIP_STEPS:nsteps;
-e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
-e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
+x1data = Data2Plot(t, rad2deg(x(1, :)), rad2deg(ekf_x(1, :)), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
+[fig, ax1, ~] = x1data.plotoutnerror(1, 0, "images/nss/angular_position_w_estimate_error");
 
-RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
-RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
+% hold(ax1, "on");
+% plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1);
+% hold(ax1, "off");
 
+x2data = Data2Plot(t, rad2deg(x(2, :)), rad2deg(ekf_x(2, :)), "stairs", "s", "\frac{deg}{s}", "Pendulum angular velocity", "Plot of pendulum velocity", false, "s", "all", [], true, [0 0 17 13.6]);
+x2data.plotoutnerror(2, 0, "images/nss/angular_velocity_w_estimate_error");
 
-figure("Name", "Angular Position estimate"); clf;
-tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-ax1 = nexttile([2 1]);
-hold on;
-stairs(ax1, t, rad2deg(x(1, :)));
-stairs(ax1, t, rad2deg(ekf_x(1, :)));
-hold off;
-ylabel(ax1, "$x_1\ \left[deg\right]$", "Interpreter", "latex");
-title(ax1, 'Pendulum angular position');
-subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
-legend(ax1, "y","y_{ekf}");
-grid minor;
-grid on;
-
-ax2 = nexttile;
-errorbar(ax2, t(select_mask), zeros(size(e_phi)), e_phi, '.');
-title(ax2, "Simulated and observed state x_1: difference squared");
-xlabel(ax2, "t [s]");
-ylabel(ax2, "$\Delta x_1^{2}\ \left[rad\right]^2$", "Interpreter", "latex");
-grid minor;
-grid on;
-
-
-
-figure("Name", "Angular velocity estimate"); clf;
-tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-ax1 = nexttile([2 1]);
-hold on;
-stairs(ax1, t, (x(2, :)));
-plot(ax1, [0, t(end)], [0, 0], '--r');
-stairs(ax1, t, (ekf_x(2, :)));
-% stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
-hold off;
-ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
-title(ax1, 'Pendulum angular velocity');
-subtitle(ax1, "RMSE: " + num2str(RMSE_X2) + " rad s^{-1}")
-legend(ax1, "dy","0-line","dy_{ekf}");
-grid minor;
-grid on;
-
-ax2 = nexttile;
-errorbar(ax2, t(select_mask), zeros(size(e_dphi)), e_dphi, '.');
-title(ax2, "Simulated and observed state x_2: difference squared");
-xlabel(ax2, "t [s]");
-ylabel(ax2, "$\Delta x_2^{2}\ \left[\frac{rad}{s}\right]^2$", "Interpreter", "latex");
-grid minor;
-grid on;
-
-fprintf("Velocity mean: %f\n", mean(x(2, :)));
-
-if w_disturbance
-
-    e_dist = (x(3, select_mask) - ekf_x(3, select_mask)).^2;
-    RMSE_X3 = rad2deg(sqrt(mean(e_dist)));
-
-
-    figure("Name", "Disturbance estimate"); clf;
-    tiledlayout(3, 1, "TileSpacing", "compact", "Padding", "tight");
-    ax1 = nexttile([2 1]);
-    hold on;
-    stairs(ax1, t, rad2deg(x(3, :)));
-    plot(ax1, [0, t(end)], [0, 0], '--r');
-    stairs(ax1, t, rad2deg(ekf_x(3, :)));
-    hold off;
-    ylabel(ax1, "$x_3\ \left[ deg \right]$", "Interpreter", "latex");
-    title(ax1, 'Pendulum disturbance');
-    subtitle(ax1, "RMSE: " + num2str(RMSE_X3) + " rad")
-    legend(ax1, "dist","0-line","dist_{ekf}");
-    grid minor;
-    grid on;
-
-    ax2 = nexttile;
-    errorbar(ax2, t(select_mask), zeros(size(e_dist)), e_dist, '.');
-    title(ax2, "Simulated and observed state x_3: difference squared");
-    xlabel(ax2, "t [s]");
-    ylabel(ax2, "$\Delta x_3^{2}\ \left[ rad \right]^2$", "Interpreter", "latex");
-    grid minor;
-    grid on;
+if n == 3
+    x3data = Data2Plot(t, rad2deg(x(3, :)), rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
+    x3data.plotoutnerror(3, 0, "images/nss/angualr_position_deviation_w_estimate_error");
 end

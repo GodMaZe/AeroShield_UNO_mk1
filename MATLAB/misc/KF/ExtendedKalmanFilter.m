@@ -82,6 +82,8 @@ classdef ExtendedKalmanFilter
         end
 
         function [obj, yhat] = step(obj, t, u, y)
+            %STEP Step function updates the EKF.
+            % Call it using the following; EKF.step(t, u, y)
             if nargin < 3, u = obj.Zi; end
             obj = obj.predict(t, u);
             if nargin < 4 || isempty(y)

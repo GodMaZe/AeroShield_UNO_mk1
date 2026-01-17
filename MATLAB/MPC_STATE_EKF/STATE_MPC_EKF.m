@@ -198,10 +198,10 @@ A_con = [Gamma;
         -N*Gamma];
 
 %% --- Kalman filter initialization --- 
-[f, h, Fx, Hx] = pendulum.nonlinear(Ts, false, false);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 
-R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
-Q = diag([deg2rad(0.01)^2 deg2rad(0.01/Ts)^2]);
+R = (0.015)^2; % Measurement noise (from datasheet)
+Q = diag([(0.01)^2 (0.01/Ts)^2]);
 
 x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -306,27 +306,7 @@ try
             REF = REF_INIT + REF_STEPS(2);
         elseif elapsed >= 5
             REF = REF_INIT + REF_STEPS(1);
-        end
-
-        % Do Kalman
-        % [ekf, y_hat] = ekf.step(plant_time, u/666.66, deg2rad(plant_output));
-        % x_hat = ekf.xhat;
-        [kf, y_hat] = kf.step(u, deg2rad(plant_output));
-        x_hat = kf.xhat;
-        % y_hat = rad2deg(y_hat);
-
-        % x_hat = A_tilde*x_hat + B_tilde*u;
-        % 
-        % P = A_tilde*P*A_tilde' + Q;
-        % S = (C_tilde*P*C_tilde' + R);
-        % K = P*C_tilde'/S;
-        % e1 = plant_output - C_tilde*x_hat;
-        % x_hat = x_hat + K*e1;
-        % y_hat = C_tilde*x_hat;
-        % P = P - K*C_tilde*P;
-        % End Kalman
-
-        
+        end        
         
         if elapsed >= 0
             % Do MPC
@@ -340,9 +320,9 @@ try
             % x_test(1) = deg2rad(REF) - x_test(3);
             % x_test(3) = 0;
             
-            Y_ref = repmat((REF), p, 1);
+            Y_ref = repmat(deg2rad(REF), p, 1);
             
-            Mx = M*(rad2deg(x_hat));
+            Mx = M*(x_hat);
             Nu = N*u_pred;
             b = 2*(Mx + Nu - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
@@ -376,6 +356,24 @@ try
         plant_potentiometer = aerodata.potentiometer;
         plant_dt = aerodata.dt;
         plant_control_time = aerodata.controltime - plant_time_init;
+
+        % Do Kalman
+        % [ekf, y_hat] = ekf.step(plant_time, u/666.66, deg2rad(plant_output));
+        % x_hat = ekf.xhat;
+        [kf, y_hat] = kf.step(u, deg2rad(plant_output));
+        x_hat = kf.xhat;
+        % y_hat = rad2deg(y_hat);
+
+        % x_hat = A_tilde*x_hat + B_tilde*u;
+        % 
+        % P = A_tilde*P*A_tilde' + Q;
+        % S = (C_tilde*P*C_tilde' + R);
+        % K = P*C_tilde'/S;
+        % e1 = plant_output - C_tilde*x_hat;
+        % x_hat = x_hat + K*e1;
+        % y_hat = C_tilde*x_hat;
+        % P = P - K*C_tilde*P;
+        % End Kalman
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];

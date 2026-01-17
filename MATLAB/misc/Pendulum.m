@@ -19,7 +19,8 @@ classdef Pendulum
         % Ku = 1/3000;
 
         %% All the frictional coefficients
-        xi = 0.0003; % damping coefficient
+        % xi = 0.0003; % damping coefficient % lab
+        xi = 0.00005; % damping coefficient % home
         mu = 0.0000043; % coloumb friction coefficient
 
         ka = 0.0014; % is the air resistance coefficient
@@ -77,7 +78,9 @@ classdef Pendulum
                 w_disturbance = false; % Default disturbance value (in case we are trying to identify the deviation from real system)
             end
             if(w_disturbance)
-                obj.n = obj.n + 1;
+                obj.n = 3;
+            else
+                obj.n = 2; % Decrease state count if no disturbance
             end
             [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, w_disturbance);
         end

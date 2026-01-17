@@ -3,13 +3,12 @@ clc;
 
 addpath("../misc");
 addpath("../misc/MPC");
-addpath("../misc/models");
 
 loadconfigs;
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "mpckalman_opt";
+FILENAME = "mpckalman";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -29,8 +28,8 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 30;
 SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
-Ts = 0.1;
-p = 15; % Prediction horizon
+Ts = 0.05;
+p = 20; % Prediction horizon
 
 U_PB = 30;
 
@@ -118,12 +117,31 @@ options = optimoptions('quadprog', ...
                        'OptimalityTolerance',1e-5, ...
                        'Display', 'off');
 
-pendulum = Pendulum();
-[A, B, C, ~] = pendulum.ss_discrete(Ts);
+% Define model parameters
+K = 1.3860;
+eta = 11.0669;
+omega = 7.8944;
+b = 0.0735;
 
-n = pendulum.n;
-r = pendulum.r;
-m = pendulum.m;
+% State matrix A
+Ac = [-eta, 0, 0;
+      0, 0, 1;
+      omega^2, -omega^2, -2*b*omega];
+
+% Input matrix B
+Bc = [K*eta; 0; 0];
+
+% Output matrix C
+Cc = [0, 1, 0];
+
+sys = ss(Ac,Bc,Cc,0);
+sysd = c2d(sys, Ts);
+
+[A, B, C, ~] = ssdata(sysd);
+
+n = size(A, 1);
+r = size(B, 2);
+m = size(C, 1);
 
 % --- Augmented system for integral action ---
 D = [1]; % Disturbance (the discrepancy between the model and real system)
@@ -132,7 +150,6 @@ d = size(D, 1);
 
 A_tilde = [A, zeros(n, d);
            zeros(d, n), D];
-
 B_tilde = [B; zeros(r, d)];
 
 C_tilde = [C, eye(d)];
@@ -144,8 +161,8 @@ C_tilde = [C, eye(d)];
 % --- MPC weighting matrices ---
 % Q_mpc = [1];
 % R_mpc = [10];
-Q_mpc=[15];
-R_mpc=[0.01];
+Q_mpc=[0.01];
+R_mpc=[0.1];
 
 Q_ = diagblock(Q_mpc, p);
 R_ = diagblock(R_mpc, p);
@@ -161,8 +178,8 @@ u_upper = [UMax];
 U_lower = repmat(u_lower, p, 1);
 U_upper = repmat(u_upper, p, 1);
 
-y_lower = [-pi/3];
-y_upper = [7*pi/5];
+y_lower = [-60];
+y_upper = [210];
 
 Y_lower = repmat(y_lower, p, 1);
 Y_upper = repmat(y_upper, p, 1);
@@ -175,7 +192,7 @@ A_con = [Gamma;
 
 % --- Kalman filter initialization ---    
 R=0.01; % measurement noise covariance
-Q=diag([0.1;0.1;0.1]);  % process noise covariance
+Q=diag([0.1;0.1;0.1;0.1]);  % process noise covariance
 
 % Kalman initial
 P=zeros(size(Q));
@@ -290,7 +307,7 @@ try
             % Do MPC
             u_pred = u_ones*u;
 
-            Y_ref = repmat(deg2rad(REF), p, 1);
+            Y_ref = repmat(REF, p, 1);
 
             b = 2*(M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
@@ -330,7 +347,7 @@ try
         P = A_tilde*P*A_tilde' + Q;
         
         K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
-        e1 = deg2rad(plant_output) - C_tilde*x_hat;
+        e1 = plant_output - C_tilde*x_hat;
         x_hat = x_hat + K*e1;
         y_hat = C_tilde*x_hat;
         P = P - K*C_tilde*P;
@@ -350,8 +367,8 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
-        LOG_YHAT = [LOG_YHAT, rad2deg(y_hat)];
-        LOG_XHAT = [LOG_XHAT; rad2deg(x_hat)'];
+        LOG_YHAT = [LOG_YHAT, y_hat];
+        LOG_XHAT = [LOG_XHAT; x_hat'];
         LOG_UX = [LOG_UX, ux];
 
         time_last = time_curr;

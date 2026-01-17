@@ -107,7 +107,7 @@ classdef Data2Plot
             obj.updatefigure(f, ax);
             saveplot2file(f, filename);
         end
-        function fig = plotoutnerror(obj, i, nskipsamples, filename)
+        function [fig, ax1, ax2] = plotoutnerror(obj, i, nskipsamples, filename)
         %PLOTOUTNERROR Plot function for plotting the measured state (x) and estimated
         %state (xhat) in time (t). Including the
         %error squared of the inconsistencies within the measured and estimated data.
@@ -119,6 +119,8 @@ classdef Data2Plot
         end
         arguments (Output)
             fig;
+            ax1;
+            ax2;
         end
 
         if ~obj.isvalid
@@ -138,13 +140,13 @@ classdef Data2Plot
         select_mask = SKIP_STEPS:obj.ntsamples;
         canrmse = obj.isxhat;
         
-        f = obj.getcleanfigure(i);
+        fig = obj.getcleanfigure(i);
 
         if canrmse
-            tiledlayout(3, 1, "TileSpacing", "compact", "Padding", "tight");
+            tiledlayout(fig, 3, 1, "TileSpacing", "compact", "Padding", "tight");
             ax1 = nexttile([2 1]);
         else
-            ax1 = axes(f);
+            ax1 = axes(fig);
         end
         
         hold on;
@@ -159,6 +161,7 @@ classdef Data2Plot
         obj.updatefigure(i, ax1);
 
         if ~canrmse
+            ax2 = [];
             return;
         end
         e_x = (obj.x(select_mask) - obj.xhat(select_mask)).^2;
@@ -176,7 +179,7 @@ classdef Data2Plot
         grid minor;
         grid on;
         
-        saveplot2file(f, filename);
+        saveplot2file(fig, filename);
         end
         function isvalid = checkdims(obj)
             isvalid = true;

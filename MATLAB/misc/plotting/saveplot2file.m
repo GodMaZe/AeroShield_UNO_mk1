@@ -8,6 +8,13 @@ function saveplot2file(fig, name, aspdf)
         return;
     end
 
+    pathtoimg = split(name, ["/","\"]);
+    
+    % Ensure the directory exists before saving the file
+    if ~exist(strjoin(pathtoimg(1:end-1), '/'), 'dir')
+        mkdir(strjoin(pathtoimg(1:end-1), '/'));
+    end
+
     if aspdf
         saveas(fig, name, "pdf");
     else

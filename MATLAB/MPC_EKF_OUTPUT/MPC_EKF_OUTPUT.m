@@ -4,12 +4,13 @@ clc;
 addpath("../misc");
 addpath("../misc/MPC");
 addpath("../misc/models");
+addpath("../misc/KF");
 
 loadconfigs;
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "mpckalman_opt";
+FILENAME = "mpcekf_out";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -29,8 +30,8 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 30;
 SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
-Ts = 0.1;
-p = 15; % Prediction horizon
+Ts = 0.05;
+p = 10; % Prediction horizon
 
 U_PB = 30;
 
@@ -119,25 +120,38 @@ options = optimoptions('quadprog', ...
                        'Display', 'off');
 
 pendulum = Pendulum();
-[A, B, C, ~] = pendulum.ss_discrete(Ts);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, true);
 
 n = pendulum.n;
 r = pendulum.r;
 m = pendulum.m;
 
-% --- Augmented system for integral action ---
-D = [1]; % Disturbance (the discrepancy between the model and real system)
-
-d = size(D, 1);
-
-A_tilde = [A, zeros(n, d);
-           zeros(d, n), D];
-
-B_tilde = [B; zeros(r, d)];
-
-C_tilde = [C, eye(d)];
-
 %% --- MPC prediction matrices ---
+% --- Augmented system for integral action ---
+if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
+    xinit = zeros(n, 1);
+    A = Fx(0, xinit, 0);
+    C = Hx(0, xinit, 0);
+    B = discrete_jacobian_u(f, 0, xinit, 0, Ts);
+end
+
+A_tilde = A;
+A_tilde(end, end) =  1;
+B_tilde = B;
+C_tilde = C;
+
+
+% D = [1]; % Disturbance (the discrepancy between the model and real system)
+% 
+% d = size(D, 1);
+% 
+% A_tilde = [A, zeros(n, d);
+%            zeros(d, n), D];
+% 
+% B_tilde = [B; zeros(r, d)];
+% 
+% C_tilde = [C, eye(d)];
+
 [M,N] = mpcfillmnoutput(A_tilde,B_tilde,C_tilde,p);  % build prediction matrices
 [Gamma] = mpcfillgamma(r,p);
 
@@ -172,14 +186,6 @@ A_con = [Gamma;
         -Gamma;
          N*Gamma;
         -N*Gamma];
-
-% --- Kalman filter initialization ---    
-R=0.01; % measurement noise covariance
-Q=diag([0.1;0.1;0.1]);  % process noise covariance
-
-% Kalman initial
-P=zeros(size(Q));
-x_hat=zeros(size(Q,1),1);
 
 try
     timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
@@ -248,8 +254,17 @@ try
     udt = U_STEP_SIZE/10;
     is_init = true;
     e = 0;
-    
 
+    % --- Kalman filter initialization ---    
+    R = (0.015)^2; % Measurement noise (from datasheet)
+    Q = diag([(0.01)^2 (0.01/Ts)^2 1]);
+    
+    % Kalman initial
+    P=zeros(size(Q));
+    x_hat=zeros(size(Q,1),1);
+
+    ekf = ExtendedKalmanFilter(f, h, x_hat, 1, 'Q', Q, 'R', R, 'epstol', Ts, 'P', P);
+    
     u_ones = ones(p, r);
     y_hat =  C_tilde*x_hat;
     
@@ -287,16 +302,46 @@ try
         end
         
         if elapsed >= 0
+            %% --- MPC prediction matrices ---
+            % --- Augmented system for integral action ---
+            if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
+                xinit = zeros(n, 1);
+                A = Fx(plant_time, x_hat, u);
+                C = Hx(plant_time, x_hat, u);
+                B = discrete_jacobian_u(f, plant_time, x_hat, u, Ts);
+            end
+            
+            A_tilde = A;
+            A_tilde(end, end) =  1;
+            B_tilde = B;
+            C_tilde = C;
+            
+            [M,N] = mpcfillmnoutput(A_tilde,B_tilde,C_tilde,p);  % build prediction matrices
+            [Gamma] = mpcfillgamma(r,p);
+
+            % Quadratic cost Hessian
+            H = 2*(Gamma'*N'*Q_*N*Gamma + R_);
+            H = (H+H')/2; % for symmetry
+
+            A_con = [Gamma;
+                    -Gamma;
+                     N*Gamma;
+                    -N*Gamma];
+
+
             % Do MPC
             u_pred = u_ones*u;
 
             Y_ref = repmat(deg2rad(REF), p, 1);
 
-            b = 2*(M*x_hat + N*u_pred - Y_ref)'*Q_*N*Gamma;
+            Nu = N*u_pred;
+            Mx = M*x_hat;
+
+            b = 2*(Mx + Nu - Y_ref)'*Q_*N*Gamma;
             b_con = [U_upper - u_pred;
                     -U_lower + u_pred;
-                    Y_upper - M*x_hat - N*u_pred;
-                    -Y_lower + M*x_hat + N*u_pred];
+                    Y_upper - Mx - Nu;
+                    -Y_lower + Mx + Nu];
 
             tic
             delta_U = quadprog(H, b, A_con, b_con, [], [], [], [],[], options);
@@ -326,14 +371,8 @@ try
         plant_control_time = aerodata.controltime - plant_time_init;
 
         % Do Kalman
-        x_hat = A_tilde*x_hat + B_tilde*u;
-        P = A_tilde*P*A_tilde' + Q;
-        
-        K = P*C_tilde'/(C_tilde*P*C_tilde' + R);
-        e1 = deg2rad(plant_output) - C_tilde*x_hat;
-        x_hat = x_hat + K*e1;
-        y_hat = C_tilde*x_hat;
-        P = P - K*C_tilde*P;
+        [ekf, y_hat] = ekf.step(plant_time, u, deg2rad(aerodata.output));
+        x_hat = ekf.get_xhat();
         % End Kalman
 
         % Write the data into a file
