@@ -19,8 +19,8 @@ classdef Pendulum
         % Ku = 1/3000;
 
         %% All the frictional coefficients
-        % xi = 0.0003; % damping coefficient % lab
-        xi = 0.00005; % damping coefficient % home
+        xi = 0.0001; % damping coefficient % lab
+        % xi = 0.00005; % damping coefficient % home
         mu = 0.0000043; % coloumb friction coefficient
 
         ka = 0.0014; % is the air resistance coefficient

@@ -6,7 +6,7 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting")
 
 %% Do the simulation
-Ts = 0.05;
+Ts = 0.1;
 Tstop = 20;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);

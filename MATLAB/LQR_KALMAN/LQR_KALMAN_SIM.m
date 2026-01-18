@@ -70,9 +70,9 @@ A_tilde = [A, zeros(n, m);
 
 B_tilde(1:n) = B;
 
-Q_=diag([15 5]);
+Q_=diag([10 5]);
 R_=[0.01];
-Qz=[10];
+Qz=[15];
 
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
         zeros(size(Qz, 1), size(Q_, 2)), Qz];

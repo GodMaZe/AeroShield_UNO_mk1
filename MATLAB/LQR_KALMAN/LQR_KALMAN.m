@@ -27,7 +27,7 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 30;
+Tstop = 10;
 SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
 Ts = 0.1;
@@ -188,7 +188,8 @@ try
     plant_time = 0;
     
 
-    REF_INIT = 35;
+    % REF_INIT = 35;
+    REF_INIT = 20;
     REF = REF_INIT;
 
     REF_STEPS = [-REF_INIT+90, -5, 0, 10, -REF_INIT];
@@ -241,7 +242,7 @@ try
     %     0 10 0;
     %     0 0 7];
     Q_=diag([10 5]);
-    R_=[0.01];
+    R_=[0.1];
     Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -256,14 +257,14 @@ try
     
     
     % --- Kalman filter initialization ---    
-    % R = (0.015); % Measurement noise (from datasheet)
-    % Q = diag(([0.001 (0.001*Ts)]));
+    R = (0.015); % Measurement noise (from datasheet)
+    Q = diag(([0.001 (0.001*Ts)]));
 
     % R = (0.015)^2; % Measurement noise (from datasheet)
     % Q = diag([(0.01)^2 (0.01/Ts)^2]);
-
-    R = (0.015)^2; % Measurement noise (from datasheet)
-    Q = diag([(0.01)^2 (0.01/Ts)^2]);
+    % 
+    % R = (0.015)^2; % Measurement noise (from datasheet)
+    % Q = diag([(0.01)^2 (0.01/Ts)^2]);
     
     % R = 3;
     % Q = diag([0.1 0.1 1]);
@@ -298,16 +299,20 @@ try
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        if elapsed >= 25
-            REF = REF_INIT + REF_STEPS(5);
-        elseif elapsed >= 20
-            REF = REF_INIT + REF_STEPS(4);
-        elseif elapsed >= 15
-            REF = REF_INIT + REF_STEPS(3);
-        elseif elapsed >= 10
-            REF = REF_INIT + REF_STEPS(2);
-        elseif elapsed >= 5
-            REF = REF_INIT + REF_STEPS(1);
+        % if elapsed >= 25
+        %     REF = REF_INIT + REF_STEPS(5);
+        % elseif elapsed >= 20
+        %     REF = REF_INIT + REF_STEPS(4);
+        % elseif elapsed >= 15
+        %     REF = REF_INIT + REF_STEPS(3);
+        % elseif elapsed >= 10
+        %     REF = REF_INIT + REF_STEPS(2);
+        % elseif elapsed >= 5
+        %     REF = REF_INIT + REF_STEPS(1);
+        % end
+
+        if step >= nsteps/2
+            REF = 30;
         end
 
         u = U_PB;
