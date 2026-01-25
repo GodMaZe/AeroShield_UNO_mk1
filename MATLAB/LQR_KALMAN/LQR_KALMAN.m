@@ -30,7 +30,8 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 10;
 SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
-Ts = 0.1;
+Ts = 0.05;
+nsteps_solo = floor(Tstop/Ts);
 
 Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
@@ -192,14 +193,17 @@ try
     REF_INIT = 20;
     REF = REF_INIT;
 
-    REF_STEPS = [-REF_INIT+90, -5, 0, 10, -REF_INIT];
+    REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
     % REF_STEPS(:) = -REF_INIT;
+    nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
 
     U_STEP_SIZE = 5;
     
     U_PB = 30;
 
     step = 0;
+    step_init = 0;
+
     u = 0;
     ux = 0;
     udt = U_STEP_SIZE/10;
@@ -208,7 +212,9 @@ try
 
     %% Init system and Kalman Filter
     % [A, B, C, ~] = ssdata(sysd);
-    pendulum = Pendulum();
+    % pendulum = Pendulum();
+    load("../misc/models/ipendulum_model");
+    pendulum = sys;
     [A, B, C, D] = pendulum.ss_discrete(Ts);
     [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
     
@@ -241,8 +247,9 @@ try
     % Q_=[0.01 0 0;
     %     0 10 0;
     %     0 0 7];
-    Q_=diag([10 5]);
-    R_=[0.1];
+
+    Q_=diag([1 5]);
+    R_=[0.01];
     Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -262,9 +269,9 @@ try
 
     % R = (0.015)^2; % Measurement noise (from datasheet)
     % Q = diag([(0.01)^2 (0.01/Ts)^2]);
-    % 
-    % R = (0.015)^2; % Measurement noise (from datasheet)
-    % Q = diag([(0.01)^2 (0.01/Ts)^2]);
+
+    R = (0.015)^2; % Measurement noise (from datasheet)
+    Q = diag([(0.001)^2 (0.001*Ts)^2]);
     
     % R = 3;
     % Q = diag([0.1 0.1 1]);
@@ -275,7 +282,7 @@ try
     y_hat = h(0, x_hat, 0);
 
     % KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
-    EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Fx', Fx, 'Hx', Hx, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
+    EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
     %% Loop
     while plant_time < Tstop
@@ -311,17 +318,31 @@ try
         %     REF = REF_INIT + REF_STEPS(1);
         % end
 
-        if step >= nsteps/2
-            REF = 30;
-        end
-
-        u = U_PB;
-
         if elapsed >= 0
-            if exist("EKF", "var")
-                A = Fx(plant_time, x_hat, u);
-                C = Hx(plant_time, x_hat, u);
-                B = discrete_jacobian_u(f, plant_time, x_hat, u, Ts);
+            if step_init == 0
+                step_init = step;
+                istep = 1;
+            else
+                istep = istep + 1;
+            end
+            
+            if mod(istep, nsteps_per_ref) == 0 && istep/nsteps_per_ref <= numel(REF_STEPS)
+                REF = REF_INIT + REF_STEPS(istep/nsteps_per_ref);
+            end
+
+            if exist("Fx", "var")
+                x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
+                A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
+                C_new = Hx(plant_time, x_test, u);
+                B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
+    
+                % A = (A+A_new)/2;
+                % B = (B+B_new)/2;
+                % C = (C+C_new)/2;
+                
+                A = A_new;
+                B = B_new;
+                C = C_new;
 
                 A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
@@ -330,7 +351,7 @@ try
                 % --- Solve Discrete-time Algebraic Riccati Equation ---
                 [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
                 K_LQ = -K_LQ;
-                
+
                 Kx=K_LQ(1:n);           % state feedback part
                 Kz=K_LQ(n + 1:end);        % integral feedback part
             end
@@ -339,8 +360,10 @@ try
             e = deg2rad(REF) - y_hat; % EKF
             z = z + e;
 
-            u = u + saturate(ux, -U_PB, 100 - U_PB);
+            u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
             % u = saturate(ux, 0, 100);
+        else
+            u = U_PB;
         end
 
 

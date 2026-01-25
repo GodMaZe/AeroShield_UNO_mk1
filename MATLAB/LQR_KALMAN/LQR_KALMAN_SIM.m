@@ -10,12 +10,19 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting");
 
 %% Do the simulation
-Ts = 0.1;
-Tstop = 10;
+Ts = 0.05;
+Tstop = 30;
+SYNC_TIME = 0; % [s]
+
+nsteps_solo = floor(Tstop/Ts);
+Tstop = Tstop + SYNC_TIME;
+
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
 pendulum = Pendulum();
+load("../misc/models/ipendulum_model");
+pendulum = sys;
 % [A, B, C, D] = pendulum.ss_discrete(Ts);
 [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 
@@ -36,12 +43,12 @@ x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
 
 R = (0.015)^2; % Measurement noise (from datasheet)
-Q = diag([(0.01)^2 (0.01/Ts)^2]);
+Q = diag([(0.001)^2 (0.001*Ts)^2]);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
 
-ekf = ExtendedKalmanFilter(f,h,x0,1,'Fx',Fx,'Hx',Hx,'Q',Q,'R',R,'P0',P,"epstol",Ts);
+ekf = ExtendedKalmanFilter(f,h,x0,1,'Q',Q,'R',R,'P0',P,"epstol", Ts);
 
 fprintf("Init EKF:\n\n");
 disp(ekf.xhat);
@@ -70,7 +77,8 @@ A_tilde = [A, zeros(n, m);
 
 B_tilde(1:n) = B;
 
-Q_=diag([10 5]);
+
+Q_=diag([1 5]);
 R_=[0.01];
 Qz=[15];
 
@@ -85,9 +93,12 @@ Kz = K_LQ((n+1):end);
 %% LOOP
 U = zeros(nsteps, 1);
 
-U_PB = 20; % %PWM
+U_PB = 30; % %PWM
 
-REF = 20; % deg
+REF_INIT = 20;
+REF = REF_INIT; % deg
+REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
+nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
 
 x_hat = x0;
 y_hat = x0(1);
@@ -96,47 +107,68 @@ u = U_PB;
 
 LOG_REF(1) = REF;
 
-for step=2:nsteps
+step_init = 0;
 
-    if step >= nsteps/2
-        REF = 30;
-    end
+w_noise = 1;
+
+for step=2:nsteps
 
     LOG_REF = [LOG_REF, REF];
 
-    if step > 0
+    if t(step) >= SYNC_TIME
+        if step_init == 0
+            step_init = step;
+            istep = 1;
+        else
+            istep = istep + 1;
+        end
+
+        if mod(istep, nsteps_per_ref) == 0 && istep/nsteps_per_ref <= numel(REF_STEPS)
+            REF = REF_INIT + REF_STEPS(istep/nsteps_per_ref);
+        end
+
         if exist("ekf", "var")
-            A = Fx(t(step-1), x_hat, u);
-            C = Hx(t(step-1), x_hat, u);
-            B = discrete_jacobian_u(f, t(step-1), x_hat, u, Ts);
-
+            x_test = x_hat; % [x(1, step - 1); x_hat(2)];
+            A_new = discrete_jacobian(f, t(step-1), x_test, u, Ts);
+            C_new = Hx(t(step-1), x_test, u);
+            B_new = discrete_jacobian_u(f, t(step-1), x_test, u, Ts);
+        
+            % A = (A+A_new)/2;
+            % B = (B+B_new)/2;
+            % C = (C+C_new)/2;
+        
+            A = A_new;
+            B = B_new;
+            C = C_new;
+        
             A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
-
+        
             B_tilde(1:n, :) = B;
-
+        
             % --- Solve Discrete-time Algebraic Riccati Equation ---
             [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
             K_LQ = -K_LQ;
-            
+        
             Kx=K_LQ(1:n);           % state feedback part
             Kz=K_LQ(n + 1:end);        % integral feedback part
         end
+
         ux = Kx*(x_hat) + Kz*z;
-        e = deg2rad(REF) - y_hat; % OPT Params
+        e = deg2rad(REF) - x(1, step - 1); % OPT Params
         z = z + e;
 
         u = U_PB + saturate(ux, -U_PB, 100-U_PB);
-        % u = saturate(u, 0, 100);
     else
         u = U_PB;
     end
     
     
-    w = chol(Q) * randn(n, 1) * 1;
-    x(:, step) = f(t(step-1), x(:, step-1), u*0.9) + w;
+    w = chol(Q) * randn(n, 1) * w_noise;
+    x(:, step) = f(t(step-1), x(:, step-1), u*1.3) + w;
 
     [ekf, y_hat] = ekf.step(t(step-1), u, x(1, step));
-    y_hat = y_hat;
+    v = chol(R) * randn(m, 1) * w_noise;
+    y_hat = y_hat + v;
     x_hat = ekf.get_xhat();
 
     ekf_yhat(step) = y_hat;
@@ -150,61 +182,6 @@ for step=2:nsteps
 end
 
 %% Plot
-% SKIP_STEPS = 1;
-% select_mask = SKIP_STEPS:nsteps;
-% e_phi = (x(1, select_mask) - ekf_x(1, select_mask)).^2;
-% e_dphi = (x(2, select_mask) - ekf_x(2, select_mask)).^2;
-% RMSE_X1 = rad2deg(sqrt(mean(e_phi)));
-% RMSE_X2 = rad2deg(sqrt(mean(e_dphi)));
-% 
-% 
-% figure(1); clf;
-% tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-% ax1 = nexttile([2 1]);
-% hold on;
-% stairs(ax1, t, rad2deg(x(1, :)));
-% stairs(ax1, t, rad2deg(ekf_x(1, :)));
-% hold off;
-% ylabel(ax1, "$x_1\ \left[deg\right]$", "Interpreter", "latex");
-% title(ax1, 'Pendulum angular position');
-% subtitle(ax1, "RMSE: " + num2str(RMSE_X1) + " rad")
-% legend(ax1, "y","y_{ekf}");
-% grid minor;
-% grid on;
-% 
-% ax2 = nexttile;
-% errorbar(ax2, t(select_mask), zeros(size(e_phi)), e_phi, '.');
-% title(ax2, "Simulated and observed state x_1: difference squared");
-% xlabel(ax2, "t [s]");
-% ylabel(ax2, "$\Delta x_1^{2}\ \left[deg\right]^2$", "Interpreter", "latex");
-% grid minor;
-% grid on;
-% 
-% 
-% 
-% figure(2); clf;
-% tiledlayout(3,1,"TileSpacing","compact","Padding","tight");
-% ax1 = nexttile([2 1]);
-% hold on;
-% stairs(ax1, t, (x(2, :)));
-% plot(ax1, [0, t(end)], [0, 0], '--r');
-% stairs(ax1, t, (ekf_x(2, :)));
-% % stairs(ax1, t, U/max(U) * mean(abs(x(2,:))))
-% hold off;
-% ylabel(ax1, "$x_2\ \left[\frac{rad}{s}\right]$", "Interpreter", "latex");
-% title(ax1, 'Pendulum angular velocity');
-% subtitle(ax1, "RMSE: " + num2str(RMSE_X2) + " rad s^{-1}")
-% legend(ax1, "dy","0-line","dy_{ekf}");
-% grid minor;
-% grid on;
-% 
-% ax2 = nexttile;
-% errorbar(ax2, t(select_mask), zeros(size(e_dphi)), e_dphi, '.');
-% title(ax2, "Simulated and observed state x_2: difference squared");
-% xlabel(ax2, "t [s]");
-% ylabel(ax2, "$\Delta x_2^{2}\ \left[\frac{rad}{s}\right]^2$", "Interpreter", "latex");
-% grid minor;
-% grid on;
 
 fprintf("Velocity mean: %f\n", mean(x(2, :)));
 

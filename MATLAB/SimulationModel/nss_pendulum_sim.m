@@ -6,19 +6,25 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting")
 
 %% Do the simulation
-Ts = 0.1;
-Tstop = 20;
+
+Ts = 0.05;
+Tstop = 30;
 t = 0:Ts:Tstop; % Create a time vector from 0 to Tstop with step Ts
 nsteps = numel(t);
 
 u = 0.00;
 pendulum = Pendulum();
+load("../misc/models/ipendulum_model");
+% load("apptest_model.mat");
+pendulum = sys;
 w_disturbance = false;
 
 [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-x0 = zeros(2 + w_disturbance, 1);
+n = 2 + w_disturbance;
+
+x0 = zeros(n, 1);
 x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
@@ -28,7 +34,7 @@ R = (0.015)^2; % Measurement noise (from datasheet)
 if size(x0, 1) == 3
     Q = diag([(0.01)^2 (0.01/Ts)^2 0.1]);
 else
-    Q = diag([(0.01)^2 (0.01/Ts)^2]);
+    Q = diag([(0.001)^2 (0.001*Ts)^2]);
 end
 
 % x0 = [0; 0];
@@ -50,7 +56,10 @@ ekf_x(:, 1) = x0;
 
 U = zeros(nsteps, 1);
 
-for step=2:nsteps
+tx = 0;
+cx = x0;
+
+for step=1:nsteps
     
     % X = x(:, step - 1);
     % x2 = X(2) + [0 1] * Ts * f(X, u);
@@ -63,7 +72,7 @@ for step=2:nsteps
     % x(:, step + 1) = rk4_step(f, t(step), x(:, step), u, Ts);
     % x(:, step) = euler_step(f, x(:, step - 1), u, Ts);
 
-    if step == 2
+    if step == 1
         u = 100;
     else
         u = 0;
@@ -71,13 +80,16 @@ for step=2:nsteps
 
     U(step) = u;
     
-    w = chol(Q) * randn(size(Q,1), 1) * 0;
-    x(:, step) = f(t(step-1), x(:, step-1), u) + w;
+    w = chol(Q) * randn(size(Q,1), 1) * 1;
+    x(:, step) = f(tx, cx, u) + w;
 
-    [ekf, yhat] = ekf.step(t(step-1), u, x(1, step));
+    [ekf, yhat] = ekf.step(tx, u, x(1, step));
     
     ekf_yhat(step) = yhat;
     ekf_x(:, step) = ekf.xhat;
+
+    tx = tx + Ts;
+    cx = x(:, step);
 
     if step < 5
         disp(ekf.xhat)
@@ -99,3 +111,33 @@ if n == 3
     x3data = Data2Plot(t, rad2deg(x(3, :)), rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
     x3data.plotoutnerror(3, 0, "images/nss/angualr_position_deviation_w_estimate_error");
 end
+
+tt = t;
+
+%% Comparison to the measured impulse characteristic
+load("mean_impulse");
+
+figure(777); clf;
+hold on;
+stairs(t, u, '-k', 'LineWidth', 1);
+stairs(tt, U, 'LineWidth', 1);
+legend('Measured Impulse', 'Simulated Pendulum', 'Location', 'Best');
+xlabel('t [s]');
+ylabel("$\varphi [^\circ]$", 'Interpreter', 'latex');
+title('Pendulum Angle Comparison');
+grid minor;
+grid on;
+hold off;
+
+figure(666); clf;
+hold on;
+plot(t, y, '-k', 'LineWidth', 1);
+plot(tt, rad2deg(x(1, :)), 'LineWidth', 1);
+legend('Measured Impulse', 'Simulated Pendulum', 'Location', 'Best');
+xlabel('t [s]');
+ylabel("$\varphi [^\circ]$", 'Interpreter', 'latex');
+title('Pendulum Angle Comparison');
+grid minor;
+grid on;
+hold off;
+

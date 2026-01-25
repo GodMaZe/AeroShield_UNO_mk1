@@ -28,16 +28,19 @@ ncols = numel(data) + 1;
 ts = zeros(minLength, ncols);
 tps = zeros(minLength, ncols);
 ys = zeros(minLength, ncols);
+us = zeros(minLength, ncols);
 
 for i = 1:length(csvFilePaths)
     ts(:, i) = data{i}.t(smask);
     tps(:, i) = data{i}.tp(smask);
     ys(:, i) = data{i}.y(smask);
+    us(:, i) = data{i}.u(smask);
 end
 
 ts(:, end) = mean(ts(:, 1:end-1), 2);
 tps(:, end) = mean(tps(:, 1:end-1), 2);
 ys(:, end) = mean(ys(:, 1:end-1), 2);
+us(:, end) = mean(us(:, 1:end-1), 2);
 
 %% Plot all the outputs within the same graph
 N = size(tps, 2);
@@ -58,5 +61,14 @@ grid minor;
 grid on;
 xlabel('t [s]');
 ylabel("$\varphi$ [deg]", "Interpreter", "latex");
-title("Impulse characteristic");
+title("Aggregated Impulse characteristic");
 legend show;
+
+% Save the figure as a PNG file
+saveas(gcf, 'impulse_characteristic.png');
+
+u = us(:, end);
+y = ys(:, end);
+t = ts(:, end);
+
+save("mean_impulse", "t", "y", "u");
