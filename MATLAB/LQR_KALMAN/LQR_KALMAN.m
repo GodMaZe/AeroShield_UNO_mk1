@@ -28,7 +28,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
 Tstop = 10;
-SYNC_TIME = 0; % Time for the system to stabilize in the OP
+SYNC_TIME = 5; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
 nsteps_solo = floor(Tstop/Ts);
@@ -190,7 +190,7 @@ try
     
 
     % REF_INIT = 35;
-    REF_INIT = 20;
+    REF_INIT = 30;
     REF = REF_INIT;
 
     REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
@@ -199,7 +199,7 @@ try
 
     U_STEP_SIZE = 5;
     
-    U_PB = 30;
+    U_PB = 20;
 
     step = 0;
     step_init = 0;
@@ -215,7 +215,8 @@ try
     % pendulum = Pendulum();
     load("../misc/models/ipendulum_model");
     pendulum = sys;
-    [A, B, C, D] = pendulum.ss_discrete(Ts);
+    pendulum.Ku = pendulum.Ku/0.72;
+    % [A, B, C, D] = pendulum.ss_discrete(Ts);
     [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
     
     if exist("pendulum", "var")
@@ -232,7 +233,7 @@ try
     % --- Augmented system for integral action ---
     if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
         xinit = zeros(n, 1);
-        A = Fx(0, xinit, 0);
+        A = discrete_jacobian(f, 0, xinit, 0, Ts);
         C = Hx(0, xinit, 0);
         B = discrete_jacobian_u(f, 0, xinit, 0, Ts);
     end
@@ -264,8 +265,8 @@ try
     
     
     % --- Kalman filter initialization ---    
-    R = (0.015); % Measurement noise (from datasheet)
-    Q = diag(([0.001 (0.001*Ts)]));
+    % R = (0.015); % Measurement noise (from datasheet)
+    % Q = diag(([0.001 (0.001*Ts)]));
 
     % R = (0.015)^2; % Measurement noise (from datasheet)
     % Q = diag([(0.01)^2 (0.01/Ts)^2]);
@@ -294,29 +295,7 @@ try
             continue;
         end
 
-        % if is_init
-        %     u = u + udt;
-        %     u = max(0, min(u, U_PB));
-        %     if u >= U_PB
-        %         is_init = false;
-        %     end
-        % else
-        %     u = U_PB;
-        % end
-
         elapsed = time_elapsed - SYNC_TIME;
-
-        % if elapsed >= 25
-        %     REF = REF_INIT + REF_STEPS(5);
-        % elseif elapsed >= 20
-        %     REF = REF_INIT + REF_STEPS(4);
-        % elseif elapsed >= 15
-        %     REF = REF_INIT + REF_STEPS(3);
-        % elseif elapsed >= 10
-        %     REF = REF_INIT + REF_STEPS(2);
-        % elseif elapsed >= 5
-        %     REF = REF_INIT + REF_STEPS(1);
-        % end
 
         if elapsed >= 0
             if step_init == 0

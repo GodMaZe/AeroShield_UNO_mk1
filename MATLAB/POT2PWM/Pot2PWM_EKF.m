@@ -2,8 +2,17 @@ close all; clear;
 clc;
 
 addpath("../misc");
+addpath("../misc/KF");
+addpath("../misc/models");
+addpath("../misc/functions");
+addpath("../misc/models/frictions");
 
 loadconfigs;
+
+load("../misc/models/ipendulum_model");
+pendulum = sys;
+pendulum.Ku = pendulum.Ku/0.72;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "pot2pwm";
@@ -23,7 +32,7 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 60;
+Tstop = 30;
 
 Ts = 0.05;
 nsteps = floor(Tstop/Ts);
@@ -32,7 +41,7 @@ nsteps = floor(Tstop/Ts);
 % the following value
 Ystop = 180; % deg
 
-global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
+global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF LOG_Y_HAT LOG_X_HAT LOG_P_HAT;
 
 % Logging vectors
 LOG_T = [];
@@ -45,16 +54,19 @@ LOG_DT = [];
 LOG_STEP = [];
 LOG_CTRL_T = [];
 LOG_REF = [];
+LOG_Y_HAT = [];
+LOG_X_HAT = [];
+LOG_P_HAT = [];
 
 function plotdatarealtime()
-    global LOG_T LOG_Y LOG_U LOG_REF;
+    global LOG_T LOG_Y LOG_U LOG_Y_HAT;
     persistent hy hr hu;
     % ----------------------------------
     % Plot the measured data in real time
     % ----------------------------------
     try
         if isempty(hy) || isempty(hr) || isempty(hu)
-            f = figure("Name","Plot-RealTime","GraphicsSmoothing","on","Renderer","opengl","RendererMode","auto");
+            f = figure("Name","Plot-RealTime");
             ax = axes(f);
             hold on;
             % hy = plot(ax, nan, nan, '.k');
@@ -67,13 +79,10 @@ function plotdatarealtime()
             title("Real-Time System Response");
             xlabel("t [s]");
             ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-            legend(ax, "y","ref", "u", 'Location', 'southeast');
+            legend(ax, "y","yhat", "u", 'Location', 'southeast');
             
         end
        
-        % plot(plot_t, plot_sig_3,'.b', plot_t, plot_sig_2,'.r', plot_t,
-        % plot_sig_1,'.k')
-        % print(timer_t(1));
         nsteps = numel(LOG_Y);
         last_n_points = nsteps - 300;
 
@@ -85,7 +94,7 @@ function plotdatarealtime()
         t = LOG_T(mask);
 
         set(hy, 'YData', LOG_Y(mask), 'XData', t);
-        set(hr, 'YData', LOG_REF(mask), 'XData', t);
+        set(hr, 'YData', rad2deg(LOG_Y_HAT(mask)), 'XData', t);
         set(hu, 'YData', LOG_U(mask), 'XData', t);
         drawnow limitrate nocallbacks;
     catch err
@@ -95,11 +104,12 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
 
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -148,8 +158,42 @@ try
     step = 0;
 
     REF = 0;
+    u = aerodata.control;
+
+    %% Initialize Extended Kalman Filter
+    w_disturbance = true;
+
+    [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
+
+    n = pendulum.n;
+    r = pendulum.r;
+    m = pendulum.m;
+
+    x0 = zeros(n, 1);
+    x0(1) = deg2rad(aerodata.output);
+
+    R = (0.015)^2; % Measurement noise (from datasheet)
+    if w_disturbance
+        Q = diag([(0.001)^2 (0.001*Ts)^2 1^2]);
+    else
+        Q = diag([(0.001)^2 (0.001*Ts)^2]);
+    end
+
+    P = diag(ones(size(x0))*var(x0));
+
+    ekf = ExtendedKalmanFilter(f, h, x0, 1, 'R', R, 'Q', Q, 'P', P, 'epstol', Ts);
     
-    while plant_time < Tstop
+    %% Insert null entries into the Kalman logs
+    [ekf, y_hat] = ekf.step(plant_time, u);
+    % LOG_Y_HAT = [LOG_Y_HAT, y_hat];
+    % LOG_X_HAT = [LOG_X_HAT, ekf.get_xhat()];
+    % LOG_P_HAT = [LOG_P_HAT, ekf.P];
+    
+
+    %% Start the loop
+    
+
+    while plant_time <= Tstop
         time_elapsed = seconds(time_curr - time_start);
         time_curr = datetime("now");
         time_delta = seconds(time_curr - time_last);
@@ -158,7 +202,9 @@ try
             continue;
         end
 
-        write(scon, aerodata.potentiometer, "single");
+        u = aerodata.potentiometer;
+
+        write(scon, u, "single");
         
         % Wait for the system to send a data message
         bytes = read(scon, aerodata.packetsize, "uint8");
@@ -175,6 +221,8 @@ try
         plant_dt = aerodata.dt;
         plant_control_time = aerodata.controltime - plant_time_init;
 
+        [ekf, y_hat] = ekf.step(plant_time, u, deg2rad(aerodata.output));
+
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
         writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
@@ -189,12 +237,15 @@ try
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
+        LOG_Y_HAT = [LOG_Y_HAT, y_hat];
+        LOG_X_HAT = [LOG_X_HAT, ekf.get_xhat()];
+        LOG_P_HAT = [LOG_P_HAT, ekf.P];
+
 
         step = step + 1;
         time_last = time_curr;
 
         if plant_time >= Tstop || plant_output >= Ystop
-            % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
             break;
         end
     end
@@ -234,3 +285,12 @@ xlabel('k'); ylabel('u(k)'); grid on
 % xlim([0,max(LOG_STEP)]);
 
 set(gcf,'position',[200,400,650,400]);
+
+%% Plot the Kalman parameters
+addpath("../misc/plotting");
+
+plt = Data2Plot(LOG_TP, rad2deg(LOG_X_HAT),[],"stairs","s","^\circ","EKF Estimate");
+plt.plotx();
+
+plt = Data2Plot(LOG_TP, LOG_Y, rad2deg(LOG_Y_HAT),"stairs","s","^\circ","Output vs EKF Estimate","Estimation comparsion");
+plt.plotoutnerror(123, 0, "./figures/out_vs_ekf");
