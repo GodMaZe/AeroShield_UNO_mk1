@@ -24,11 +24,11 @@ classdef Pendulum
         mu = 0.000160; % coloumb friction coefficient
 
         ka = 0.00000145; % is the air resistance coefficient
-        kr = 1000; % hyperbolic tangent smoothing in the drag equation
+        kr = 10000; % hyperbolic tangent smoothing in the drag equation
 
         hc = 10000; % tanh smoothing in the coulomb friction
         
-        omega_brk = 100; % the breakaway angular velocity threshold
+        omega_brk = 0.1; % the breakaway angular velocity threshold
         
         omega_S = 0; % Stribeck angular velocity threshold
         omega_dry = 0; % dry angular velocity threshold

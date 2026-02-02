@@ -5,6 +5,7 @@ classdef Data2Plot
     properties (SetAccess = immutable)
         t;
         x;
+        that;
         xhat;
         tdims;
         ntsamples;
@@ -31,10 +32,11 @@ classdef Data2Plot
     end
 
     methods
-        function obj = Data2Plot(t, x, xhat, plottype, tunits, xunits, title, figure_name, show_zeroline, units_brackettype, grid, subtitle, show_legend, figsize)
+        function obj = Data2Plot(t, x, that, xhat, plottype, tunits, xunits, title, figure_name, show_zeroline, units_brackettype, grid, subtitle, show_legend, figsize)
             arguments (Input)
                 t;
                 x;
+                that = [];
                 xhat = [];
                 plottype = "plot"; % plot, stairs, scatter
                 tunits = "s";
@@ -50,6 +52,7 @@ classdef Data2Plot
             end
             obj.t = t;
             obj.x = x;
+            obj.that = that;
             obj.xhat = xhat;
             obj.plottype = plottype;
             obj.tunits = tunits;
@@ -154,7 +157,11 @@ classdef Data2Plot
         plotfcn = obj.plotcustom();
         
         plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'x');
-        plotfcn(ax1, obj.t, obj.xhat, 'DisplayName', 'xhat');
+        that = obj.that;
+        if isempty(obj.that)
+            that = obj.t;
+        end
+        plotfcn(ax1, that, obj.xhat, 'DisplayName', 'xhat');
         
         hold off;
 
