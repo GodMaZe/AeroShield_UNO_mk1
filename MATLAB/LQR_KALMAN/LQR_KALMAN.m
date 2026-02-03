@@ -446,20 +446,23 @@ hold on;
 plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
 stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
 stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
-xlabel('t [s]'); ylabel('\phi(k)'); grid on;
+xlabel('t [s]'); ylabel("$\varphi [deg]$", "Interpreter", "latex"); grid on;
 % xlim([0,max(LOG_STEP)]);
 legend("ref","y","yhat");
+title("Control Response");
 hold off;
 
 subplot(2,1,2)
 hold on
 stairs(LOG_TP, LOG_U,'LineWidth',1.5);
-stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
-ylabel('u(t) [%]'); xlabel('t [s]'); grid on
+% stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
+ylabel('u(t) [%PWM]'); xlabel('t [s]'); grid on
 % xlim([0,max(LOG_STEP)]);
-legend("u","ux");
+% legend("u","ux");
+title("Control Input");
 hold off
 set(gcf,'position',[200,400,650,400]);
+saveplot2file(gcf, "images/LQR/control_response");
 
 %%
 figure(123); clf;
