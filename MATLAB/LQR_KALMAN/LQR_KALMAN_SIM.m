@@ -11,7 +11,7 @@ addpath("../misc/plotting");
 
 %% Do the simulation
 Ts = 0.05;
-Tstop = 30;
+Tstop = 10;
 SYNC_TIME = 10; % [s]
 
 nsteps_solo = floor(Tstop/Ts);
@@ -79,7 +79,7 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 
-Q_=diag([1 5]);
+Q_=diag([10 5]);
 R_=[0.1];
 Qz=[15];
 
@@ -98,7 +98,7 @@ U_PB = 30; % %PWM
 
 REF_INIT = 30;
 REF = REF_INIT; % deg
-REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
+REF_STEPS = [+10, -REF_INIT];
 nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
 
 x_hat = x0;
@@ -155,10 +155,11 @@ for step=2:nsteps
         % end
 
         ux = Kx*(x_hat) + Kz*z;
-        e = deg2rad(REF) - y_hat; % OPT Params
+        e = deg2rad(REF) - y(:, step - 1); % OPT Params
         z = z + e;
 
-        u = U_PB + saturate(ux, -U_PB, 100-U_PB);
+        % u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
+        u = saturate(ux, 0, 100);
     else
         u = U_PB;
     end

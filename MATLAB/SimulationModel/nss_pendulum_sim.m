@@ -29,12 +29,7 @@ x0 = zeros(n, 1);
 % x0(1) = -pi/3; % free fall experiment
 
 %% Initiate Extended Kalman Filter
-R = (0.015)^2; % Measurement noise (from datasheet)
-if size(x0, 1) == 3
-    Q = diag([(0.001)^2 (0.001*Ts)^2 0.1]);
-else
-    Q = diag([(0.001)^2 (0.001*Ts)^2]);
-end
+[Q, R] = QR_matrix(n, m);
 
 P = diag(ones(size(x0))*var(x0));
 
@@ -46,13 +41,13 @@ fprintf("========\n");
 
 %% Create the control input signal
 u = zeros(1, nsteps);
-% u(1) = 25;
-% u(2) = 80;
-% u(3) = -15;
-% u(4) = 5;
+u(1) = 25;
+u(2) = 80;
+u(3) = -15;
+u(4) = 5;
 
 %% Simulate the system and observer
-in_disturbance = 0;
+in_disturbance = 1;
 [x, y, xhat, yhat] = simulate_sys_ekf(t, u, f, h, ekf, x0, in_disturbance, Q, R);
 
 %% Plot
@@ -74,7 +69,7 @@ end
 ydata = Data2Plot(t, rad2deg(y), [], rad2deg(yhat), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
 [fig, ax1, ~] = ydata.plotoutnerror(4, 0, "images/nss/angular_position_w_estimate_error");
 
-
+return;
 tt = t;
 yt = y;
 ut = u;
@@ -108,6 +103,6 @@ hold off;
 
 yhat_ = yt(1:numel(t));
 tt_ = tt(1:numel(t));
-ycdata = Data2Plot(t', y', tt_, rad2deg(yhat_), "plot", "s", "deg", "Pendulum angular position", "Impulse response comparision", false, "s", "all", [], true);
+ycdata = Data2Plot(t', y', tt_, rad2deg(yhat_), "plot", "s", "deg", "Pendulum impulse response comparison", "Impulse response comparision", false, "s", "all", [], true);
 [fig, ax1, ~] = ycdata.plotoutnerror(5, 0, "images/nss/angular_position_impulse_compare");
 

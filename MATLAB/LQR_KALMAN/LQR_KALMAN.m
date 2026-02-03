@@ -29,8 +29,8 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 30;
-SYNC_TIME = 10; % Time for the system to stabilize in the OP
+Tstop = 10;
+SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
 nsteps_solo = floor(Tstop/Ts);
@@ -110,29 +110,6 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-%% Init model, LQR, Kalman
-% ----------------------------------
-% ----------------------------------
-
-% % Define model parameters
-% K = 1.3860;
-% eta = 11.0669;
-% omega = 7.8944;
-% b = 0.0735;
-% 
-% % State matrix A
-% Ac = [-eta, 0, 0;
-%       0, 0, 1;
-%       omega^2, -omega^2, -2*b*omega];
-% 
-% % Input matrix B
-% Bc = [K*eta; 0; 0];
-% 
-% % Output matrix C
-% Cc = [0, 1, 0];
-% 
-% sys = ss(Ac,Bc,Cc,0);
-% sysd = c2d(sys, Ts);
     
 % Initialize control variables
 z=0;
@@ -195,7 +172,7 @@ try
     REF_INIT = 30;
     REF = REF_INIT;
 
-    REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
+    REF_STEPS = [10, -REF_INIT];
     % REF_STEPS(:) = -REF_INIT;
     nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
 
@@ -252,9 +229,9 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([1 5]);
-    R_=[0.1];
-    Qz=[15];
+    Q_=diag([0.1 15]);
+    R_=[0.01];
+    Qz=[25];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
             zeros(size(Qz, 1), size(Q_, 2)), Qz];
@@ -340,11 +317,11 @@ try
             % end
 
             ux = Kx*x_hat + Kz*z;
-            e = deg2rad(REF) - y_hat; % EKF
+            e = deg2rad(REF) - deg2rad(aerodata.output); % EKF
             z = z + e;
 
-            u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
-            % u = saturate(ux, 0, 100);
+            % u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
+            u = saturate(ux, 0, 100);
         else
             u = U_PB;
         end
