@@ -12,9 +12,9 @@ end
 
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
 if n == 3
-    Q = diag([deg2rad(0.001)^2 deg2rad(0.01)^2 0.1]);
+    Q = diag([deg2rad(0.01)^2 deg2rad(0.01)^2 0.1]);
 else
-    Q = diag([deg2rad(0.001)^2 deg2rad(0.01)^2]);
+    Q = diag([deg2rad(0.01)^2 deg2rad(1)^2]);
 end
 
 end
