@@ -156,12 +156,14 @@ try
     REF = 0;
 
     pendulum = Pendulum();
+    load("../misc/models/ipendulum_model.mat");
+    pendulum = sys;
 
-    [f, h, Fx, Hx] = pendulum.nonlinear(Ts, false, false);
+    [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 
     R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
     % Q = diag([deg2rad(0.01*Ts)^2 deg2rad(1/Ts)^2 deg2rad(0.0001)^2]);
-    Q = diag([deg2rad(0.01*Ts)^2 deg2rad(1/Ts)^2]);
+    Q = diag([(0.001*Ts)^2 (0.001*Ts)^2]);
 
     % x0 = [-pi/3; 0; 0];
     x0 = [-pi/3; 0];
@@ -183,9 +185,7 @@ try
 
         % u = 0;
 
-        % Do EKF
-        [ekf, yhat] = ekf.step(plant_time, u, deg2rad(aerodata.output));
-        xhat = ekf.xhat;
+        
 
         if(plant_time <= 10)
             u = 15;
@@ -210,6 +210,10 @@ try
         if plant_time_init < 0
             plant_time_init = aerodata.time;
         end
+
+        % Do EKF
+        [ekf, yhat] = ekf.step(plant_time, u, deg2rad(aerodata.output));
+        xhat = ekf.xhat;
 
         plant_time = aerodata.time - plant_time_init;
         plant_output = aerodata.output;

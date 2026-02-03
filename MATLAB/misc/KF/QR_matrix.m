@@ -1,0 +1,20 @@
+function [Q, R] = QR_matrix(n, m)
+%QR_MATRIX Return the 
+arguments (Input)
+    n = 2;
+    m = 1;
+end
+
+arguments (Output)
+    Q;
+    R;
+end
+
+R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
+if n == 3
+    Q = diag([(0.01)^2 (0.001)^2 0.1]);
+else
+    Q = diag([deg2rad(0.001)^2 deg2rad(0.01)^2]);
+end
+
+end

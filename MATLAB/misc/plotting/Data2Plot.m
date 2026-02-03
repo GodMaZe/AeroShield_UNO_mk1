@@ -77,10 +77,12 @@ classdef Data2Plot
             obj.isvalid = obj.checkdims();
         end
 
-        function [f, ax] = plotx(obj, i, filename)
+        function [f, ax] = plotx(obj, i, xlabel_, ylabel_, filename)
             arguments (Input)
                 obj;
                 i = -1;
+                xlabel_ = "t";
+                ylabel_ = "x";
                 filename = [];
             end
             arguments (Output)
@@ -94,23 +96,30 @@ classdef Data2Plot
 
             [f, ax] = obj.getfigureaxes(i);
             pltfcn = obj.plotcustom();
+
             if obj.xdims > 1
                 hold on;
                 for i=1:obj.xdims
                     if obj.tdims > 1
-                        pltfcn(ax, obj.t(i, :), obj.x(i, :), "LineWidth", 1);
+                        pltfcn(ax, obj.t(i, :), obj.x(i, :), "LineWidth", 1, "DisplayName", "x" + num2str(i));
                     else
-                        pltfcn(ax, obj.t, obj.x(i, :), "LineWidth", 1);
+                        pltfcn(ax, obj.t, obj.x(i, :), "LineWidth", 1, "DisplayName", "x" + num2str(i));
                     end
                 end
                 hold off;
             else
-                pltfcn(ax, obj.t, obj.x, "LineWidth", 1);
+                if obj.plottype == "scatter"
+                    pltfcn(ax, obj.t, obj.x, 120, "k", ".");
+                else
+                    pltfcn(ax, obj.t, obj.x, "LineWidth", 1, "DisplayName", "x");
+                end
             end
-            obj.updatefigure(f, ax);
+
+            obj.updatefigure(f, ax, xlabel_, ylabel_);
             saveplot2file(f, filename);
         end
-        function [fig, ax1, ax2] = plotoutnerror(obj, i, nskipsamples, filename)
+
+        function [fig, ax1, ax2] = plotoutnerror(obj, i, nskipsamples, filename, is_measurement)
         %PLOTOUTNERROR Plot function for plotting the measured state (x) and estimated
         %state (xhat) in time (t). Including the
         %error squared of the inconsistencies within the measured and estimated data.
@@ -119,6 +128,7 @@ classdef Data2Plot
             i = -1; % Figure id
             nskipsamples = 0;
             filename = [];
+            is_measurement = false;
         end
         arguments (Output)
             fig;
@@ -156,12 +166,19 @@ classdef Data2Plot
         
         plotfcn = obj.plotcustom();
         
-        plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'x');
+        
         that = obj.that;
         if isempty(obj.that)
             that = obj.t;
         end
-        plotfcn(ax1, that, obj.xhat, 'DisplayName', 'xhat');
+
+        if is_measurement
+            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'y');
+            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'ysim');
+        else
+            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'x');
+            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'xhat');
+        end
         
         hold off;
 
@@ -179,10 +196,17 @@ classdef Data2Plot
         hold on;
         errorbar(ax2, obj.t(select_mask), zeros(size(obj.t)), e_x, '.');
         hold off;
-        title(ax2, "Simulated and observed state x: difference squared");
+
+        if is_measurement
+            title(ax2, "Measurement and simulation output: difference squared");
+            ylabel(ax2, "$\Delta y^{2}\ " + obj.getxunits() + "^2$", "Interpreter", "latex");
+        else
+            title(ax2, "Simulated and observed state x: difference squared");
+            ylabel(ax2, "$\Delta x^{2}\ " + obj.getxunits() + "^2$", "Interpreter", "latex");
+        end
         subtitle(ax1, "RMSE: $" + num2str(RMSE_X) + "\ " + obj.getxunits() + "$", "Interpreter", "latex");
         xlabel(ax2, "$t\ " + obj.gettunits() + "$", "Interpreter", "latex");
-        ylabel(ax2, "$\Delta x^{2}\ " + obj.getxunits() + "^2$", "Interpreter", "latex");
+        
         grid minor;
         grid on;
         
@@ -207,9 +231,11 @@ classdef Data2Plot
         function unit = gettunits(obj)
             unit = obj.getunitsinbracket(obj.tunits);
         end
+
         function unit = getxunits(obj)
             unit = obj.getunitsinbracket(obj.xunits);
         end
+
         function unit = getunitsinbracket(obj, u)
             switch obj.units_brackettype
                 case "s"
@@ -222,6 +248,7 @@ classdef Data2Plot
                     unit = u;
             end
         end
+
         function fig = getfigure(obj, i)
             arguments (Input)
                 obj;
@@ -246,6 +273,7 @@ classdef Data2Plot
                 fig.NumberTitle = 'off';
             end
         end
+
         function fig = getcleanfigure(obj, i)
             arguments (Input)
                 obj;
@@ -270,11 +298,14 @@ classdef Data2Plot
             fig = obj.getfigure(i);
             ax = axes(fig);
         end
-        function updatefigure(obj, fig, ax)
+
+        function updatefigure(obj, fig, ax, xlabel_, ylabel_)
             arguments (Input)
                 obj;
                 fig;
                 ax = [];
+                xlabel_ = "t";
+                ylabel_ = "x";
             end
             if isempty(ax)
                 ax = axes(fig);
@@ -286,8 +317,9 @@ classdef Data2Plot
                 hold off;
             end
 
-            xlabel(ax, "$t\ " + obj.gettunits() + "$", "Interpreter", "latex");
-            ylabel(ax, "$x\ " + obj.getxunits() + "$", "Interpreter", "latex");
+
+            xlabel(ax, "$" + xlabel_ + "\ " + obj.gettunits() + "$", "Interpreter", "latex");
+            ylabel(ax, "$" + ylabel_ + "\ " + obj.getxunits() + "$", "Interpreter", "latex");
             
             if ~isempty(obj.title)
                 title(ax, obj.title);
@@ -299,6 +331,7 @@ classdef Data2Plot
             obj.gridupdate(ax);
             obj.legendupdate(ax);
         end
+
         function gridupdate(obj, ax)
             arguments (Input)
                 obj;
@@ -319,6 +352,7 @@ classdef Data2Plot
                     grid(ax, "on");
             end
         end
+
         function legendupdate(obj, ax)
             arguments (Input)
                 obj;
@@ -330,6 +364,7 @@ classdef Data2Plot
                 legend(ax, "hide");
             end
         end
+
         function plotfcn = plotcustom(obj)
             switch obj.plottype
                 case "plot"

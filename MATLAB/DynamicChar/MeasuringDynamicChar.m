@@ -24,10 +24,10 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 60;
-SYNC_TIME = 20; % Time for the system to stabilize in the OP
+Tstop = 20;
+SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
-Ts = 0.02;
+Ts = 0.05;
 
 
 Tstop = Tstop + SYNC_TIME;
@@ -184,17 +184,18 @@ try
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        if elapsed >= 50
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 40
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 30
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 20
-            u = u + U_STEP_SIZE;
-        elseif elapsed >= 10
-            u = u - U_STEP_SIZE;
-        elseif elapsed >= 0
+        % if elapsed >= 50
+        %     u = u - U_STEP_SIZE;
+        % elseif elapsed >= 40
+        %     u = u + U_STEP_SIZE;
+        % elseif elapsed >= 30
+        %     u = u - U_STEP_SIZE;
+        % elseif elapsed >= 20
+        %     u = u + U_STEP_SIZE;
+        % elseif elapsed >= 10
+        %     u = u - U_STEP_SIZE;
+        % else
+        if elapsed >= 0
             u = u + U_STEP_SIZE;
         end
 

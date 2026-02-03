@@ -27,8 +27,8 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 10;
-SYNC_TIME = 5; % Time for the system to stabilize in the OP
+Tstop = 30;
+SYNC_TIME = 10; % Time for the system to stabilize in the OP
 
 Ts = 0.05;
 nsteps_solo = floor(Tstop/Ts);
@@ -199,7 +199,7 @@ try
 
     U_STEP_SIZE = 5;
     
-    U_PB = 20;
+    U_PB = 30;
 
     step = 0;
     step_init = 0;
@@ -215,9 +215,10 @@ try
     % pendulum = Pendulum();
     load("../misc/models/ipendulum_model");
     pendulum = sys;
-    pendulum.Ku = pendulum.Ku/0.72;
+    % pendulum.Ku = pendulum.Ku/0.72;
     % [A, B, C, D] = pendulum.ss_discrete(Ts);
     [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
+    
     
     if exist("pendulum", "var")
         n = pendulum.n;
@@ -229,13 +230,13 @@ try
         m = size(C, 1);   
     end
     
+    x0 = zeros(n, 1);
     
     % --- Augmented system for integral action ---
     if exist("Fx","var") && exist("Hx","var") && exist("Bu", "var")
-        xinit = zeros(n, 1);
-        A = discrete_jacobian(f, 0, xinit, 0, Ts);
-        C = Hx(0, xinit, 0);
-        B = discrete_jacobian_u(f, 0, xinit, 0, Ts);
+        A = discrete_jacobian(f, 0, x0, 0, Ts);
+        C = Hx(0, x0, 0);
+        B = discrete_jacobian_u(f, 0, x0, 0, Ts);
     end
     B_tilde=zeros(n+m, r);
     
@@ -250,7 +251,7 @@ try
     %     0 0 7];
 
     Q_=diag([1 5]);
-    R_=[0.01];
+    R_=[0.1];
     Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -271,15 +272,16 @@ try
     % R = (0.015)^2; % Measurement noise (from datasheet)
     % Q = diag([(0.01)^2 (0.01/Ts)^2]);
 
-    R = (0.015)^2; % Measurement noise (from datasheet)
-    Q = diag([(0.001)^2 (0.001*Ts)^2]);
+    [Q, R] = QR_matrix(n, m);
     
     % R = 3;
     % Q = diag([0.1 0.1 1]);
     
     % Kalman initial
-    P=eye(size(Q));
-    x_hat=zeros(size(Q,1),1);
+   
+
+    P = diag(ones(size(x0))*var(x0));
+    x_hat = x0;
     y_hat = h(0, x_hat, 0);
 
     % KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
@@ -309,31 +311,31 @@ try
                 REF = REF_INIT + REF_STEPS(istep/nsteps_per_ref);
             end
 
-            if exist("Fx", "var")
-                x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
-                A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
-                C_new = Hx(plant_time, x_test, u);
-                B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
-    
-                % A = (A+A_new)/2;
-                % B = (B+B_new)/2;
-                % C = (C+C_new)/2;
-                
-                A = A_new;
-                B = B_new;
-                C = C_new;
-
-                A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
-
-                B_tilde(1:n, :) = B; 
-
-                % --- Solve Discrete-time Algebraic Riccati Equation ---
-                [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
-                K_LQ = -K_LQ;
-
-                Kx=K_LQ(1:n);           % state feedback part
-                Kz=K_LQ(n + 1:end);        % integral feedback part
-            end
+            % if exist("Fx", "var")
+            %     x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
+            %     A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
+            %     C_new = Hx(plant_time, x_test, u);
+            %     B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
+            % 
+            %     % A = (A+A_new)/2;
+            %     % B = (B+B_new)/2;
+            %     % C = (C+C_new)/2;
+            % 
+            %     A = A_new;
+            %     B = B_new;
+            %     C = C_new;
+            % 
+            %     A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
+            % 
+            %     B_tilde(1:n, :) = B; 
+            % 
+            %     % --- Solve Discrete-time Algebraic Riccati Equation ---
+            %     [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+            %     K_LQ = -K_LQ;
+            % 
+            %     Kx=K_LQ(1:n);           % state feedback part
+            %     Kz=K_LQ(n + 1:end);        % integral feedback part
+            % end
 
             ux = Kx*x_hat + Kz*z;
             e = deg2rad(REF) - y_hat; % EKF

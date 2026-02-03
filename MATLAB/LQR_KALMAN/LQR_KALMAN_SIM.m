@@ -12,7 +12,7 @@ addpath("../misc/plotting");
 %% Do the simulation
 Ts = 0.05;
 Tstop = 30;
-SYNC_TIME = 0; % [s]
+SYNC_TIME = 10; % [s]
 
 nsteps_solo = floor(Tstop/Ts);
 Tstop = Tstop + SYNC_TIME;
@@ -41,9 +41,10 @@ x1 = x0(1);
 x2 = x0(2);
 x = zeros(size(x0,1), nsteps);
 x(:, 1) = x0;
+y = zeros(1, nsteps);
+y(1) = x0(1);
 
-R = (0.015)^2; % Measurement noise (from datasheet)
-Q = diag([(0.001)^2 (0.001*Ts)^2]);
+[Q, R] = QR_matrix(n, m);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -79,7 +80,7 @@ B_tilde(1:n) = B;
 
 
 Q_=diag([1 5]);
-R_=[0.01];
+R_=[0.1];
 Qz=[15];
 
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -95,7 +96,7 @@ U = zeros(nsteps, 1);
 
 U_PB = 30; % %PWM
 
-REF_INIT = 20;
+REF_INIT = 30;
 REF = REF_INIT; % deg
 REF_STEPS = [-10, -5, 0, 10, -REF_INIT];
 nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
@@ -127,34 +128,34 @@ for step=2:nsteps
             REF = REF_INIT + REF_STEPS(istep/nsteps_per_ref);
         end
 
-        if exist("ekf", "var")
-            x_test = x_hat; % [x(1, step - 1); x_hat(2)];
-            A_new = discrete_jacobian(f, t(step-1), x_test, u, Ts);
-            C_new = Hx(t(step-1), x_test, u);
-            B_new = discrete_jacobian_u(f, t(step-1), x_test, u, Ts);
-        
-            % A = (A+A_new)/2;
-            % B = (B+B_new)/2;
-            % C = (C+C_new)/2;
-        
-            A = A_new;
-            B = B_new;
-            C = C_new;
-        
-            A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
-        
-            B_tilde(1:n, :) = B;
-        
-            % --- Solve Discrete-time Algebraic Riccati Equation ---
-            [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
-            K_LQ = -K_LQ;
-        
-            Kx=K_LQ(1:n);           % state feedback part
-            Kz=K_LQ(n + 1:end);        % integral feedback part
-        end
+        % if exist("ekf", "var")
+        %     x_test = x_hat; % [x(1, step - 1); x_hat(2)];
+        %     A_new = discrete_jacobian(f, t(step-1), x_test, u, Ts);
+        %     C_new = Hx(t(step-1), x_test, u);
+        %     B_new = discrete_jacobian_u(f, t(step-1), x_test, u, Ts);
+        % 
+        %     % A = (A+A_new)/2;
+        %     % B = (B+B_new)/2;
+        %     % C = (C+C_new)/2;
+        % 
+        %     A = A_new;
+        %     B = B_new;
+        %     C = C_new;
+        % 
+        %     A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
+        % 
+        %     B_tilde(1:n, :) = B;
+        % 
+        %     % --- Solve Discrete-time Algebraic Riccati Equation ---
+        %     [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+        %     K_LQ = -K_LQ;
+        % 
+        %     Kx=K_LQ(1:n);           % state feedback part
+        %     Kz=K_LQ(n + 1:end);        % integral feedback part
+        % end
 
         ux = Kx*(x_hat) + Kz*z;
-        e = deg2rad(REF) - x(1, step - 1); % OPT Params
+        e = deg2rad(REF) - y_hat; % OPT Params
         z = z + e;
 
         u = U_PB + saturate(ux, -U_PB, 100-U_PB);
@@ -164,11 +165,13 @@ for step=2:nsteps
     
     
     w = chol(Q) * randn(n, 1) * w_noise;
-    x(:, step) = f(t(step-1), x(:, step-1), u*1.3) + w;
-
-    [ekf, y_hat] = ekf.step(t(step-1), u, x(1, step));
     v = chol(R) * randn(m, 1) * w_noise;
-    y_hat = y_hat + v;
+
+    x(:, step) = f(t(step-1), x(:, step-1), u*0.8) + w;
+    y(:, step) = h(t(step-1), x(:, step), u) + v;
+
+
+    [ekf, y_hat] = ekf.step(t(step-1), u, y(:, step));
     x_hat = ekf.get_xhat();
 
     ekf_yhat(step) = y_hat;
@@ -194,17 +197,35 @@ title('Control Input Over Time');
 grid on;
 
 %% Testing new plotting class
-x1data = Data2Plot(t, rad2deg(x(1, :)), rad2deg(ekf_x(1, :)), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
+x1data = Data2Plot(t, rad2deg(x(1, :)), [], rad2deg(ekf_x(1, :)), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
 [fig, ax1, ~] = x1data.plotoutnerror(1, 0, "angular_position_w_estimate_error");
 
 hold(ax1, "on");
 plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1);
 hold(ax1, "off");
 
-x2data = Data2Plot(t, rad2deg(x(2, :)), rad2deg(ekf_x(2, :)), "stairs", "s", "\frac{deg}{s}", "Pendulum angular velocity", "Plot of pendulum velocity", false, "s", "all", [], true, [0 0 17 13.6]);
+x2data = Data2Plot(t, rad2deg(x(2, :)), [], rad2deg(ekf_x(2, :)), "stairs", "s", "\frac{deg}{s}", "Pendulum angular velocity", "Plot of pendulum velocity", false, "s", "all", [], true, [0 0 17 13.6]);
 x2data.plotoutnerror(2, 0, "angular_velocity_w_estimate_error");
 
 if n == 3
-    x3data = Data2Plot(t, rad2deg(x(3, :)), rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
+    x3data = Data2Plot(t, rad2deg(x(3, :)), [], rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
     x3data.plotoutnerror(3, 0, "angualr_position_deviation_w_estimate_error");
 end
+
+ycdata = Data2Plot(t, rad2deg(y), [], [], "plot", "s", "deg", "Control response", "Control response", false, "s", "all", [], true, [0 0 17 8.6]);
+[fig, ax1] = ycdata.plotx(5, [], [], "images/LQR_SIM/angular_position");
+hold(ax1, "on");
+plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1,"DisplayName", "ref");
+xline(SYNC_TIME,"--k","DisplayName","Control start");
+ylabel(ax1, "$\varphi\ [deg]$", "Interpreter", "latex");
+xlabel(ax1, "$t\ [s]$", "Interpreter", "latex");
+hold(ax1, "off");
+saveplot2file(fig,"images/LQR_SIM/angular_position");
+
+%%
+ucdata = Data2Plot(t, U', [], [], "stairs", "s", "\%PWM", "Control input", "Control input", false, "s", "all", [], true, [0 0 17 5.6]);
+[fig, ax1] = ucdata.plotx(6, [], [], "images/LQR_SIM/control_input");
+legend(ax1, "u", "Location", "southwest");
+ylabel(ax1, "u [%PWM]");
+xlabel(ax1, "t [s]");
+saveplot2file(fig,"images/LQR_SIM/control_input")

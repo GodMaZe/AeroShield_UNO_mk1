@@ -26,6 +26,7 @@ m = pendulum.m;
 
 %% Initial state of the system
 x0 = zeros(n, 1);
+% x0(1) = -pi/3; % free fall experiment
 
 %% Initiate Extended Kalman Filter
 R = (0.015)^2; % Measurement noise (from datasheet)
@@ -45,10 +46,10 @@ fprintf("========\n");
 
 %% Create the control input signal
 u = zeros(1, nsteps);
-u(1) = 25;
-u(2) = 80;
-u(3) = -15;
-u(4) = 5;
+% u(1) = 25;
+% u(2) = 80;
+% u(3) = -15;
+% u(4) = 5;
 
 %% Simulate the system and observer
 in_disturbance = 0;

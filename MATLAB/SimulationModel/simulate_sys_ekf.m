@@ -1,4 +1,4 @@
-function [x, y, xhat, yhat] = simulate_sys_ekf(t, u, f, h, ekf, x0, w_disturbance, Q, R)
+function [x, y, xhat, yhat, simulation_steps] = simulate_sys_ekf(t, u, f, h, ekf, x0, w_disturbance, Q, R, YLIM)
 %SIM_SYSEKF Simulate a system defined in a nonlinear state space using the
 %vector function f, with the measurement function h, while trying to
 %estimate the state of the system using an observer. (Optionally) Provided with the
@@ -13,6 +13,7 @@ arguments (Input)
     w_disturbance = false;
     Q = ones(1, 1);
     R = ones(1, 1);
+    YLIM = [];
 end
 
 arguments (Output)
@@ -20,6 +21,7 @@ arguments (Output)
     y;
     xhat;
     yhat;
+    simulation_steps;
 end
 
 nsteps = numel(t);
@@ -39,6 +41,9 @@ y(:, 1) = y0;
 x(:, 1) = x0;
 xhat(:, 1) = x0;
 yhat(:, 1) = y0;
+simulation_steps = 1;
+
+w_limits = ~isempty(YLIM);
 
 for step=1:nsteps-1
     nstep = step + 1;
@@ -47,10 +52,22 @@ for step=1:nsteps-1
 
     x(:, nstep) = f(t(step), x(:, step), u(:, step)) + w;
     y(:, nstep) = h(t(nstep), x(:, nstep), u(:, step)) + v;
+    cy = y(:, nstep);
 
     [ekf, y_hat] = ekf.step(t(step), u(:, step), y(:, nstep));
     xhat(:, nstep) = ekf.get_xhat();
     yhat(:, nstep) = y_hat;
+
+    simulation_steps = simulation_steps + 1;
+
+    if w_limits && (min(YLIM) > cy || max(YLIM) < cy)
+        sim_range = 1:simulation_steps;
+        y = y(:, sim_range);
+        x = x(:, sim_range);
+        yhat = yhat(:, sim_range);
+        xhat = xhat(:, sim_range);
+        break;
+    end
 end
 
 end
