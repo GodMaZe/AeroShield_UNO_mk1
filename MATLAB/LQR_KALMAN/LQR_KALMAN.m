@@ -445,12 +445,15 @@ style='-k';
 
 subplot(2,1,1)
 hold on;
-plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
-stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
-stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5);
-xlabel('t [s]'); ylabel("$\varphi [deg]$", "Interpreter", "latex"); grid on;
+plot(LOG_TP, LOG_REF,"--k","LineWidth", 1.5, 'DisplayName', 'ref');
+stairs(LOG_TP,LOG_Y,'LineWidth',1.5, 'DisplayName', 'y');
+stairs(LOG_TP, LOG_YHAT,'LineWidth',1.5, 'DisplayName', 'yhat');
+xlabel('t [s]'); ylabel("$\varphi\ [deg]$", "Interpreter", "latex"); grid on;
+xline(SYNC_TIME,'--k','DisplayName','Control start')
 % xlim([0,max(LOG_STEP)]);
-legend("ref","y","yhat");
+legend show;
+grid minor;
+grid on;
 title("Control Response");
 hold off;
 
@@ -459,10 +462,13 @@ hold on
 stairs(LOG_TP, LOG_U,'LineWidth',1.5);
 % stairs(LOG_TP, LOG_UX,'LineWidth',1.5);
 ylabel('u(t) [%PWM]'); xlabel('t [s]'); grid on
+
 % xlim([0,max(LOG_STEP)]);
 % legend("u","ux");
 title("Control Input");
 hold off
+grid minor;
+grid on;
 set(gcf,'position',[200,400,650,400]);
 saveplot2file(gcf, "images/LQR/control_response");
 
