@@ -212,7 +212,7 @@ if n == 3
     x3data.plotoutnerror(3, 0, "angualr_position_deviation_w_estimate_error");
 end
 
-ycdata = Data2Plot(t, rad2deg(y), [], [], "plot", "s", "deg", "Control response", "Control response", false, "s", "all", [], true, [0 0 17 8.6]);
+ycdata = Data2Plot(t, rad2deg([y; ekf_yhat']), [], [], "plot", "s", "deg", "Control response", "Control response", false, "s", "all", [], true, [0 0 17 8.6]);
 [fig, ax1] = ycdata.plotx(5, [], [], "images/LQR_SIM/angular_position");
 hold(ax1, "on");
 plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1,"DisplayName", "ref");

@@ -8,6 +8,8 @@ addpath("../misc/models");
 addpath("../misc/functions");
 addpath("../misc/models/frictions");
 
+loadconfigs;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "lqrkalman";
@@ -156,7 +158,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 250000, "Timeout", 5);
+    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
     
     sline = "";
 
