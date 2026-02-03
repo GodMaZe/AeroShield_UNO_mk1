@@ -101,9 +101,9 @@ classdef Data2Plot
                 hold on;
                 for i=1:obj.xdims
                     if obj.tdims > 1
-                        pltfcn(ax, obj.t(i, :), obj.x(i, :), "LineWidth", 1, "DisplayName", "x" + num2str(i));
+                        pltfcn(ax, obj.t(i, :), obj.x(i, :), "LineWidth", 1.5, "DisplayName", "x" + num2str(i));
                     else
-                        pltfcn(ax, obj.t, obj.x(i, :), "LineWidth", 1, "DisplayName", "x" + num2str(i));
+                        pltfcn(ax, obj.t, obj.x(i, :), "LineWidth", 1.5, "DisplayName", "x" + num2str(i));
                     end
                 end
                 hold off;
@@ -111,7 +111,7 @@ classdef Data2Plot
                 if obj.plottype == "scatter"
                     pltfcn(ax, obj.t, obj.x, 120, "k", ".");
                 else
-                    pltfcn(ax, obj.t, obj.x, "LineWidth", 1, "DisplayName", "x");
+                    pltfcn(ax, obj.t, obj.x, "LineWidth", 1.5, "DisplayName", "x");
                 end
             end
 
@@ -173,11 +173,11 @@ classdef Data2Plot
         end
 
         if is_measurement
-            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'y');
-            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'ysim');
+            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'y', "LineWidth", 1.5);
+            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'ysim', "LineWidth", 1.5);
         else
-            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'x');
-            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'xhat');
+            plotfcn(ax1, obj.t, obj.x, 'DisplayName', 'x', "LineWidth", 1.5);
+            plotfcn(ax1, that, obj.xhat, 'DisplayName', 'xhat', "LineWidth", 1.5);
         end
         
         hold off;

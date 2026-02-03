@@ -208,11 +208,11 @@ x2data = Data2Plot(t, rad2deg(x(2, :)), [], rad2deg(ekf_x(2, :)), "stairs", "s",
 x2data.plotoutnerror(2, 0, "angular_velocity_w_estimate_error");
 
 if n == 3
-    x3data = Data2Plot(t, rad2deg(x(3, :)), [], rad2deg(ekf_x(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
+    x3data = Data2Plot(t, rad2deg(x(3, :)), [], rad2deg(ekf_x(3, :)), "stairs", "s", "^\circ", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
     x3data.plotoutnerror(3, 0, "angualr_position_deviation_w_estimate_error");
 end
 
-ycdata = Data2Plot(t, rad2deg([y; ekf_yhat']), [], [], "plot", "s", "deg", "Control response", "Control response", false, "s", "all", [], true, [0 0 17 8.6]);
+ycdata = Data2Plot(t, rad2deg([y; ekf_yhat']), [], [], "plot", "s", "deg", "Control response", "Control response", false, "s", "all", "simulation", true, [0 0 17 5.6]);
 [fig, ax1] = ycdata.plotx(5, [], [], "images/LQR_SIM/angular_position");
 hold(ax1, "on");
 plot(ax1, t, LOG_REF, '--r', 'LineWidth', 1,"DisplayName", "ref");
@@ -223,7 +223,7 @@ hold(ax1, "off");
 saveplot2file(fig,"images/LQR_SIM/angular_position");
 
 %%
-ucdata = Data2Plot(t, U', [], [], "stairs", "s", "\%PWM", "Control input", "Control input", false, "s", "all", [], true, [0 0 17 5.6]);
+ucdata = Data2Plot(t, U', [], [], "stairs", "s", "\%PWM", "Control input", "Control input", false, "s", "all", "simulation", true, [0 0 17 5.6]);
 [fig, ax1] = ucdata.plotx(6, [], [], "images/LQR_SIM/control_input");
 legend(ax1, "u", "Location", "southwest");
 ylabel(ax1, "u [%PWM]");

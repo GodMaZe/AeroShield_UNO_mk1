@@ -200,8 +200,7 @@ A_con = [Gamma;
 %% --- Kalman filter initialization --- 
 [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
 
-R = (0.015)^2; % Measurement noise (from datasheet)
-Q = diag([(0.01)^2 (0.01/Ts)^2]);
+[Q, R] = QR_matrix(n, m);
 
 x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
