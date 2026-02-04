@@ -229,9 +229,9 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([0.1 15]);
-    R_=[0.01];
-    Qz=[25];
+    Q_=diag([0.001 5]);
+    R_=[0.1];
+    Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
             zeros(size(Qz, 1), size(Q_, 2)), Qz];
@@ -290,38 +290,38 @@ try
                 REF = REF_INIT + REF_STEPS(istep/nsteps_per_ref);
             end
 
-            % if exist("Fx", "var")
-            %     x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
-            %     A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
-            %     C_new = Hx(plant_time, x_test, u);
-            %     B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
-            % 
-            %     % A = (A+A_new)/2;
-            %     % B = (B+B_new)/2;
-            %     % C = (C+C_new)/2;
-            % 
-            %     A = A_new;
-            %     B = B_new;
-            %     C = C_new;
-            % 
-            %     A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
-            % 
-            %     B_tilde(1:n, :) = B; 
-            % 
-            %     % --- Solve Discrete-time Algebraic Riccati Equation ---
-            %     [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
-            %     K_LQ = -K_LQ;
-            % 
-            %     Kx=K_LQ(1:n);           % state feedback part
-            %     Kz=K_LQ(n + 1:end);        % integral feedback part
-            % end
+            if exist("Fx", "var")
+                x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
+                A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
+                C_new = Hx(plant_time, x_test, u);
+                B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
+
+                % A = (A+A_new)/2;
+                % B = (B+B_new)/2;
+                % C = (C+C_new)/2;
+
+                A = A_new;
+                B = B_new;
+                C = C_new;
+
+                A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
+
+                B_tilde(1:n, :) = B; 
+
+                % --- Solve Discrete-time Algebraic Riccati Equation ---
+                [P_LQ,~,K_LQ] = dare(A_tilde, B_tilde, Q_tilde, R_);
+                K_LQ = -K_LQ;
+
+                Kx=K_LQ(1:n);           % state feedback part
+                Kz=K_LQ(n + 1:end);        % integral feedback part
+            end
 
             ux = Kx*x_hat + Kz*z;
             e = deg2rad(REF) - deg2rad(aerodata.output); % EKF
             z = z + e;
 
-            % u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
-            u = saturate(ux, 0, 100);
+            u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
+            % u = saturate(ux, 0, 100);
         else
             u = U_PB;
         end
