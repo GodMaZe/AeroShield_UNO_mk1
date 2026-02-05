@@ -14,12 +14,12 @@ end
 R = deg2rad(0.015)^2; % Measurement noise (from datasheet)
 if n == 3
     if w_propeller
-        Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2 0.001^2]);
+        Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2 0.00175^2]);
     else
         Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2 0.1^2]);
     end
 elseif n == 4
-        Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2 0.001^2 0.1^2]);
+        Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2 0.00175^2 0.1^2]);
 else
     Q = diag([deg2rad(0.001)^2 deg2rad(0.1)^2]);
 end

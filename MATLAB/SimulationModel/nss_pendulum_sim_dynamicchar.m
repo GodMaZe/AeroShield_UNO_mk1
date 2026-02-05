@@ -18,17 +18,17 @@ load("apptest_model.mat");
 pendulum = sys;
 w_disturbance = false;
 
-[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
-[A,B,C,D] = pendulum.ss_discrete(Ts);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear_w_propeller(Ts, w_disturbance);
+% [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-n = 2 + w_disturbance;
+n = pendulum.n;
 m = pendulum.m;
 
 %% Initial state of the system
 x0 = zeros(n, 1);
 
 %% Initiate Extended Kalman Filter
-[Q, R] = QR_matrix(n, m);
+[Q, R] = QR_matrix(n, m, true);
 
 P = diag(ones(size(x0))*var(x0));
 

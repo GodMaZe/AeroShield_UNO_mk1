@@ -10,7 +10,7 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting");
 
 %% Do the simulation
-Ts = 0.02;
+Ts = 0.05;
 Tstop = 10;
 SYNC_TIME = 0; % [s]
 
@@ -138,13 +138,13 @@ for step=2:nsteps
             % B = (B+B_new)/2;
             % C = (C+C_new)/2;
             
-            A = (2*A+1*A_new)/3;
-            B = (2*B+1*B_new)/3;
-            C = (2*C+1*C_new)/3;
+            % A = (2*A+1*A_new)/3;
+            % B = (2*B+1*B_new)/3;
+            % C = (2*C+1*C_new)/3;
 
-            % A = A_new;
-            % B = B_new;
-            % C = C_new;
+            A = A_new;
+            B = B_new;
+            C = C_new;
 
             A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 

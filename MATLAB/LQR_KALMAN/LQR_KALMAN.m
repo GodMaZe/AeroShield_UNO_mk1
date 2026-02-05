@@ -227,7 +227,7 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([0.00001 10 0.00000001]);
+    Q_=diag([0.00001 30 0.00000001]);
     R_=[0.01];
     Qz=[15];
 
@@ -278,17 +278,17 @@ try
 
             if exist("Fx", "var")
                 x_test = x_hat; %[deg2rad(aerodata.output); x_hat(2)];
-                A_new = discrete_jacobian(f, plant_time, x_test, u, Ts);
+                A_new = discrete_jacobian(f, plant_time, x_test, u, 1e-6);
                 C_new = Hx(plant_time, x_test, u);
-                B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
+                B_new = discrete_jacobian_u(f, plant_time, x_test, u, 1e-6);
 
-                A = (2*A+1*A_new)/3;
-                B = (2*B+1*B_new)/3;
-                C = (2*C+1*C_new)/3;
+                % A = (2*A+1*A_new)/3;
+                % B = (2*B+1*B_new)/3;
+                % C = (2*C+1*C_new)/3;
 
-                % A = A_new;
-                % B = B_new;
-                % C = C_new;
+                A = A_new;
+                B = B_new;
+                C = C_new;
 
                 A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
