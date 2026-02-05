@@ -63,7 +63,7 @@ if w_propeller
     f_cont = @(t, x, u) [
         x(2);
         dx2(t, x, u);
-        -5*x(3)+15*u(1); %(pendulum.I_T/pendulum.Ku)
+        -15*x(3)+30*u(1); %(pendulum.I_T/pendulum.Ku)
         ] + b(t, x, u);
     Hx = @(t, x, u) [1 0 0];
 else

@@ -172,7 +172,7 @@ try
     REF_INIT = 30;
     REF = REF_INIT;
 
-    REF_STEPS = [10, -REF_INIT];
+    REF_STEPS = [-5, -REF_INIT];
     % REF_STEPS(:) = -REF_INIT;
     nsteps_per_ref = floor(nsteps_solo / (numel(REF_STEPS) + 1));
 
@@ -227,7 +227,7 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([0.001 10 0.001]);
+    Q_=diag([0.00001 10 0.00000001]);
     R_=[0.01];
     Qz=[15];
 
@@ -282,13 +282,13 @@ try
                 C_new = Hx(plant_time, x_test, u);
                 B_new = discrete_jacobian_u(f, plant_time, x_test, u, Ts);
 
-                % A = (A+A_new)/2;
-                % B = (B+B_new)/2;
-                % C = (C+C_new)/2;
+                A = (2*A+1*A_new)/3;
+                B = (2*B+1*B_new)/3;
+                C = (2*C+1*C_new)/3;
 
-                A = A_new;
-                B = B_new;
-                C = C_new;
+                % A = A_new;
+                % B = B_new;
+                % C = C_new;
 
                 A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
@@ -306,8 +306,8 @@ try
             e = deg2rad(REF) - deg2rad(aerodata.output);
             z = z + e;
 
-            u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
-            % u = saturate(ux, 0, 100);
+            % u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
+            u = saturate(ux, 0, 100);
         else
             u = U_PB;
         end

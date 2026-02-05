@@ -10,7 +10,7 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting");
 
 %% Do the simulation
-Ts = 0.05;
+Ts = 0.02;
 Tstop = 10;
 SYNC_TIME = 0; % [s]
 
@@ -79,7 +79,7 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 
-Q_=diag([0.001 10 0.001]);
+Q_=diag([0.00001 10 0.00000001]);
 R_=[0.01];
 Qz=[15];
 
@@ -130,17 +130,21 @@ for step=2:nsteps
 
         if exist("ekf", "var")
             x_test = x_hat;
-            A_new = discrete_jacobian(f, t(step-1), x_test, u, Ts);
+            A_new = discrete_jacobian(f, t(step-1), x_test, u, 1e-6);
             C_new = Hx(t(step-1), x_test, u);
-            B_new = discrete_jacobian_u(f, t(step-1), x_test, u, Ts);
+            B_new = discrete_jacobian_u(f, t(step-1), x_test, u, 1e-6);
 
             % A = (A+A_new)/2;
             % B = (B+B_new)/2;
             % C = (C+C_new)/2;
+            
+            A = (2*A+1*A_new)/3;
+            B = (2*B+1*B_new)/3;
+            C = (2*C+1*C_new)/3;
 
-            A = A_new;
-            B = B_new;
-            C = C_new;
+            % A = A_new;
+            % B = B_new;
+            % C = C_new;
 
             A_tilde(1:size(A, 1), 1:size(A, 2)) = A;
 
@@ -158,8 +162,8 @@ for step=2:nsteps
         e = deg2rad(REF) - y(:, step - 1); % OPT Params
         z = z + e;
 
-        u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
-        % u = saturate(ux, 0, 100);
+        % u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
+        u = saturate(ux, 0, 100);
     else
         u = U_PB;
     end
