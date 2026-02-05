@@ -39,7 +39,7 @@ function x2 = dx2(t, x, u, vel_tol)
     Fs = frictions(t, x, u, vel_tol);
     x2 = (1/pendulum.I_T) * (Fs - tau_g);
     if w_propeller
-        x2 = x2 + (pendulum.Ku/pendulum.I_T)*x(3);
+        x2 = x2 + x(3);
     end
 end
 
@@ -63,7 +63,7 @@ if w_propeller
     f_cont = @(t, x, u) [
         x(2);
         dx2(t, x, u);
-        -5*x(3)+u(1);
+        -5*x(3)+15*u(1); %(pendulum.I_T/pendulum.Ku)
         ] + b(t, x, u);
     Hx = @(t, x, u) [1 0 0];
 else
