@@ -18,10 +18,10 @@ load("../misc/models/ipendulum_model");
 pendulum = sys;
 w_disturbance = false;
 
-[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, w_disturbance);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear_w_propeller(Ts, w_disturbance);
 [A,B,C,D] = pendulum.ss_discrete(Ts);
 
-n = 2 + w_disturbance;
+n = pendulum.n;
 m = pendulum.m;
 
 %% Initial state of the system
@@ -41,10 +41,11 @@ fprintf("========\n");
 
 %% Create the control input signal
 u = zeros(1, nsteps);
-u(1) = 25;
-u(2) = 80;
-u(3) = -15;
-u(4) = 5;
+u(1) = 100;
+% u(1) = 25;
+% u(2) = 80;
+% u(3) = -15;
+% u(4) = 5;
 
 %% Simulate the system and observer
 in_disturbance = 1;
@@ -69,7 +70,7 @@ end
 ydata = Data2Plot(t, rad2deg(y), [], rad2deg(yhat), "stairs", "s", "deg", "Pendulum angular position", "Plot of pendulum angle", false, "s", "all", [], true, [0 0 17 13.6]);
 [fig, ax1, ~] = ydata.plotoutnerror(4, 0, "images/nss/angular_position_w_estimate_error");
 
-return;
+
 tt = t;
 yt = y;
 ut = u;

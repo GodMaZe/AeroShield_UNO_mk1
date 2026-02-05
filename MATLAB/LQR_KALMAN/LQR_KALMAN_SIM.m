@@ -24,7 +24,7 @@ pendulum = Pendulum();
 load("../misc/models/ipendulum_model");
 pendulum = sys;
 % [A, B, C, D] = pendulum.ss_discrete(Ts);
-[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts, false);
+[pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear_w_propeller(Ts, false);
 
 if exist("pendulum", "var")
     n = pendulum.n;
@@ -44,7 +44,7 @@ x(:, 1) = x0;
 y = zeros(1, nsteps);
 y(1) = x0(1);
 
-[Q, R] = QR_matrix(n, m);
+[Q, R] = QR_matrix(n, m, true);
 
 % x0 = [0; 0];
 P = diag(ones(size(x0))*var(x0));
@@ -79,8 +79,8 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 
-Q_=diag([0.001 5]);
-R_=[0.1];
+Q_=diag([0.001 10 0.001]);
+R_=[0.01];
 Qz=[15];
 
 Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -129,7 +129,7 @@ for step=2:nsteps
         end
 
         if exist("ekf", "var")
-            x_test = x_hat; % [x(1, step - 1); x_hat(2)];
+            x_test = x_hat;
             A_new = discrete_jacobian(f, t(step-1), x_test, u, Ts);
             C_new = Hx(t(step-1), x_test, u);
             B_new = discrete_jacobian_u(f, t(step-1), x_test, u, Ts);
@@ -227,6 +227,6 @@ saveplot2file(fig,"images/LQR_SIM/angular_position");
 ucdata = Data2Plot(t, U', [], [], "stairs", "s", "\%PWM", "Control input", "Control input", false, "s", "all", "simulation", true, [0 0 17 5.6]);
 [fig, ax1] = ucdata.plotx(6, [], [], "images/LQR_SIM/control_input");
 legend(ax1, "u", "Location", "southwest");
-ylabel(ax1, "u [%PWM]");
+ylabel(ax1, "$u [\%PWM]$", "Interpreter", "latex");
 xlabel(ax1, "t [s]");
 saveplot2file(fig,"images/LQR_SIM/control_input")

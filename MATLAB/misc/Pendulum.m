@@ -133,6 +133,20 @@ classdef Pendulum
             [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, w_disturbance);
         end
 
+        function [obj, f, b, h, Fx, Bu, Hx] = nonlinear_w_propeller(obj, Ts, w_disturbance)
+            arguments (Input)
+                obj;
+                Ts = 0.01; % Sample time for discrete state-space model
+                w_disturbance = false; % Default disturbance value (in case we are trying to identify the deviation from real system)
+            end
+            if(w_disturbance)
+                obj.n = 4;
+            else
+                obj.n = 3; % Decrease state count if no disturbance
+            end
+            [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(obj, Ts, w_disturbance, true);
+        end
+
         function [obj] = sett_brk(obj, t_brk, isscaling)
             arguments (Input)
                 obj 

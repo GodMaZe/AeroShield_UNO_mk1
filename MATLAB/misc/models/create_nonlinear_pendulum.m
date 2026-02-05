@@ -1,8 +1,9 @@
-function [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(pendulum, Ts, w_disturbance)
+function [f, b, h, Fx, Bu, Hx] = create_nonlinear_pendulum(pendulum, Ts, w_disturbance, w_propeller)
 arguments (Input)
     pendulum = Pendulum();
     Ts = 0.05;
     w_disturbance = false;
+    w_propeller = false;
 end
 arguments (Output)
     % Initialize state variables and system matrices
@@ -37,10 +38,17 @@ function x2 = dx2(t, x, u, vel_tol)
     tau_g = pendulum.G_1*sin(x(1));
     Fs = frictions(t, x, u, vel_tol);
     x2 = (1/pendulum.I_T) * (Fs - tau_g);
+    if w_propeller
+        x2 = x2 + (pendulum.Ku/pendulum.I_T)*x(3);
+    end
 end
 
 function f = Buf(t, x, u)
-    f = [0; pendulum.Ku/pendulum.I_T];
+    f = [0; 0];
+    if w_propeller
+        f = [0; f];
+    end
+
     if w_disturbance
         f = [f; 0];
     end
@@ -49,19 +57,36 @@ end
 Bu = @(t, x, u) Buf(t, x, u);
 b = @(t, x, u) Bu(t, x, u)*u(1);
 
-f_cont = @(t, x, u) [
+
+
+if w_propeller
+    f_cont = @(t, x, u) [
+        x(2);
+        dx2(t, x, u);
+        -5*x(3)+u(1);
+        ] + b(t, x, u);
+    Hx = @(t, x, u) [1 0 0];
+else
+    f_cont = @(t, x, u) [
     x(2);
     dx2(t, x, u)
     ] + b(t, x, u);
+    Hx = @(t, x, u) [1 0];
+end
+
 h = @(t, x, u) x(1);
-Hx = @(t, x, u) [1 0];
+
 
 if w_disturbance
-    f_cont = @(t, x, u) [x(2); dx2(t, x, u); x(3)] + b(t, x, u);
-
-    h = @(t, x, u) x(1) + x(3);
-
-    Hx = @(t, x, u) [1 0 1];
+    if w_propeller
+        f_cont = @(t, x, u) [x(2); dx2(t, x, x(3)); 0.1; x(4)] + b(t, x, u);
+        h = @(t, x, u) x(1) + x(4);
+        Hx = @(t, x, u) [1 0 0 1];
+    else
+        f_cont = @(t, x, u) [x(2); dx2(t, x, u); x(3)] + b(t, x, u);
+        h = @(t, x, u) x(1) + x(3);
+        Hx = @(t, x, u) [1 0 1];
+    end
 end
 
 

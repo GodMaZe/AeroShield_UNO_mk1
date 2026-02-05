@@ -194,9 +194,7 @@ try
     % pendulum = Pendulum();
     load("../misc/models/ipendulum_model");
     pendulum = sys;
-    % pendulum.Ku = pendulum.Ku/0.72;
-    % [A, B, C, D] = pendulum.ss_discrete(Ts);
-    [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear(Ts);
+    [pendulum, f, b, h, Fx, Bu, Hx] = pendulum.nonlinear_w_propeller(Ts);
     
     
     if exist("pendulum", "var")
@@ -229,8 +227,8 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([0.001 5]);
-    R_=[0.1];
+    Q_=diag([0.001 10 0.001]);
+    R_=[0.01];
     Qz=[15];
 
     Q_tilde=[Q_, zeros(size(Q_, 1), size(Qz, 2));
@@ -244,26 +242,14 @@ try
     Kz=K_LQ(n + 1:end);        % integral feedback part
     
     
-    % --- Kalman filter initialization ---    
-    % R = (0.015); % Measurement noise (from datasheet)
-    % Q = diag(([0.001 (0.001*Ts)]));
+    % --- Kalman filter initialization ---
 
-    % R = (0.015)^2; % Measurement noise (from datasheet)
-    % Q = diag([(0.01)^2 (0.01/Ts)^2]);
-
-    [Q, R] = QR_matrix(n, m);
-    
-    % R = 3;
-    % Q = diag([0.1 0.1 1]);
-    
-    % Kalman initial
-   
+    [Q, R] = QR_matrix(n, m);   
 
     P = diag(ones(size(x0))*var(x0));
     x_hat = x0;
     y_hat = h(0, x_hat, 0);
 
-    % KF = KalmanFilter(A, B, C, 'R', R, 'Q', Q, 'x0', x_hat);
     EKF = ExtendedKalmanFilter(f, h, x_hat, 1, 'Q', Q, 'R', R, 'P0', P, 'epstol', Ts);
 
     %% Loop
@@ -317,7 +303,7 @@ try
             end
 
             ux = Kx*x_hat + Kz*z;
-            e = deg2rad(REF) - deg2rad(aerodata.output); % EKF
+            e = deg2rad(REF) - deg2rad(aerodata.output);
             z = z + e;
 
             u = U_PB + saturate(ux, -U_PB, 100 - U_PB);
@@ -351,14 +337,6 @@ try
         [EKF, y_hat] = EKF.step(plant_time, u, deg2rad(aerodata.output));
         y_hat = y_hat;
         x_hat = EKF.get_xhat();
-
-        % [KF, y_hat] = KF.step(u, deg2rad(aerodata.output));
-        % y_hat = y_hat;
-        % x_hat = KF.get_xhat();
-
-        % [KF, y_hat] = KF.step(u, aerodata.output);
-        % y_hat = y_hat;
-        % x_hat = KF.get_xhat();
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
@@ -484,6 +462,7 @@ subtitle("Mean square error: " + num2str(emean^2))
 grid minor;
 hold off;
 fprintf("Statistical data:\n Mean: %8.3f\n Var: %8.3f\n STD: %8.3f\n", emean, estd, evar);
+return;
 
 %% Plot the frequency analysis (fft) of the control error
 mkdir("figures");
