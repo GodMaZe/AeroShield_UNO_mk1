@@ -10,7 +10,7 @@ addpath("../misc/models/frictions");
 addpath("../misc/plotting");
 
 %% Do the simulation
-Ts = 0.05;
+Ts = 0.03;
 Tstop = 10;
 SYNC_TIME = 0; % [s]
 
@@ -79,7 +79,7 @@ A_tilde = [A, zeros(n, m);
 B_tilde(1:n) = B;
 
 
-Q_=diag([0.00001 10 0.00000001]);
+Q_=diag([5 30 0.45]);
 R_=[0.01];
 Qz=[15];
 
@@ -172,7 +172,7 @@ for step=2:nsteps
     w = chol(Q) * randn(n, 1) * w_noise;
     v = chol(R) * randn(m, 1) * w_noise;
 
-    x(:, step) = f(t(step-1), x(:, step-1), u*0.8) + w;
+    x(:, step) = f(t(step-1), x(:, step-1), u) + w;
     y(:, step) = h(t(step-1), x(:, step), u) + v;
 
 

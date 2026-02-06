@@ -7,6 +7,7 @@ addpath("../misc/KF");
 addpath("../misc/models");
 addpath("../misc/functions");
 addpath("../misc/models/frictions");
+addpath("../misc/plotting");
 
 loadconfigs;
 
@@ -32,7 +33,7 @@ OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 Tstop = 10;
 SYNC_TIME = 0; % Time for the system to stabilize in the OP
 
-Ts = 0.05;
+Ts = 0.03;
 nsteps_solo = floor(Tstop/Ts);
 
 Tstop = Tstop + SYNC_TIME;
@@ -227,7 +228,7 @@ try
     %     0 10 0;
     %     0 0 7];
 
-    Q_=diag([0.00001 30 0.00000001]);
+    Q_=diag([5 30 0.45]);
     R_=[0.01];
     Qz=[15];
 
