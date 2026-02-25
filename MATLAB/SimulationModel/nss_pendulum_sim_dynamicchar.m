@@ -60,7 +60,7 @@ x2data = Data2Plot(t, rad2deg(x(2, :)), [], rad2deg(xhat(2, :)), "stairs", "s", 
 x2data.plotoutnerror(2, 0, "images/nss/state_x2_w_estimate_error");
 
 if n == 3
-    x3data = Data2Plot(t, rad2deg(x(3, :)), [], rad2deg(xhat(3, :)), "stairs", "s", "deg", "Pendulum angular position deviation estimate", "Plot of pendulum angle deviation", false, "s", "all", [], true, [0 0 17 13.6]);
+    x3data = Data2Plot(t, rad2deg(x(3, :)), [], rad2deg(xhat(3, :)), "stairs", "s", "deg", "Pendulum rotor angular velocity", "Plot of pendulum rotor angular velocity", false, "s", "all", [], true, [0 0 17 13.6]);
     x3data.plotoutnerror(3, 0, "images/nss/state_x3_w_estimate_error");
 end
 

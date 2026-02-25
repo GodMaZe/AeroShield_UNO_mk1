@@ -3,6 +3,8 @@ clc;
 
 addpath("../misc");
 
+loadconfigs;
+
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
 FILENAME = "staticChar";
@@ -101,11 +103,11 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
-
 try
+
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
+
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
@@ -121,7 +123,7 @@ try
         clear scon;
     end
 
-    scon = serialport("COM3", 115200, "Timeout", 5);
+    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
     
     sline = "";
 

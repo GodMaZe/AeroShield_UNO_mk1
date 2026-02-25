@@ -7,7 +7,7 @@ loadconfigs;
 
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "dynamic_char";
+FILENAME = "mer5_dynChar_upb40_du5";
 
 if ~exist(DDIR, "dir")
     fprintf("Creating the default data repository folder, for saving the measurements...\n");
@@ -24,8 +24,9 @@ FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
 OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
 
 %% Declare all the necessary variables
-Tstop = 20;
-SYNC_TIME = 10; % Time for the system to stabilize in the OP
+Tstop = 240;
+SYNC_TIME = 5; % Time for the system to stabilize in the OP
+STABLE_TIME = 20; % Time for the system to stabilize after a step
 
 Ts = 0.05;
 
@@ -157,10 +158,12 @@ try
 
 
     
-    U_PB = 30;
+    U_PB = 40;
     u = 0;
     udt = 1;
     is_init = true;
+    n_stabilized = 0;
+    n_stabilized_last = -1;
     
     
     while plant_time < Tstop
@@ -178,25 +181,16 @@ try
             if u >= U_PB
                 is_init = false;
             end
-        else
-            u = U_PB;
         end
 
         elapsed = time_elapsed - SYNC_TIME;
 
-        % if elapsed >= 50
-        %     u = u - U_STEP_SIZE;
-        % elseif elapsed >= 40
-        %     u = u + U_STEP_SIZE;
-        % elseif elapsed >= 30
-        %     u = u - U_STEP_SIZE;
-        % elseif elapsed >= 20
-        %     u = u + U_STEP_SIZE;
-        % elseif elapsed >= 10
-        %     u = u - U_STEP_SIZE;
-        % else
-        if elapsed >= 0
-            u = u + U_STEP_SIZE;
+
+        n_stabilized = floor(elapsed/STABLE_TIME);
+
+        if elapsed > 0 && n_stabilized > n_stabilized_last
+            n_stabilized_last = n_stabilized;
+            u = U_PB + (-1)^(mod(n_stabilized, 2)) * U_STEP_SIZE;
         end
 
         write(scon, u, "single");

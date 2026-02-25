@@ -95,11 +95,10 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
-start(timerplotrealtime);
-
 
 try
+    timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
+    start(timerplotrealtime);
     % Open the CSV file for writing
     if(exist("dfile_handle", "var"))
         fclose(dfile_handle);
