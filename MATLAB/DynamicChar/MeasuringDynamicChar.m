@@ -253,31 +253,36 @@ save(FILEPATH_MAT, "Tstop","SYNC_TIME","U_PB", "Ts", "nsteps", "logsout", "Ystop
 % ===========================
 figure(1); clf;
 hold on;
-stairs(LOG_TP, LOG_Y);
-stairs(LOG_TP, LOG_REF);
-stairs(LOG_TP, LOG_U);
-title("Real-Time System Response");
+stairs(LOG_TP, LOG_Y, "LineWidth", 1);
+% stairs(LOG_TP, LOG_REF, "LineWidth", 1.5);
+stairs(LOG_TP, LOG_U, "LineWidth", 1);
+title("System Response to Step Signal");
 xlabel("t [s]");
 ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-legend("y","ref", "u", 'Location', 'southeast');
+legend("y", "u", 'Location', 'southeast');
 grid minor;
 hold off;
+set(gcf,'position',[200,400,650,400]);
+saveplot2file(1, "fig/step_response_raw");
 
-figure(999);
+figure(999); clf;
 style='-k';
 
 subplot(2,1,1)
 hold on;
-plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
-stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
+% plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
+stairs(LOG_TP,LOG_Y,'LineWidth', 1);
 % scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
+xlabel('t [s]'); ylabel("$\varphi [^\circ]$", "Interpreter","latex"); grid on
+title("System Response")
 % xlim([0,max(LOG_STEP)]);
-hold of;
+hold off;
 
 subplot(2,1,2)
-stairs(LOG_TP,LOG_U,style,'LineWidth',1.5)
-xlabel('k'); ylabel('u(k)'); grid on
+stairs(LOG_TP,LOG_U,style,'LineWidth', 1)
+xlabel('t [s]'); ylabel('u(t)'); grid on
+title("Control Input");
+subtitle("Upb = " + num2str(U_PB) + " | dU = " + num2str(U_STEP_SIZE));
 % xlim([0,max(LOG_STEP)]);
-
 set(gcf,'position',[200,400,650,400]);
+saveplot2file(999, "fig/step_response_subplot_raw");
