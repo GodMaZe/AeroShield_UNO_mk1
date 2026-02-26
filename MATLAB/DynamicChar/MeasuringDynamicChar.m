@@ -158,7 +158,7 @@ try
 
 
     
-    U_PB = 40;
+    U_PB = 30;
     u = 0;
     udt = 1;
     is_init = true;
