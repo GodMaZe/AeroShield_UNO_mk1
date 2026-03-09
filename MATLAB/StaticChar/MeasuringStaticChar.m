@@ -30,7 +30,7 @@ SYNC_TIME = 20; % Time for the system to stabilize in the OP
 Tstop = numel(STEPS)*SYNC_TIME;
 
 
-Ts = 0.02;
+Ts = 0.05;
 
 
 Tstop = Tstop + SYNC_TIME;
