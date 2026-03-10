@@ -3,35 +3,28 @@ clc;
 
 addpath("../misc");
 
-loadconfigs;
-
 %% Prepare the environment for the measurement
 DDIR = "dataRepo";
-FILENAME = "staticChar";
+FILENAME = "mer1_statChar_du5";
+% mer# - measurement count per fixed configuration
+% statChar - static characteristic
+% du## - step size, where du04 is step size of 0.4, du4 is step size of
+% 4.0, and du40 is step size of 40.0, therefore du## step size is
+% determined based on whether a it contains a preceding zero or
+% postceding.
 
-if ~exist(DDIR, "dir")
-    fprintf("Creating the default data repository folder, for saving the measurements...\n");
-    mkdir(DDIR);
-end
+COMPORT = "COM3"; % Serial port of the device
 
-DateString = convertCharsToStrings(datestr(datetime('now'), "yyyy_mm_dd_HH_MM_ss"));
-
-% File paths for the csv and mat files.
-FILEPATH = getfilename(DDIR, FILENAME, DateString);
-FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
-
-% The names of the parameters to write into the file
-OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
+[FILEPATH, FILEPATH_MAT, OUTPUT_NAMES] = prepareenv(FILENAME, "t,tp,y,u,pot,pct,dtp,dt,step,ref", DDIR);
 
 %% Declare all the necessary variables
-STEPS = 0:5:100;
+U_STEP_SIZE = 5; % max resolution per step based on the following calc: 100/255 = 0.3922, where 100 is max %PWM and 255 is the 8bit value for the PWM generator
+STEPS = 0:U_STEP_SIZE:100;
 SYNC_TIME = 20; % Time for the system to stabilize in the OP
 
-Tstop = numel(STEPS)*SYNC_TIME;
-
+Tstop = numel(STEPS) * SYNC_TIME;
 
 Ts = 0.05;
-
 
 Tstop = Tstop + SYNC_TIME;
 nsteps = floor(Tstop/Ts);
@@ -108,41 +101,18 @@ try
     timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
     start(timerplotrealtime);
 
-    % Open the CSV file for writing
-    if(exist("dfile_handle", "var"))
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
+    % Will create variables: scon (serial connection), dfile_handle (data
+    % file handle) and last but not least will initialize the serial
+    % communication (waiting for the initial --- MCU started --- message)
+    initconnection;
     
-    dfile_handle = fopen(FILEPATH,'w');
-    fprintf(dfile_handle, join(OUTPUT_NAMES,",") + "\n");
+    aerodata = AeroData;
+    bytes = read(scon, aerodata.packetsize, "uint8");
 
-    % Open the serial port for communication with the Arduino (system)
-    if(exist("scon", "var"))
-        scon.flush("input");
-        clear scon;
-    end
+    %Init data if needed.
+    aerodata = aerodata.parse(bytes);
 
-    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
-    
-    sline = "";
-
-    while(~contains(sline, "MCU"))
-        % disp(sline);
-        sline = readline(scon);
-    end
-
-    disp(sline);
-
-    sline = str2num(readline(scon));
-    disp(sline);
-
-    init_plant_time = -1;
-    plant_output = sline(2);
-    plant_input = sline(3);
-    plant_potentiometer = sline(4);
-    plant_dt = sline(5);
-    plant_control_time = sline(6);
+    disp(aerodata.tostring());
 
     time_start = datetime("now");
     time_curr = time_start;
@@ -155,147 +125,141 @@ try
 
     REF = 0;
 
-    U_STEP_SIZE = mean(diff(STEPS));
-
-
-    step = 1;
+    step = 0;
+    step_u = 1;
     u = 0;
     udt = U_STEP_SIZE/10;
     is_init = true;
     
     
-    while plant_time < Tstop
-        time_elapsed = seconds(time_curr - time_start);
+    while aerodata.time < Tstop
+        % --- Timing algorithm
+
         time_curr = datetime("now");
+        
+        if(step == 0)
+            time_start = time_curr;
+        end
+        
         time_delta = seconds(time_curr - time_last);
+
+        if step > 0 && time_delta < Ts
+            continue;
+        end
+
+        % --- END Timing algorithm
+
+        % --- Control algorithm
+
         time_step_delta = seconds(time_curr - time_step);
 
         if time_step_delta >= SYNC_TIME
             time_step = time_curr;
-            step = step + 1;
+            step_u = step_u + 1;
             is_init = true;
-        end
-
-        if time_delta < Ts
-            continue;
         end
 
         if is_init
             u = u + udt;
-            u = max(0, min(u, STEPS(step)));
-            if u >= STEPS(step)
+            u = max(0, min(u, STEPS(step_u)));
+            if u >= STEPS(step_u)
                 is_init = false;
             end
         else
-            u = STEPS(step);
+            u = STEPS(step_u);
         end
-
 
         write(scon, u, "single");
+
+        % --- END of Control algorithm
         
+        % --- Measuring algorithm
+
         % Wait for the system to send a data message
-        sline = str2num(readline(scon));
-
-        if plant_time_init < 0
-            plant_time_init = sline(1);
-        end
-
-        plant_time = sline(1) - plant_time_init;
-        plant_output = sline(2);
-        plant_input = sline(3);
-        plant_potentiometer = sline(4);
-        plant_dt = sline(5);
-        plant_control_time = sline(6) - plant_time_init;
+        bytes = read(scon, aerodata.packetsize, "uint8");
+        aerodata = aerodata.parse(bytes, true, true, step==0);
 
         % Write the data into a file
-        data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
+        time_elapsed = seconds(time_curr - time_start);
+        data = [time_elapsed, aerodata.toarray(), time_delta, step, REF];
         writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
 
         LOG_T = [LOG_T, time_elapsed];
-        LOG_TP = [LOG_TP, plant_time];
-        LOG_CTRL_T = [LOG_CTRL_T, plant_control_time];
-        LOG_Y = [LOG_Y, plant_output];
-        LOG_U = [LOG_U, plant_input];
-        LOG_POT = [LOG_POT, plant_potentiometer];
-        LOG_DTP = [LOG_DTP, plant_dt];
+        LOG_TP = [LOG_TP, aerodata.time];
+        LOG_CTRL_T = [LOG_CTRL_T, aerodata.controltime];
+        LOG_Y = [LOG_Y, aerodata.output];
+        LOG_U = [LOG_U, aerodata.control];
+        LOG_POT = [LOG_POT, aerodata.potentiometer];
+        LOG_DTP = [LOG_DTP, aerodata.dt];
         LOG_DT = [LOG_DT, time_delta];
         LOG_STEP = [LOG_STEP, step];
         LOG_REF = [LOG_REF, REF];
 
         time_last = time_curr;
+        step = step + 1;
 
-        if plant_time >= Tstop || plant_output >= Ystop
-            % configureCallback(scon, "off"); % Remove the callback from the serial port, before exiting the loop
+        if aerodata.time >= Tstop || aerodata.output >= Ystop || aerodata.potentiometer > 50
             break;
         end
+        % --- END Measuring algorithm
     end
 
 catch er
     % Send a final command and close the serial port
-    if exist("scon", "var")
-        write(scon, 0.0, 'single');
-        clear scon;
-    end
-    if exist("dfile_handle", "var")
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
-    for tim=timerfindall
-        stop(tim);
-        delete(tim);
-    end
+    close_connection(scon, dfile_handle);
     rethrow(er);
 end
 
 %% close conns
-if exist("scon", "var")
-    write(scon, 0.0, 'single');
-    clear scon;
-end
-if exist("dfile_handle", "var")
-    fclose(dfile_handle);
-    clear dfile_handle;
-end
-for tim=timerfindall
-    stop(tim);
-    delete(tim);
-end
+close_connection(scon, dfile_handle);
 
 %% Save the measurement
-logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
-save(FILEPATH_MAT, "Tstop","SYNC_TIME","STEPS", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME", "U_STEP_SIZE");
+logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_CTRL_T, LOG_DTP, LOG_DT, LOG_STEP, LOG_REF, 'VariableNames', OUTPUT_NAMES);
+save(FILEPATH_MAT);
 
 %%
 % ===========================
 %   Plot Results
 % ===========================
+FIGDIR = "./fig";
+if ~exist(FIGDIR, "dir")
+    mkdir(FIGDIR);
+    fprintf("Figure directory not found, creating one...\n");
+end
+
 figure(1); clf;
 hold on;
-stairs(LOG_TP, LOG_Y);
-stairs(LOG_TP, LOG_REF);
-stairs(LOG_TP, LOG_U);
+stairs(LOG_TP, LOG_Y, 'LineWidth', 1.5);
+stairs(LOG_TP, LOG_U, 'LineWidth', 1.5);
 title("Real-Time System Response");
 xlabel("t [s]");
-ylabel("$\varphi [^\circ]$", "Interpreter","latex");
-legend("y","ref", "u", 'Location', 'southeast');
+ylabel("$\varphi \ [^\circ]$", "Interpreter","latex");
+legend("y", "u", 'Location', 'southeast');
 grid minor;
 hold off;
+set(gcf,'position',[200, 400, 650, 400]);
+saveas(gcf, FIGDIR + "/sys_response.svg", "svg");
 
 figure(999); clf;
 style='-k';
 
 subplot(2,1,1)
 hold on;
-plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
-stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
-% scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
+stairs(LOG_TP,LOG_Y,'LineWidth', 1.5);
+xlabel('t [s]');
+ylabel("$\varphi \ [^\circ]$", "Interpreter", "latex");
+grid minor;
+grid on;
 hold of;
+title("System response");
+
 
 subplot(2,1,2)
-plot(LOG_U, LOG_Y,'.k','LineWidth',1.5)
-ylabel('y(k)'); xlabel('u(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
-
-set(gcf,'position',[200,400,650,400]);
+plot(LOG_U, LOG_Y,'.k','LineWidth', 1.5)
+xlabel('t [s]');
+ylabel("$\varphi \ [^\circ]$", "Interpreter", "latex");
+grid minor;
+grid on;
+title("U to Y response");
+set(gcf,'position',[200, 400, 650, 400]);
+saveas(gcf, FIGDIR + "/sys_response_subplot.svg", "svg");

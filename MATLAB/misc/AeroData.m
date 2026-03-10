@@ -7,6 +7,7 @@ classdef AeroData
         nbytes uint32 = 24;
         packetsize uint32 = 0;
         isnormalized logical = false;
+        inittime double = 0;
     end
     properties
         time double = 0; % long
@@ -41,6 +42,7 @@ classdef AeroData
         end
 
         function obj = reset(obj)
+            obj.inittime = 0;
             obj.time = 0;
             obj.output = 0;
             obj.control = 0;
@@ -49,13 +51,17 @@ classdef AeroData
             obj.dt = 0;
         end
         
-        function obj = parse(obj,bytes,shouldnormalize)
+        function obj = parse(obj, bytes, shouldnormalize, shouldsubinittime, isinit)
             %PARSE Parse the incoming serial communication into an object
             %like structure.
             %   This object should represent the same structure within the
             %   Arduino device.
-            if nargin <= 1
-                throw(MException("AeroData:parse_nargin_failed", "Not enougth input parameters."))
+            arguments (Input)
+                obj;
+                bytes;
+                shouldnormalize = true;
+                shouldsubinittime = true;
+                isinit = false;
             end
 
             if numel(bytes) ~= obj.packetsize
@@ -75,11 +81,18 @@ classdef AeroData
 
             obj.isnormalized = false;
 
-            if nargin > 2 && ~shouldnormalize
-                return;
+            if shouldnormalize
+                obj = obj.normalize();
             end
 
-            obj = obj.normalize();
+            if isinit
+                obj.inittime = obj.time;
+            end
+
+            if shouldsubinittime
+                obj.time = obj.time - obj.inittime;
+                obj.controltime = obj.controltime - obj.inittime;
+            end
         end
 
         function obj = normalize(obj)
@@ -96,6 +109,12 @@ classdef AeroData
 
         function s = tostring(obj)
             s = sprintf("%s ", num2str(obj.time), num2str(obj.output), num2str(obj.control), num2str(obj.potentiometer), num2str(obj.controltime), num2str(obj.dt));
+        end
+
+        %TOARRAY function returns the object data within an order array as
+        %follows: [time, output, control, potentiometer, controltime, dt].
+        function [data] = toarray(obj)
+            data = [obj.time, obj.output, obj.control, obj.potentiometer, obj.controltime, obj.dt];
         end
     end
 end
