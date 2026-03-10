@@ -256,7 +256,7 @@ title("System response");
 
 subplot(2,1,2)
 plot(LOG_U, LOG_Y,'.k','LineWidth', 1.5)
-xlabel('t [s]');
+xlabel('u [%PWM]');
 ylabel("$\varphi \ [^\circ]$", "Interpreter", "latex");
 grid minor;
 grid on;
