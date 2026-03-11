@@ -20,7 +20,7 @@ COMPORT = "COM3"; % Serial port of the device
 %% Declare all the necessary variables
 U_STEP_SIZE = 5; % max resolution per step based on the following calc: 100/255 = 0.3922, where 100 is max %PWM and 255 is the 8bit value for the PWM generator
 STEPS = 0:U_STEP_SIZE:100;
-SYNC_TIME = 20; % Time for the system to stabilize in the OP
+SYNC_TIME = 1; % Time for the system to stabilize in the OP
 
 Tstop = numel(STEPS) * SYNC_TIME;
 
@@ -33,22 +33,10 @@ nsteps = floor(Tstop/Ts);
 % the following value
 Ystop = 180; % deg
 
-global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
-
-% Logging vectors
-LOG_T = [];
-LOG_TP = [];
-LOG_POT = [];
-LOG_Y = [];
-LOG_U = [];
-LOG_DTP = [];
-LOG_DT = [];
-LOG_STEP = [];
-LOG_CTRL_T = [];
-LOG_REF = [];
+global LOGGER;
 
 function plotdatarealtime()
-    global LOG_T LOG_Y LOG_U LOG_REF;
+    global LOGGER;
     persistent hy hr hu;
     % ----------------------------------
     % Plot the measured data in real time
@@ -58,9 +46,6 @@ function plotdatarealtime()
             f = figure("Name","Plot-RealTime");
             ax = axes(f);
             hold on;
-            % hy = plot(ax, nan, nan, '.k');
-            % hr = plot(ax, nan, nan, '.r');
-            % hu = plot(ax, nan, nan, '.b');
             hy = stairs(ax, nan, nan);
             hr = stairs(ax, nan, nan);
             hu = stairs(ax, nan, nan);
@@ -72,10 +57,7 @@ function plotdatarealtime()
             
         end
        
-        % plot(plot_t, plot_sig_3,'.b', plot_t, plot_sig_2,'.r', plot_t,
-        % plot_sig_1,'.k')
-        % print(timer_t(1));
-        nsteps = numel(LOG_Y);
+        nsteps = LOGGER.count;
         last_n_points = nsteps - 300;
 
         if last_n_points < 0
@@ -83,11 +65,11 @@ function plotdatarealtime()
         end
 
         mask = last_n_points:nsteps;
-        t = LOG_T(mask);
+        t = LOGGER.get("tp", mask);
 
-        set(hy, 'YData', LOG_Y(mask), 'XData', t);
-        set(hr, 'YData', LOG_REF(mask), 'XData', t);
-        set(hu, 'YData', LOG_U(mask), 'XData', t);
+        set(hy, 'YData', LOGGER.get("y", mask), 'XData', t);
+        set(hr, 'YData', LOGGER.get("ref", mask), 'XData', t);
+        set(hu, 'YData', LOGGER.get("u", mask), 'XData', t);
         drawnow limitrate nocallbacks;
     catch err
        fprintf(2, "Plot thread: " + err.message + "\n");
@@ -106,6 +88,7 @@ try
     % communication (waiting for the initial --- MCU started --- message)
     initconnection;
     
+    LOGGER = DataLogger(dfile_handle, OUTPUT_NAMES, Ts);
     aerodata = AeroData;
     bytes = read(scon, aerodata.packetsize, "uint8");
 
@@ -182,18 +165,7 @@ try
         % Write the data into a file
         time_elapsed = seconds(time_curr - time_start);
         data = [time_elapsed, aerodata.toarray(), time_delta, step, REF];
-        writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
-
-        LOG_T = [LOG_T, time_elapsed];
-        LOG_TP = [LOG_TP, aerodata.time];
-        LOG_CTRL_T = [LOG_CTRL_T, aerodata.controltime];
-        LOG_Y = [LOG_Y, aerodata.output];
-        LOG_U = [LOG_U, aerodata.control];
-        LOG_POT = [LOG_POT, aerodata.potentiometer];
-        LOG_DTP = [LOG_DTP, aerodata.dt];
-        LOG_DT = [LOG_DT, time_delta];
-        LOG_STEP = [LOG_STEP, step];
-        LOG_REF = [LOG_REF, REF];
+        LOGGER = LOGGER.record(data, mod(step, 10) == 0);
 
         time_last = time_curr;
         step = step + 1;
@@ -214,7 +186,7 @@ end
 close_connection(scon, dfile_handle);
 
 %% Save the measurement
-logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_CTRL_T, LOG_DTP, LOG_DT, LOG_STEP, LOG_REF, 'VariableNames', OUTPUT_NAMES);
+logsout = LOGGER.totable();
 save(FILEPATH_MAT);
 
 %%
@@ -229,8 +201,8 @@ end
 
 figure(1); clf;
 hold on;
-stairs(LOG_TP, LOG_Y, 'LineWidth', 1.5);
-stairs(LOG_TP, LOG_U, 'LineWidth', 1.5);
+stairs(logsout.tp, logsout.y, 'LineWidth', 1.5);
+stairs(logsout.tp, logsout.u, 'LineWidth', 1.5);
 title("Real-Time System Response");
 xlabel("t [s]");
 ylabel("$\varphi \ [^\circ]$", "Interpreter","latex");
@@ -245,17 +217,17 @@ style='-k';
 
 subplot(2,1,1)
 hold on;
-stairs(LOG_TP,LOG_Y,'LineWidth', 1.5);
+stairs(logsout.tp, logsout.y, 'LineWidth', 1.5);
 xlabel('t [s]');
 ylabel("$\varphi \ [^\circ]$", "Interpreter", "latex");
 grid minor;
 grid on;
-hold of;
+hold off;
 title("System response");
 
 
 subplot(2,1,2)
-plot(LOG_U, LOG_Y,'.k','LineWidth', 1.5)
+plot(logsout.u, logsout.y,'.k','LineWidth', 1.5)
 xlabel('u [%PWM]');
 ylabel("$\varphi \ [^\circ]$", "Interpreter", "latex");
 grid minor;

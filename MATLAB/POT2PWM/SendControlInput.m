@@ -8,19 +8,9 @@ loadconfigs;
 DDIR = "dataRepo";
 FILENAME = "pot2pwm";
 
-if ~exist(DDIR, "dir")
-    fprintf("Creating the default data repository folder, for saving the measurements...\n");
-    mkdir(DDIR);
-end
+COMPORT = "COM3";
 
-DateString = convertCharsToStrings(datestr(datetime('now'), "yyyy_mm_dd_HH_MM_ss"));
-
-% File paths for the csv and mat files.
-FILEPATH = getfilename(DDIR, FILENAME, DateString);
-FILEPATH_MAT = getfilename(DDIR, FILENAME, DateString, 'mat');
-
-% The names of the parameters to write into the file
-OUTPUT_NAMES = ["t", "tp", "y", "u", "pot", "dtp", "dt", "step", "pct", "ref"];
+[FILEPATH, FILEPATH_MAT, OUTPUT_NAMES] = prepareenv(FILENAME, "t,tp,y,u,pot,pct,dtp,dt,step,ref", DDIR);
 
 %% Declare all the necessary variables
 Tstop = 60;
@@ -32,34 +22,19 @@ nsteps = floor(Tstop/Ts);
 % the following value
 Ystop = 180; % deg
 
-global LOG_T LOG_TP LOG_POT LOG_Y LOG_U LOG_DTP LOG_DT LOG_STEP LOG_CTRL_T LOG_REF;
-
-% Logging vectors
-LOG_T = [];
-LOG_TP = [];
-LOG_POT = [];
-LOG_Y = [];
-LOG_U = [];
-LOG_DTP = [];
-LOG_DT = [];
-LOG_STEP = [];
-LOG_CTRL_T = [];
-LOG_REF = [];
+global LOGGER;
 
 function plotdatarealtime()
-    global LOG_T LOG_Y LOG_U LOG_REF;
+    global LOGGER;
     persistent hy hr hu;
     % ----------------------------------
     % Plot the measured data in real time
     % ----------------------------------
     try
         if isempty(hy) || isempty(hr) || isempty(hu)
-            f = figure("Name","Plot-RealTime","GraphicsSmoothing","on","Renderer","opengl","RendererMode","auto");
+            f = figure("Name","Plot-RealTime");
             ax = axes(f);
             hold on;
-            % hy = plot(ax, nan, nan, '.k');
-            % hr = plot(ax, nan, nan, '.r');
-            % hu = plot(ax, nan, nan, '.b');
             hy = stairs(ax, nan, nan);
             hr = stairs(ax, nan, nan);
             hu = stairs(ax, nan, nan);
@@ -71,10 +46,7 @@ function plotdatarealtime()
             
         end
        
-        % plot(plot_t, plot_sig_3,'.b', plot_t, plot_sig_2,'.r', plot_t,
-        % plot_sig_1,'.k')
-        % print(timer_t(1));
-        nsteps = numel(LOG_Y);
+        nsteps = LOGGER.count;
         last_n_points = nsteps - 300;
 
         if last_n_points < 0
@@ -82,11 +54,11 @@ function plotdatarealtime()
         end
 
         mask = last_n_points:nsteps;
-        t = LOG_T(mask);
+        t = LOGGER.get("tp", mask);
 
-        set(hy, 'YData', LOG_Y(mask), 'XData', t);
-        set(hr, 'YData', LOG_REF(mask), 'XData', t);
-        set(hu, 'YData', LOG_U(mask), 'XData', t);
+        set(hy, 'YData', LOGGER.get("y", mask), 'XData', t);
+        set(hr, 'YData', LOGGER.get("ref", mask), 'XData', t);
+        set(hu, 'YData', LOGGER.get("u", mask), 'XData', t);
         drawnow limitrate nocallbacks;
     catch err
        fprintf(2, "Plot thread: " + err.message + "\n");
@@ -95,35 +67,13 @@ function plotdatarealtime()
     % ----------------------------------
 end
 
-
 try
     timerplotrealtime = timer('ExecutionMode','fixedRate', 'Period', 0.5, 'TimerFcn', @(~, ~) plotdatarealtime());
     start(timerplotrealtime);
-    % Open the CSV file for writing
-    if(exist("dfile_handle", "var"))
-        fclose(dfile_handle);
-        clear dfile_handle;
-    end
     
-    dfile_handle = fopen(FILEPATH,'w');
-    fprintf(dfile_handle, join(OUTPUT_NAMES,",") + "\n");
-
-    % Open the serial port for communication with the Arduino (system)
-    if(exist("scon", "var"))
-        scon.flush("input");
-        clear scon;
-    end
-
-    scon = serialport("COM3", CF_BAUDRATE, "Timeout", CF_TIMEOUT);
+    initconnection;
     
-    sline = "";
-
-    while(~contains(sline, "MCU"))
-        % disp(sline);
-        sline = readline(scon);
-    end
-
-    disp(sline);
+    LOGGER = DataLogger(dfile_handle, OUTPUT_NAMES, Ts);
 
     aerodata = AeroData;
     bytes = read(scon, aerodata.packetsize, "uint8");
@@ -176,18 +126,8 @@ try
 
         % Write the data into a file
         data = [time_elapsed, plant_time, plant_output, plant_input, plant_potentiometer, plant_dt, time_delta, step, plant_control_time, REF];
-        writenum2file(dfile_handle, data, mod(step, 10)==0, Ts, time_delta);
-
-        LOG_T = [LOG_T, time_elapsed];
-        LOG_TP = [LOG_TP, plant_time];
-        LOG_CTRL_T = [LOG_CTRL_T, plant_control_time];
-        LOG_Y = [LOG_Y, plant_output];
-        LOG_U = [LOG_U, plant_input];
-        LOG_POT = [LOG_POT, plant_potentiometer];
-        LOG_DTP = [LOG_DTP, plant_dt];
-        LOG_DT = [LOG_DT, time_delta];
-        LOG_STEP = [LOG_STEP, step];
-        LOG_REF = [LOG_REF, REF];
+        
+        LOGGER = LOGGER.record(data, mod(step, 10) == 0);
 
         step = step + 1;
         time_last = time_curr;
@@ -208,7 +148,7 @@ end
 close_connection(scon, dfile_handle);
 
 %% Save the measurement
-logsout = table(LOG_T, LOG_TP, LOG_Y, LOG_U, LOG_POT, LOG_DTP, LOG_DT, LOG_STEP, LOG_CTRL_T, LOG_REF, 'VariableNames', OUTPUT_NAMES);
+logsout = LOGGER.totable();
 save(FILEPATH_MAT, "Tstop", "Ts", "nsteps", "logsout", "Ystop", "DDIR", "FILEPATH_MAT", "FILEPATH", "FILENAME");
 
 %%
@@ -220,16 +160,17 @@ style='-k';
 
 subplot(2,1,1)
 hold on;
-plot(LOG_TP, LOG_REF,"--k","LineWidth",1.5);
-stairs(LOG_TP,LOG_Y,'LineWidth',1.5);
-% scatter(LOG_TP, LOG_Y, '.k');
-xlabel('k'); ylabel('\phi(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
-hold of;
+plot(logsout.tp, logsout.ref, "--k","LineWidth", 1.5);
+stairs(logsout.tp, logsout.y, 'LineWidth', 1.5);
+xlabel('t [s]'); ylabel('$\varphi(t) [\circ]$','Interpreter','latex');
+grid minor;
+grid on;
+hold off;
 
 subplot(2,1,2)
-stairs(LOG_TP,LOG_U,style,'LineWidth',1.5)
-xlabel('k'); ylabel('u(k)'); grid on
-% xlim([0,max(LOG_STEP)]);
-
+stairs(logsout.tp, logsout.u, style, 'LineWidth', 1.5)
+xlabel('t [s]');
+ylabel('u(t) [%PWM]');
+grid minor;
+grid on;
 set(gcf,'position',[200,400,650,400]);
